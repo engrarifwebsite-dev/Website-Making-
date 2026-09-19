@@ -1,2 +1,3 @@
-# Website-Making-
-Personal Management System – Google Apps Script, Google Sheets and HTML, Google drive 
+# Personal Management System
+
+A personal management website built with Google Apps Script, Google Sheets, HTML, CSS and JavaScript.
