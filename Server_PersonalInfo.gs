@@ -1,7 +1,8 @@
 /**
  * Server_PersonalInfo.gs
- * Server-side support for the ব্যক্তিগত তথ্য page — both the Profile
- * subtab and the Family Tree subtab (Section 5 & 6 of the blueprint).
+ * Server-side support for the ব্যক্তিগত তথ্য page — Profile subtab,
+ * Education timeline (with per-entry certificate/document uploads),
+ * and the Family Tree subtab.
  *
  * The profile PHOTO here is INDEPENDENT of the header/account avatar
  * (Auth.gs uploadProfilePhoto, Users.ProfilePhotoFileID) — it's stored
@@ -11,6 +12,10 @@
 
 /* ============================================================
  * Profile (key/value fields in Personal_Info > Profile)
+ * NOTE: 'Education' is intentionally NOT a flat field here — it lives
+ * in its own multi-entry timeline below (Personal_Info > Education),
+ * since one person can have several degrees, each with its own
+ * documents.
  * ============================================================ */
 
 var PROFILE_FIELDS = [
@@ -92,293 +97,6 @@ function saveProfile(compositeToken, fields) {
   return true;
 }
 
-/* ============================================================
- * Education timeline (Personal_Info > Education)
- * A dedicated multi-entry list, separate from the flat Profile fields.
- * ============================================================ */
-
-function getEducationList() {
-  var sheet = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info).getSheetByName('Education');
-  if (!sheet) return [];
-  var data = sheet.getDataRange().getValues();
-  var results = [];
-  for (var i = 1; i < data.length; i++) {
-    if (!data[i][0]) continue;
-    results.push({
-      id: data[i][0],
-      degree: data[i][1] || '',
-      institution: data[i][2] || '',
-      passingYear: data[i][3] || '',
-      gradeType: data[i][4] || '',
-      gradeValue: data[i][5] || '',
-      gradeScale: data[i][6] || ''
-    });
-  }
-  // Most recent first, matching how a CV usually reads.
-  results.sort(function (a, b) { return String(b.passingYear).localeCompare(String(a.passingYear)); });
-  return results;
-}
-
-/**
- * Replaces the ENTIRE education list with what's passed in — simplest way
- * to support add/edit/remove/reorder all from one "সম্পাদনা" modal without
- * needing separate add/update/delete endpoints. entries = array of
- * { id, degree, institution, passingYear, gradeType, gradeValue, gradeScale }.
- *
- * An entry that comes back with its existing `id` KEEPS that ID, so the
- * documents attached to it (Personal_Info > EducationDocuments) stay linked.
- * Entries that are no longer in the list have their attached documents
- * removed too (files go to the Drive trash, so they are recoverable).
- */
-function setEducationList(compositeToken, entries) {
-  var user = validateSession(compositeToken);
-  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
-
-  var sheet = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info).getSheetByName('Education');
-  var lastRow = sheet.getLastRow();
-
-  var existingIds = {};
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, 1).getValues().forEach(function (r) {
-      if (r[0]) existingIds[String(r[0])] = true;
-    });
-    sheet.getRange(2, 1, lastRow - 1, 7).clearContent();
-  }
-
-  var keptIds = {};
-  var rows = (entries || [])
-    .filter(function (e) { return e.degree && String(e.degree).trim(); })
-    .map(function (e) {
-      var id = e.id ? String(e.id) : '';
-      // Only reuse an ID that really existed, and only once.
-      if (!id || !existingIds[id] || keptIds[id]) id = generateUniqueId('EDU');
-      keptIds[id] = true;
-      return [
-        id,
-        e.degree || '', e.institution || '', e.passingYear || '',
-        e.gradeType || '', e.gradeValue || '', e.gradeScale || ''
-      ];
-    });
-
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, 7).setValues(rows);
-  }
-
-  var removedIds = Object.keys(existingIds).filter(function (id) { return !keptIds[id]; });
-  if (removedIds.length) deleteEducationDocsForEntries_(removedIds);
-
-  return true;
-}
-
-/* ============================================================
- * Education documents (Personal_Info > EducationDocuments)
- * Certificates, marksheets and other papers attached to an education
- * entry. Files are stored in Drive under
- *   Photos and Files > EducationDocuments
- * and this sheet keeps one row per file:
- *   DocID, EducationID, DocType, FileName, FileID, MimeType, SizeBytes, UploadedAt
- * The EducationDocuments tab is created automatically on first use.
- * ============================================================ */
-
-var EDU_DOC_HEADERS = [
-  'DocID', 'EducationID', 'DocType', 'FileName', 'FileID', 'MimeType', 'SizeBytes', 'UploadedAt'
-];
-var EDU_DOC_MAX_BYTES = 10 * 1024 * 1024; // 10 MB per file
-var EDU_DOC_ALLOWED_MIME = [
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
-
-function getEducationDocsSheet_() {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info);
-  return ensureSheetWithHeaders(ss, 'EducationDocuments', EDU_DOC_HEADERS);
-}
-
-function getOrCreateEducationDocsFolder_() {
-  var parent = DriveApp.getFolderById(DRIVE_FOLDER_IDS.PhotosAndFiles);
-  var existing = parent.getFoldersByName('EducationDocuments');
-  if (existing.hasNext()) return existing.next();
-  return parent.createFolder('EducationDocuments');
-}
-
-/** Makes a file name safe for Drive and for a spreadsheet cell. */
-function sanitizeDocFileName_(name) {
-  var n = String(name || '')
-    .replace(/[\\\/:*?"<>|\r\n\t]/g, '_')
-    .replace(/^[=+\-@\s]+/, '_')   // never let a name start like a spreadsheet formula
-    .trim();
-  if (n.length > 120) {
-    var dot = n.lastIndexOf('.');
-    var ext = dot > 0 ? n.substring(dot) : '';
-    if (ext.length > 10) ext = '';
-    n = n.substring(0, 120 - ext.length) + ext;
-  }
-  return n || 'document';
-}
-
-/** Returns the degree name for an education entry, or null if the entry doesn't exist. */
-function findEducationDegree_(educationId) {
-  var sheet = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info).getSheetByName('Education');
-  if (!sheet) return null;
-  var data = sheet.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(educationId)) return String(data[i][1] || '');
-  }
-  return null;
-}
-
-/** Row -> plain object for the client. The Drive FileID is deliberately NOT sent; downloads go through the server. */
-function eduDocToClient_(row) {
-  return {
-    docId: row[0],
-    educationId: row[1],
-    docType: row[2] || '',
-    fileName: row[3] || '',
-    mimeType: row[5] || '',
-    size: Number(row[6]) || 0,
-    uploadedAt: formatIfDate_(row[7])
-  };
-}
-
-function trashDriveFile_(fileId) {
-  if (!fileId) return;
-  try {
-    DriveApp.getFileById(fileId).setTrashed(true);
-  } catch (e) {
-    Logger.log('Could not trash Drive file ' + fileId + ': ' + e.message);
-  }
-}
-
-/** Lists every education document (metadata only), in upload order. The client groups them by EducationID. */
-function getEducationDocuments() {
-  var sheet = getEducationDocsSheet_();
-  var data = sheet.getDataRange().getValues();
-  var results = [];
-  for (var i = 1; i < data.length; i++) {
-    if (!data[i][0]) continue;
-    results.push(eduDocToClient_(data[i]));
-  }
-  return results;
-}
-
-/**
- * Uploads one document for an education entry into
- * Photos and Files > EducationDocuments and records it in the sheet.
- * Returns the new document's metadata.
- */
-function uploadEducationDocument(compositeToken, educationId, docType, fileName, base64Data, mimeType) {
-  var user = validateSession(compositeToken);
-  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
-
-  if (!educationId) throw new Error('কোন শিক্ষাগত যোগ্যতার জন্য কাগজ যোগ হবে তা নির্বাচন করা হয়নি।');
-  if (!base64Data || !fileName) throw new Error('ফাইল পাওয়া যায়নি।');
-
-  var mime = String(mimeType || '').toLowerCase();
-  if (EDU_DOC_ALLOWED_MIME.indexOf(mime) === -1) {
-    throw new Error('এই ধরনের ফাইল আপলোড করা যাবে না। PDF, JPG, PNG, WEBP বা DOC/DOCX ফাইল দিন।');
-  }
-
-  var sizeBytes = Math.floor(String(base64Data).length * 3 / 4);
-  if (sizeBytes > EDU_DOC_MAX_BYTES) {
-    throw new Error('ফাইলের সাইজ সর্বোচ্চ ১০ MB হতে পারবে।');
-  }
-
-  var degree = findEducationDegree_(educationId);
-  if (degree === null) throw new Error('এই শিক্ষাগত যোগ্যতাটি পাওয়া যায়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।');
-
-  var cleanName = sanitizeDocFileName_(fileName);
-  var driveName = (degree ? degree + ' - ' : '') + cleanName;
-  var typeLabel = String(docType || '').trim().substring(0, 60) || 'অন্যান্য';
-
-  var folder = getOrCreateEducationDocsFolder_();
-  var fileId = uploadFileToFolder_(folder.getId(), base64Data, mime, driveName);
-
-  var docId = generateUniqueId('EDOC');
-  var now = new Date();
-  try {
-    getEducationDocsSheet_().appendRow([docId, String(educationId), typeLabel, cleanName, fileId, mime, sizeBytes, now]);
-  } catch (e) {
-    trashDriveFile_(fileId); // don't leave an untracked file behind
-    throw e;
-  }
-
-  return {
-    docId: docId,
-    educationId: String(educationId),
-    docType: typeLabel,
-    fileName: cleanName,
-    mimeType: mime,
-    size: sizeBytes,
-    uploadedAt: formatIfDate_(now)
-  };
-}
-
-/**
- * Returns the file content as base64 so the browser can save it.
- * Session is checked, and only files registered in EducationDocuments can be
- * read — the client can never ask for an arbitrary Drive file ID.
- */
-function getEducationDocumentData(compositeToken, docId) {
-  var user = validateSession(compositeToken);
-  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
-
-  var data = getEducationDocsSheet_().getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === docId) {
-      try {
-        var file = DriveApp.getFileById(data[i][4]);
-        if (file.isTrashed()) throw new Error('trashed');
-        var blob = file.getBlob();
-        return {
-          fileName: data[i][3] || 'document',
-          mimeType: data[i][5] || blob.getContentType(),
-          base64: Utilities.base64Encode(blob.getBytes())
-        };
-      } catch (e) {
-        throw new Error('ফাইলটি ড্রাইভে পাওয়া যায়নি।');
-      }
-    }
-  }
-  throw new Error('কাগজটি পাওয়া যায়নি।');
-}
-
-/** Removes one document: the row is deleted and the Drive file goes to the trash (recoverable). */
-function deleteEducationDocument(compositeToken, docId) {
-  var user = validateSession(compositeToken);
-  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
-
-  var sheet = getEducationDocsSheet_();
-  var data = sheet.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === docId) {
-      trashDriveFile_(data[i][4]);
-      sheet.deleteRow(i + 1);
-      return true;
-    }
-  }
-  return false;
-}
-
-/** Internal: removes every document belonging to the given education entry IDs (used when entries are deleted). */
-function deleteEducationDocsForEntries_(educationIds) {
-  var idSet = {};
-  educationIds.forEach(function (id) { idSet[String(id)] = true; });
-
-  var sheet = getEducationDocsSheet_();
-  var data = sheet.getDataRange().getValues();
-  for (var i = data.length - 1; i >= 1; i--) {
-    if (data[i][0] && idSet[String(data[i][1])]) {
-      trashDriveFile_(data[i][4]);
-      sheet.deleteRow(i + 1);
-    }
-  }
-}
-
-
 /**
  * ONE-TIME CLEANUP — run this manually (select from the function dropdown,
  * click Run) if the Profile sheet has duplicate FieldName rows. For each
@@ -420,6 +138,297 @@ function cleanupDuplicateProfileFields() {
 function debugGetProfile() {
   var result = getProfile();
   Logger.log(JSON.stringify(result, null, 2));
+}
+
+/* ============================================================
+ * Education timeline (Personal_Info > Education)
+ * A dedicated multi-entry list, separate from the flat Profile fields.
+ * Columns: EduID, Degree, Institution, PassingYear, GradeType,
+ *          GradeValue, GradeScale
+ * ============================================================ */
+
+function getEducationList() {
+  var sheet = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info).getSheetByName('Education');
+  if (!sheet) return [];
+  var data = sheet.getDataRange().getValues();
+  var results = [];
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    results.push({
+      id: data[i][0],
+      degree: data[i][1] || '',
+      institution: data[i][2] || '',
+      passingYear: data[i][3] || '',
+      gradeType: data[i][4] || '',
+      gradeValue: data[i][5] || '',
+      gradeScale: data[i][6] || ''
+    });
+  }
+  // Most recent first, matching how a CV usually reads.
+  results.sort(function (a, b) { return String(b.passingYear).localeCompare(String(a.passingYear)); });
+  return results;
+}
+
+/**
+ * Replaces the ENTIRE education list with what's passed in — simplest way
+ * to support add/edit/reorder all from one "সম্পাদনা" modal without
+ * needing separate add/update endpoints.
+ *
+ * entries = array of { id (optional — omit/blank for a brand-new entry),
+ *   degree, institution, passingYear, gradeType, gradeValue, gradeScale }.
+ * An entry's id is preserved across saves whenever the client sends it
+ * back, so that any documents already attached (EducationDocuments,
+ * linked by EduID) stay attached to the right entry instead of being
+ * orphaned by a fresh ID every time you save an edit.
+ *
+ * removedIds = array of EduIDs the user explicitly removed in this edit
+ * (via the "মুছুন" button on a row) — used to also clean up that
+ * entry's uploaded documents (Drive files + EducationDocuments rows).
+ * Entries the client simply forgot to resend are NOT treated as
+ * removed, so a client-side bug can't silently wipe out someone's
+ * documents.
+ */
+function setEducationList(compositeToken, entries, removedIds) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  var sheet = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info).getSheetByName('Education');
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.getRange(2, 1, lastRow - 1, 7).clearContent();
+  }
+
+  var rows = (entries || [])
+    .filter(function (e) { return e.degree && String(e.degree).trim(); })
+    .map(function (e) {
+      var id = (e.id && String(e.id).trim()) || generateUniqueId('EDU');
+      return [
+        id,
+        e.degree || '', e.institution || '', e.passingYear || '',
+        e.gradeType || '', e.gradeValue || '', e.gradeScale || ''
+      ];
+    });
+
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, 7).setValues(rows);
+  }
+
+  (removedIds || []).forEach(function (eduId) {
+    if (eduId) removeEducationDocumentsForEntry_(eduId);
+  });
+
+  return true;
+}
+
+/* ============================================================
+ * Education documents (certificates, marksheets, testimonials, etc.)
+ * Personal_Info > EducationDocuments
+ * Columns: DocID, EduID, FileID, FileName, UploadedAt
+ * Files are stored in the shared DRIVE_FOLDER_IDS.PhotosAndFiles folder.
+ * ============================================================ */
+
+function ensureEducationDocumentsSheet_() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info);
+  return ensureSheetWithHeaders(ss, 'EducationDocuments', [
+    'DocID', 'EduID', 'FileID', 'FileName', 'UploadedAt'
+  ]);
+}
+
+/**
+ * Returns every uploaded document for every education entry in ONE call,
+ * grouped by EduID: { 'EDU-...': [ { docId, fileId, fileName, uploadedAt }, ... ] }.
+ * The client fetches this once alongside getEducationList() rather than
+ * making a separate round-trip per entry.
+ */
+function getEducationDocumentsMap() {
+  var sheet = ensureEducationDocumentsSheet_();
+  var data = sheet.getDataRange().getValues();
+  var map = {};
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0] || !row[1]) continue;
+    var eduId = row[1];
+    if (!map[eduId]) map[eduId] = [];
+    map[eduId].push({
+      docId: row[0],
+      fileId: row[2],
+      fileName: row[3] || 'ডকুমেন্ট',
+      uploadedAt: formatIfDate_(row[4])
+    });
+  }
+  return map;
+}
+
+/**
+ * Uploads one certificate/document for a given education entry into
+ * Drive (PhotosAndFiles folder) and records it against that entry.
+ * Returns the new document's info so the client can show it immediately
+ * without re-fetching the whole map.
+ */
+function uploadEducationDocument(compositeToken, eduId, base64Data, mimeType, fileName) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+  if (!eduId) throw new Error('শিক্ষাগত এন্ট্রি খুঁজে পাওয়া যায়নি — আগে এন্ট্রিটি সংরক্ষণ করুন।');
+
+  var safeName = (fileName && String(fileName).trim()) || 'certificate';
+  var fileId = uploadFileToFolder_(DRIVE_FOLDER_IDS.PhotosAndFiles, base64Data, mimeType, 'edu-' + eduId + '-' + safeName);
+
+  var sheet = ensureEducationDocumentsSheet_();
+  var docId = generateUniqueId('EDOC');
+  var now = new Date();
+  sheet.appendRow([docId, eduId, fileId, safeName, now]);
+
+  return {
+    docId: docId,
+    fileId: fileId,
+    fileName: safeName,
+    uploadedAt: Utilities.formatDate(now, 'Asia/Dhaka', 'yyyy-MM-dd')
+  };
+}
+
+/** Deletes one document's record and trashes the underlying Drive file. */
+function deleteEducationDocument(compositeToken, docId) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  var sheet = ensureEducationDocumentsSheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === docId) {
+      var fileId = data[i][2];
+      if (fileId) {
+        try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) { /* file may already be gone — ignore */ }
+      }
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Internal: removes all documents (rows + Drive files) belonging to one education entry — used when that entry itself is deleted. */
+function removeEducationDocumentsForEntry_(eduId) {
+  var sheet = ensureEducationDocumentsSheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (data[i][1] === eduId) {
+      var fileId = data[i][2];
+      if (fileId) {
+        try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) { /* ignore */ }
+      }
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+
+/* ============================================================
+ * Age Calculator (Personal_Info > AgeCards)
+ * Small saved "cards" — name + photo + date of birth — the client
+ * displays as little green squares with a continuously ticking age.
+ * Columns: CardID, Name, PhotoFileID, DOB, CreatedAt, UpdatedAt
+ * ============================================================ */
+
+function getAgeCards() {
+  var sheet = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info).getSheetByName('AgeCards');
+  if (!sheet) return [];
+  var data = sheet.getDataRange().getValues();
+  var results = [];
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    results.push({
+      id: data[i][0],
+      name: data[i][1] || '',
+      photoFileId: data[i][2] || '',
+      dob: formatIfDate_(data[i][3])
+    });
+  }
+  return results;
+}
+
+/** Adds a new age card. photoBase64/photoMimeType are optional (a card can be added without a photo, and one added later via updateAgeCard). */
+function addAgeCard(compositeToken, name, dob, photoBase64, photoMimeType) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  name = (name || '').trim();
+  if (!name) throw new Error('নাম আবশ্যক।');
+  if (!dob) throw new Error('জন্ম তারিখ আবশ্যক।');
+
+  var photoFileId = '';
+  if (photoBase64 && photoMimeType) {
+    var folder = getOrCreateAgeCardsPhotosFolder_();
+    photoFileId = uploadFileToFolder_(folder.getId(), photoBase64, photoMimeType, 'age-card-' + name);
+  }
+
+  var sheet = ensureAgeCardsSheet_();
+  var cardId = generateUniqueId('AGE');
+  var now = new Date();
+  sheet.appendRow([cardId, name, photoFileId, dob, now, now]);
+
+  return { id: cardId, name: name, photoFileId: photoFileId, dob: dob };
+}
+
+/**
+ * Updates a card's name and/or photo — NOT the date of birth (that's the
+ * basis of the whole calculation, so it's fixed once the card is
+ * created; delete and re-add the card if a DOB was entered wrong).
+ */
+function updateAgeCard(compositeToken, cardId, name, photoBase64, photoMimeType) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  name = (name || '').trim();
+  if (!name) throw new Error('নাম আবশ্যক।');
+
+  var sheet = ensureAgeCardsSheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === cardId) {
+      var photoFileId = data[i][2] || '';
+      if (photoBase64 && photoMimeType) {
+        var folder = getOrCreateAgeCardsPhotosFolder_();
+        photoFileId = uploadFileToFolder_(folder.getId(), photoBase64, photoMimeType, 'age-card-' + name);
+      }
+      sheet.getRange(i + 1, 2).setValue(name);        // Name
+      sheet.getRange(i + 1, 3).setValue(photoFileId);  // PhotoFileID
+      sheet.getRange(i + 1, 6).setValue(new Date());   // UpdatedAt
+      return { id: cardId, name: name, photoFileId: photoFileId };
+    }
+  }
+  throw new Error('কার্ডটি পাওয়া যায়নি।');
+}
+
+function deleteAgeCard(compositeToken, cardId) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  var sheet = ensureAgeCardsSheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === cardId) {
+      var photoFileId = data[i][2];
+      if (photoFileId) {
+        try { DriveApp.getFileById(photoFileId).setTrashed(true); } catch (e) { /* ignore */ }
+      }
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+function ensureAgeCardsSheet_() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.Personal_Info);
+  return ensureSheetWithHeaders(ss, 'AgeCards', [
+    'CardID', 'Name', 'PhotoFileID', 'DOB', 'CreatedAt', 'UpdatedAt'
+  ]);
+}
+
+function getOrCreateAgeCardsPhotosFolder_() {
+  var parent = DriveApp.getFolderById(DRIVE_FOLDER_IDS.PhotosAndFiles);
+  var existing = parent.getFoldersByName('AgeCardPhotos');
+  if (existing.hasNext()) return existing.next();
+  return parent.createFolder('AgeCardPhotos');
 }
 
 /* ============================================================
