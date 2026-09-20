@@ -2,6 +2,18 @@
 
 ## 2026-09-20
 
+### Age Calculator (Personal Information > এজ ক্যালকুলেটর)
+- New subtab next to ফ্যামিলি ট্রি: pick two dates and get the exact age in
+  years, months and days.
+- Also shows total months, weeks, days and hours, the weekday of the start
+  date, and the days left until the next birthday (Feb 29 births are handled).
+- "আজ" fills today's date; "আমার জন্ম তারিখ" pulls the DOB saved in the
+  Profile; results update as soon as a date changes.
+- Runs fully in the browser; no server code needed.
+- New file: `Partial_AgeCalculator.html`. `Index.html` gets one more include line.
+  The partial adds its own subtab button and panel to the Personal Info page at
+  load time, so `Page_PersonalInfo.html` is unchanged.
+
 ### Family Tree (Personal Information > ফ্যামিলি ট্রি)
 - New colourful family tree: every branch shows a round photo (gender-coloured
   ring) and the name; each generation has its own line/name colour. Couples are

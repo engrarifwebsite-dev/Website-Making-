@@ -13,6 +13,7 @@
 - [x] Personal Information: Education timeline
 - [x] Personal Information: Education documents (upload, download, delete per qualification)
 - [x] Personal Information: Family Tree UI (colourful tree, photo + name, click photo for details popup, add branch / spouse, edit, delete)
+- [x] Personal Information: Age Calculator subtab (two dates -> years/months/days)
 - [x] Global footer hadith rotation
 
 ## In Progress
@@ -40,3 +41,4 @@
 - [ ] Family Tree markup lives in `Partial_FamilyTree.html` and is moved into the Personal Info "ফ্যামিলি ট্রি" subtab at load time. When convenient, replace the placeholder inside `Page_PersonalInfo.html` (`#subtab-family-tree`) with `<?!= include('Partial_FamilyTree'); ?>` and remove the include from `Index.html`.
 - [ ] Add the `EducationDocuments` tab to `Setup_PersonalInfo.gs` (columns: DocID, EducationID, DocType, FileName, FileID, MimeType, SizeBytes, UploadedAt). It is currently created automatically on first use.
 - [ ] Suspicious-login detection in `logLoginActivity_` (planned for Phase 17).
+- [ ] Age Calculator subtab is injected by `Partial_AgeCalculator.html` at load time. When convenient, add its button and `#subtab-age-calculator` panel directly to `Page_PersonalInfo.html` (with `<?!= include('Partial_AgeCalculator'); ?>`) and remove the include from `Index.html`.
