@@ -2,6 +2,13 @@
 
 ## 2026-09-20
 
+### Weather: Feels Like
+- Added "অনুভূত তাপমাত্রা (Feels Like)" to the Home weather card and to
+  the global footer weather section (from Open-Meteo `apparent_temperature`).
+- On the Home card the last cell ("আকাশের অবস্থা") now spans the full row
+  so the nine cells stay balanced in the two-column grid.
+- Files: `Page_Home.html`, `Partial_Footer.html`.
+
 ### Global Footer (every page)
 - The hadith-rotation footer is replaced by a dark info bar with three
   sections: today's date (Bangla, English and Hijri), the current time

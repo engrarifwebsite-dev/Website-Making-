@@ -298,6 +298,9 @@
       border-radius: 12px;
     }
 
+    /* বিজোড় সংখ্যক ঘরের শেষটি পুরো সারি জুড়ে থাকে */
+    #page-home .weather-stat-wide { grid-column: 1 / -1; }
+
     #page-home .weather-label { margin-bottom: 4px; color: var(--muted); font-size: 10px; font-weight: 800; }
     #page-home .weather-value { color: var(--text); font-size: 12px; font-weight: 900; line-height: 1.35; }
     #page-home .weather-updated { margin-top: 13px; color: #8994a4; font-size: 9.5px; font-weight: 700; text-align: right; }
@@ -368,6 +371,11 @@
         </div>
 
         <div class="weather-stat">
+          <div class="weather-label">👤 অনুভূত তাপমাত্রা (Feels Like)</div>
+          <div class="weather-value" id="weatherFeelsLike">--</div>
+        </div>
+
+        <div class="weather-stat">
           <div class="weather-label">🌧️ বৃষ্টিপাত</div>
           <div class="weather-value" id="weatherRain">--</div>
         </div>
@@ -397,7 +405,7 @@
           <div class="weather-value" id="weatherColdWave">--</div>
         </div>
 
-        <div class="weather-stat">
+        <div class="weather-stat weather-stat-wide">
           <div class="weather-label">☁️ আকাশের অবস্থা</div>
           <div class="weather-value" id="weatherSky">--</div>
         </div>
@@ -756,6 +764,7 @@
             el('weatherTemp').textContent = bnDigits(Math.round(temperature)) + '°C';
             el('weatherMain').textContent = weather[0];
             el('weatherTemperature').textContent = bnDigits(temperature.toFixed(1)) + '°C';
+            el('weatherFeelsLike').textContent = isFinite(apparent) ? bnDigits(apparent.toFixed(1)) + '°C' : '--';
             el('weatherRain').textContent = bnDigits(rain.toFixed(1)) + ' মিমি';
             el('weatherHumidity').textContent = bnDigits(Math.round(humidity)) + '%';
 
@@ -782,6 +791,7 @@
             el('weatherTemp').textContent = '--°C';
             el('weatherMain').textContent = 'আবহাওয়ার তথ্য পাওয়া যায়নি';
             el('weatherTemperature').textContent = '--';
+            el('weatherFeelsLike').textContent = '--';
             el('weatherRain').textContent = '--';
             el('weatherHumidity').textContent = '--';
             el('weatherDewPoint').textContent = '--';

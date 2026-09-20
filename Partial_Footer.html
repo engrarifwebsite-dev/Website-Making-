@@ -130,6 +130,7 @@
         <div class="ib-line" id="ibCondition">লোড হচ্ছে...</div>
       </div>
       <div class="ib-stats">
+        <div>অনুভূত তাপমাত্রা: <b id="ibFeelsLike">--</b></div>
         <div>আর্দ্রতা: <b id="ibHumidity">--</b></div>
         <div>বাতাস: <b id="ibWind">--</b></div>
         <div>অবস্থান: <b id="ibLocation">--</b></div>
@@ -294,6 +295,7 @@
       el('ibWeatherIcon').textContent = '⚠️';
       el('ibTemp').textContent = '--°C';
       el('ibCondition').textContent = 'আবহাওয়ার তথ্য পাওয়া যায়নি';
+      el('ibFeelsLike').textContent = '--';
       el('ibHumidity').textContent = '--';
       el('ibWind').textContent = '--';
 
@@ -309,7 +311,7 @@
       var url = 'https://api.open-meteo.com/v1/forecast' +
         '?latitude=' + encodeURIComponent(config.lat) +
         '&longitude=' + encodeURIComponent(config.lng) +
-        '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,is_day' +
+        '&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day' +
         '&timezone=Asia%2FDhaka&temperature_unit=celsius&wind_speed_unit=kmh';
 
       fetch(url, { cache: 'no-store' })
@@ -322,6 +324,8 @@
           el('ibWeatherIcon').textContent = info[1];
           el('ibTemp').textContent = Math.round(Number(c.temperature_2m)) + '°C';
           el('ibCondition').textContent = info[0];
+          var feels = Number(c.apparent_temperature);
+          el('ibFeelsLike').textContent = isFinite(feels) ? Math.round(feels) + '°C' : '--';
           el('ibHumidity').textContent = Math.round(Number(c.relative_humidity_2m)) + '%';
           el('ibWind').textContent = Math.round(Number(c.wind_speed_10m)) + ' কিমি/ঘণ্টা';
         })
