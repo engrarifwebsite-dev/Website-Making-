@@ -64,7 +64,7 @@
     #page-personal-info .education-remove-hint { font-size: 12px; color: var(--danger); margin: 6px 0 8px; }
     #page-personal-info .education-row-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 
-    /* ---------- Age Calculator ---------- */
+    /* ---------- Age Calculator subtab: two cards ---------- */
     #page-personal-info .age-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -175,12 +175,64 @@
     @media (max-width: 480px) {
       #page-personal-info .age-cards-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
     }
+
+    /* ---------- Age Calculator card: two-date input calculator ---------- */
+    #page-personal-info .ac-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+    #page-personal-info .ac-field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+    #page-personal-info .ac-field-row { display: flex; gap: 8px; }
+    #page-personal-info .ac-field-row .form-input { flex: 1; min-width: 0; }
+    #page-personal-info .ac-mini {
+      flex-shrink: 0;
+      border: 1px solid var(--border); background: #f8fafc; color: var(--navy);
+      border-radius: 8px; padding: 0 12px;
+      font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    #page-personal-info .ac-mini:hover { background: var(--accent-soft); }
+
+    #page-personal-info .ac-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    #page-personal-info .ac-error { min-height: 18px; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--danger); }
+
+    #page-personal-info .ac-result { margin-top: 6px; }
+    #page-personal-info .ac-empty {
+      text-align: center; padding: 34px 14px;
+      border: 1px dashed var(--border); border-radius: 14px;
+      color: var(--text-muted); font-size: 14px; background: #fbfcfe;
+    }
+
+    #page-personal-info .ac-hero {
+      padding: 22px 22px 20px;
+      border-radius: 16px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 92% 12%, rgba(255, 255, 255, .22), transparent 40%),
+        linear-gradient(135deg, #0ea5e9, #6366f1 55%, #a855f7);
+      box-shadow: 0 14px 34px rgba(99, 102, 241, .28);
+    }
+    #page-personal-info .ac-hero-label { font-size: 13px; font-weight: 600; opacity: .92; }
+    #page-personal-info .ac-hero-main { margin-top: 6px; font-size: clamp(24px, 4.4vw, 36px); font-weight: 800; line-height: 1.3; }
+    #page-personal-info .ac-hero-note { margin-top: 8px; font-size: 13px; opacity: .92; }
+
+    #page-personal-info .ac-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+    #page-personal-info .ac-tile { padding: 14px 14px 12px; border-radius: 14px; color: #fff; }
+    #page-personal-info .ac-tile-label { font-size: 12px; font-weight: 600; opacity: .92; }
+    #page-personal-info .ac-tile-value { margin-top: 4px; font-size: 20px; font-weight: 800; line-height: 1.3; word-break: break-word; }
+    #page-personal-info .ac-tile-sub { margin-top: 3px; font-size: 11.5px; opacity: .9; }
+    #page-personal-info .ac-t1 { background: linear-gradient(135deg, #34d399, #059669); }
+    #page-personal-info .ac-t2 { background: linear-gradient(135deg, #fbbf24, #f97316); }
+    #page-personal-info .ac-t3 { background: linear-gradient(135deg, #f472b6, #a855f7); }
+    #page-personal-info .ac-t4 { background: linear-gradient(135deg, #38bdf8, #2563eb); }
+    #page-personal-info .ac-t5 { background: linear-gradient(135deg, #f87171, #dc2626); }
+    #page-personal-info .ac-t6 { background: linear-gradient(135deg, #2dd4bf, #0f766e); }
+
+    @media (max-width: 640px) {
+      #page-personal-info .ac-form { grid-template-columns: 1fr; }
+    }
   </style>
 
   <div class="subtabs">
     <button class="subtab-btn active" data-subtab="profile">প্রোফাইল</button>
     <button class="subtab-btn" data-subtab="family-tree">ফ্যামিলি ট্রি</button>
-    <button class="subtab-btn" data-subtab="age-calculator">বয়স ক্যালকুলেটর</button>
+    <button class="subtab-btn" data-subtab="age-calculator">এজ ক্যালকুলেটর</button>
   </div>
 
   <div class="subtab-panel active" id="subtab-profile">
@@ -234,6 +286,8 @@
   </div>
 
   <div class="subtab-panel" id="subtab-age-calculator">
+
+    <!-- কার্ড ১: বয়স ক্যালকুলেটর (নাম + ছবি + জন্মতারিখ দিয়ে সংরক্ষিত কার্ড, লাইভ টিকিং বয়স) -->
     <div class="card">
       <div class="education-card-header">
         <div class="education-card-title">🎂 বয়স ক্যালকুলেটর</div>
@@ -242,6 +296,41 @@
         <div class="profile-empty">লোড হচ্ছে...</div>
       </div>
     </div>
+
+    <!-- কার্ড ২: Age Calculator (দুটি তারিখ দিয়ে বয়স হিসাব) -->
+    <div class="card">
+      <div class="education-card-header">
+        <div class="education-card-title">🧮 Age Calculator</div>
+      </div>
+
+      <div class="ac-form">
+        <div class="ac-field">
+          <label for="acFrom">শুরুর তারিখ (যেমন: জন্ম তারিখ)</label>
+          <div class="ac-field-row">
+            <input type="date" class="form-input" id="acFrom">
+            <button type="button" class="ac-mini" id="acFromProfile" title="ব্যক্তিগত তথ্যে সংরক্ষিত জন্ম তারিখ নিন">👤 আমার জন্ম তারিখ</button>
+          </div>
+        </div>
+        <div class="ac-field">
+          <label for="acTo">শেষ তারিখ (যে তারিখ পর্যন্ত হিসাব)</label>
+          <div class="ac-field-row">
+            <input type="date" class="form-input" id="acTo">
+            <button type="button" class="ac-mini" id="acToday">📅 আজ</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ac-actions">
+        <button type="button" class="btn btn-primary" id="acCalc">হিসাব করুন</button>
+        <button type="button" class="btn btn-outline" id="acReset">রিসেট</button>
+      </div>
+      <div class="ac-error" id="acError"></div>
+
+      <div class="ac-result" id="acResult">
+        <div class="ac-empty">জন্ম তারিখ ও শেষ তারিখ দিলে এখানে ফলাফল দেখা যাবে।</div>
+      </div>
+    </div>
+
   </div>
 
 </section>
@@ -687,7 +776,7 @@
 
     document.getElementById('btnEditEducation').addEventListener('click', openEducationEditModal);
 
-    /* ---------- Age Calculator ---------- */
+    /* ---------- Age Calculator: card ১ — সংরক্ষিত কার্ড (নাম+ছবি+জন্মতারিখ) ---------- */
     var currentAgeCards = [];
     var ageTickTimer = null;
 
@@ -917,6 +1006,158 @@
     // Live tick every second — years/months/days rarely change, but the
     // running clock is the whole point of "keep calculating".
     ageTickTimer = setInterval(tickAgeCards_, 1000);
+
+    /* ---------- Age Calculator: card ২ — দুটি তারিখ থেকে বয়স হিসাব ----------
+       (আগে Partial_AgeCalculator.html নামে আলাদাভাবে include হতো এবং একটি
+       ডুপ্লিকেট ট্যাব তৈরি করত — data-subtab="age-calculator" দুই জায়গায়
+       থাকায় দুটো বাটনই একই #subtab-age-calculator প্যানেল দেখাত এবং এই
+       দুই-তারিখ ক্যালকুলেটরটি কখনো দেখাই যেত না। এখন এটি সরাসরি এই পেজেই
+       "🧮 Age Calculator" কার্ড হিসেবে বসানো হলো — নিজের ছোট IIFE-এর ভেতরে,
+       যাতে এর ভেরিয়েবল নাম (BN_MONTHS, bn, el ইত্যাদি) বাইরের স্কোপের সাথে
+       সংঘর্ষ না করে। যুক্তি/হিসাব অপরিবর্তিত। ---------- */
+    (function () {
+      var AC_BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var AC_BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      var AC_BN_WEEKDAYS = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return AC_BN_DIGITS[Number(d)]; }); }
+      function num(n) { return bn(Number(n).toLocaleString('en-US')); }
+      function el(id) { return document.getElementById(id); }
+
+      function parseIso(s) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ''));
+        return m ? { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) } : null;
+      }
+      function utc(p) { return Date.UTC(p.y, p.m - 1, p.d); }
+      function fmt(p) { return bn(p.d) + ' ' + AC_BN_MONTHS[p.m - 1] + ' ' + bn(p.y); }
+      function isLeap(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+      function todayIso() {
+        var n = new Date();
+        return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0');
+      }
+
+      function diffYMD(a, b) {
+        var y = b.y - a.y, m = b.m - a.m, d = b.d - a.d;
+        if (d < 0) {
+          m--;
+          d += new Date(b.y, b.m - 1, 0).getDate(); // শেষ তারিখের আগের মাসের দিন সংখ্যা
+        }
+        if (m < 0) { y--; m += 12; }
+        return { y: y, m: m, d: d };
+      }
+
+      function nextBirthday(from, to) {
+        var year = to.y;
+        function inYear(yr) {
+          var day = from.d;
+          if (from.m === 2 && from.d === 29 && !isLeap(yr)) day = 28;
+          return { y: yr, m: from.m, d: day };
+        }
+        var cand = inYear(year);
+        if (utc(cand) < utc(to)) cand = inYear(year + 1);
+        var days = Math.round((utc(cand) - utc(to)) / 86400000);
+        return { date: cand, days: days };
+      }
+
+      function tile(cls, label, value, sub) {
+        return '<div class="ac-tile ' + cls + '"><div class="ac-tile-label">' + label + '</div>' +
+          '<div class="ac-tile-value">' + value + '</div>' +
+          (sub ? '<div class="ac-tile-sub">' + sub + '</div>' : '') + '</div>';
+      }
+
+      function calculate(showErrors) {
+        var errorEl = el('acError');
+        var resultEl = el('acResult');
+        errorEl.textContent = '';
+
+        var from = parseIso(el('acFrom').value);
+        var to = parseIso(el('acTo').value);
+
+        if (!from || !to) {
+          if (showErrors) errorEl.textContent = 'দুটি তারিখই নির্বাচন করুন।';
+          resultEl.innerHTML = '<div class="ac-empty">জন্ম তারিখ ও শেষ তারিখ দিলে এখানে ফলাফল দেখা যাবে।</div>';
+          return;
+        }
+        if (utc(from) > utc(to)) {
+          errorEl.textContent = 'শুরুর তারিখ শেষ তারিখের পরে হতে পারে না।';
+          resultEl.innerHTML = '<div class="ac-empty">তারিখ ঠিক করুন।</div>';
+          return;
+        }
+
+        var r = diffYMD(from, to);
+        var totalDays = Math.round((utc(to) - utc(from)) / 86400000);
+        var totalMonths = r.y * 12 + r.m;
+        var weeks = Math.floor(totalDays / 7);
+        var restDays = totalDays % 7;
+        var weekday = AC_BN_WEEKDAYS[new Date(utc(from)).getUTCDay()];
+        var nb = nextBirthday(from, to);
+
+        var parts = [];
+        if (r.y) parts.push(bn(r.y) + ' বছর');
+        if (r.m) parts.push(bn(r.m) + ' মাস');
+        if (r.d || !parts.length) parts.push(bn(r.d) + ' দিন');
+
+        var nbValue, nbSub;
+        if (nb.days === 0) {
+          nbValue = '🎉 আজই!';
+          nbSub = bn(r.y) + ' বছর পূর্ণ হলো';
+        } else {
+          nbValue = bn(nb.days) + ' দিন পরে';
+          nbSub = fmt(nb.date) + ' — ' + bn(nb.date.y - from.y) + ' বছর পূর্ণ হবে';
+        }
+
+        resultEl.innerHTML =
+          '<div class="ac-hero">' +
+            '<div class="ac-hero-label">' + fmt(from) + ' থেকে ' + fmt(to) + ' পর্যন্ত</div>' +
+            '<div class="ac-hero-main">' + parts.join(' ') + '</div>' +
+            '<div class="ac-hero-note">অর্থাৎ ' + bn(r.y) + ' বছর, ' + bn(r.m) + ' মাস ও ' + bn(r.d) + ' দিন</div>' +
+          '</div>' +
+          '<div class="ac-grid">' +
+            tile('ac-t1', '📆 মোট মাস', num(totalMonths) + ' মাস', r.d ? 'আরও ' + bn(r.d) + ' দিন' : '') +
+            tile('ac-t2', '🗓️ মোট সপ্তাহ', num(weeks) + ' সপ্তাহ', restDays ? 'আরও ' + bn(restDays) + ' দিন' : '') +
+            tile('ac-t3', '☀️ মোট দিন', num(totalDays) + ' দিন', '') +
+            tile('ac-t4', '⏱️ মোট ঘণ্টা', num(totalDays * 24) + ' ঘণ্টা', '') +
+            tile('ac-t5', '🎂 পরবর্তী জন্মদিন', nbValue, nbSub) +
+            tile('ac-t6', '📅 শুরুর তারিখের বার', weekday, '') +
+          '</div>';
+      }
+
+      /* ---------- Events ---------- */
+      el('acTo').value = todayIso();
+
+      el('acCalc').addEventListener('click', function () { calculate(true); });
+      el('acFrom').addEventListener('change', function () { calculate(false); });
+      el('acTo').addEventListener('change', function () { calculate(false); });
+
+      el('acToday').addEventListener('click', function () {
+        el('acTo').value = todayIso();
+        calculate(false);
+      });
+
+      el('acReset').addEventListener('click', function () {
+        el('acFrom').value = '';
+        el('acTo').value = todayIso();
+        calculate(false);
+      });
+
+      el('acFromProfile').addEventListener('click', function () {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) return;
+        google.script.run
+          .withSuccessHandler(function (profile) {
+            var dob = profile && profile.DOB ? String(profile.DOB) : '';
+            if (!parseIso(dob)) {
+              showToast('ব্যক্তিগত তথ্যে জন্ম তারিখ পাওয়া যায়নি।', 'warning');
+              return;
+            }
+            el('acFrom').value = dob;
+            calculate(false);
+          })
+          .withFailureHandler(function () {
+            showToast('প্রোফাইল তথ্য লোড করা যায়নি।', 'danger');
+          })
+          .getProfile();
+      });
+    })();
 
     /* ---------- Initial load ---------- */
     function loadProfile() {
