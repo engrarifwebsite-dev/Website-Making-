@@ -1,6 +1,969 @@
 <section id="page-budget" class="page">
-  <div class="page-placeholder">
-    <h2>বাজেট ব্যবস্থাপনা</h2>
-    <p>এই পেজের কন্টেন্ট Phase 7-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       BUDGET MANAGEMENT  (সব ক্লাস bm- দিয়ে শুরু, #page-budget-এর ভেতরে সীমাবদ্ধ)
+       ========================================================= */
+    #page-budget {
+      --bm-blue: #0b3fbf;
+      --bm-title: #1a3fa8;
+      --bm-green: #16a34a;
+      --bm-red: #ef2b2b;
+      --bm-orange: #f97316;
+      --bm-amber: #f59e0b;
+      --bm-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-budget * { box-sizing: border-box; }
+
+    #page-budget .bm-card {
+      background: #fff;
+      border: 1px solid var(--bm-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-budget .bm-card-title { font-size: 16px; font-weight: 800; color: var(--bm-title); margin: 0; }
+    #page-budget .bm-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    /* ---------- মাস বদল ---------- */
+    #page-budget .bm-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 14px; }
+    #page-budget .bm-month { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--bm-line); border-radius: 10px; overflow: hidden; }
+    #page-budget .bm-month button { border: 0; background: #fff; padding: 8px 14px; font-size: 16px; cursor: pointer; color: var(--navy); font-family: inherit; }
+    #page-budget .bm-month button:hover { background: var(--accent-soft); }
+    #page-budget .bm-month-label { padding: 0 16px; font-weight: 700; font-size: 14px; color: var(--navy); min-width: 150px; text-align: center; }
+
+    #page-budget .bm-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-budget .bm-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-budget .bm-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    #page-budget .bm-body { transition: opacity .15s ease; }
+    #page-budget .bm-body.busy { opacity: .5; pointer-events: none; }
+
+    /* ---------- KPI ---------- */
+    #page-budget .bm-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+    #page-budget .bm-kpi-top { display: flex; align-items: center; gap: 14px; }
+    #page-budget .bm-kpi-ico { width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; }
+    #page-budget .bm-kpi-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-budget .bm-ico-green { background: #dcfce7; color: #16a34a; }
+    #page-budget .bm-ico-red { background: #fee2e2; color: #ef2b2b; }
+    #page-budget .bm-ico-blue { background: #dbeafe; color: #1d4ed8; }
+    #page-budget .bm-ico-purple { background: #ede9fe; color: #7c3aed; }
+    #page-budget .bm-ico-amber { background: #fef3c7; color: #d97706; }
+    #page-budget .bm-kpi-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    #page-budget .bm-kpi-value { margin-top: 2px; font-size: 24px; font-weight: 800; color: var(--navy); line-height: 1.25; white-space: nowrap; }
+    #page-budget .bm-kpi-sub { margin-top: 12px; font-size: 13px; color: var(--text-muted); }
+    #page-budget .bm-delta { margin-top: 14px; font-size: 13px; color: var(--text-muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    #page-budget .bm-delta b { font-weight: 800; }
+    #page-budget .bm-delta.good b { color: var(--bm-green); }
+    #page-budget .bm-delta.bad b { color: var(--bm-red); }
+    #page-budget .bm-kpi-goal { margin-top: 10px; font-size: 12.5px; color: var(--text-muted); }
+
+    /* ---------- বার / প্রগ্রেস ---------- */
+    #page-budget .bm-track { height: 7px; background: #e6eaf0; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    #page-budget .bm-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+    /* ---------- সারি ২ ---------- */
+    #page-budget .bm-row2 { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.4fr) minmax(210px, .8fr); gap: 16px; margin-bottom: 16px; }
+    #page-budget .bm-select { border: 1px solid var(--bm-line); background: #fff; border-radius: 9px; padding: 8px 12px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; }
+
+    #page-budget .bm-legend { display: flex; justify-content: center; gap: 18px; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    #page-budget .bm-legend i { display: inline-block; width: 22px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+    #page-budget .bm-chart svg { width: 100%; height: auto; display: block; }
+    #page-budget .bm-empty { text-align: center; color: var(--text-muted); font-size: 13.5px; padding: 30px 10px; }
+
+    #page-budget .bm-donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center; }
+    #page-budget .bm-donut { width: 190px; height: 190px; flex-shrink: 0; }
+    #page-budget .bm-donut svg { width: 100%; height: 100%; }
+    #page-budget .bm-legend-list { flex: 1; min-width: 200px; max-height: 240px; overflow-y: auto; }
+    #page-budget .bm-lg-row { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 10px; align-items: center; padding: 6px 0; font-size: 13px; }
+    #page-budget .bm-lg-dot { width: 12px; height: 12px; border-radius: 4px; }
+    #page-budget .bm-lg-name { color: var(--text); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #page-budget .bm-lg-amt { font-weight: 700; color: var(--navy); }
+    #page-budget .bm-lg-pct { color: var(--text-muted); min-width: 52px; text-align: right; }
+    #page-budget .bm-more { display: block; margin: 14px auto 0; }
+
+    #page-budget .bm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding: 11px 16px; border: 1px solid var(--bm-line); background: #fff; color: var(--text); }
+    #page-budget .bm-btn:hover { background: #f4f7fc; }
+    #page-budget .bm-btn-primary { background: var(--bm-blue); border-color: var(--bm-blue); color: #fff; font-size: 15px; padding: 14px 16px; }
+    #page-budget .bm-btn-primary:hover { background: #0a35a3; }
+    #page-budget .bm-btn-sm { padding: 7px 16px; font-size: 13px; color: var(--bm-blue); border-color: #c7d5f5; }
+    #page-budget .bm-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    #page-budget .bm-actions-list { display: flex; flex-direction: column; gap: 10px; }
+    #page-budget .bm-actions-list .bm-btn { justify-content: flex-start; }
+    #page-budget .bm-actions-list .bm-btn-primary { justify-content: center; }
+
+    /* ---------- সারি ৩ ---------- */
+    #page-budget .bm-row3 { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .9fr); gap: 16px; align-items: start; }
+    #page-budget .bm-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+    #page-budget .bm-table-wrap { overflow-x: auto; border: 1px solid var(--bm-line); border-radius: 10px; }
+    #page-budget table.bm-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; }
+    #page-budget .bm-table th { background: #f4f7fc; color: var(--text-muted); font-weight: 700; font-size: 12.5px; padding: 12px 12px; text-align: center; border-bottom: 1px solid var(--bm-line); white-space: nowrap; }
+    #page-budget .bm-table th:first-child, #page-budget .bm-table td:first-child { text-align: left; }
+    #page-budget .bm-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--bm-line); color: var(--text); font-weight: 600; white-space: nowrap; }
+    #page-budget .bm-table tr:last-child td { border-bottom: 0; }
+    #page-budget .bm-table tfoot td { background: #f8fafc; font-weight: 800; border-top: 1px solid var(--bm-line); }
+    #page-budget .bm-cat { display: flex; align-items: center; gap: 10px; }
+    #page-budget .bm-cat-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+    #page-budget .bm-neg { color: var(--bm-red); }
+    #page-budget .bm-use { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+    #page-budget .bm-use-pct { min-width: 56px; text-align: left; font-weight: 800; font-size: 12.5px; }
+    #page-budget .bm-use .bm-track { flex: 1; margin: 0; height: 7px; }
+    #page-budget .st-red { color: var(--bm-red); }
+    #page-budget .st-orange { color: var(--bm-orange); }
+    #page-budget .st-amber { color: var(--bm-amber); }
+    #page-budget .st-green { color: var(--bm-green); }
+    #page-budget .bm-fill.st-red { background: linear-gradient(90deg, #f87171, #ef2b2b); }
+    #page-budget .bm-fill.st-orange { background: linear-gradient(90deg, #fb923c, #f97316); }
+    #page-budget .bm-fill.st-amber { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+    #page-budget .bm-fill.st-green { background: linear-gradient(90deg, #22c55e, #16a34a); }
+
+    #page-budget .bm-iconbtn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid transparent; cursor: pointer; display: inline-grid; place-items: center; }
+    #page-budget .bm-iconbtn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-budget .bm-iconbtn.edit { background: #eaf1ff; color: #2563eb; border-color: #cfe0ff; }
+    #page-budget .bm-iconbtn.del { background: #fee9e9; color: #dc2626; border-color: #fbcaca; }
+    #page-budget .bm-iconbtn:hover { filter: brightness(.96); }
+    #page-budget .bm-actcol { display: inline-flex; gap: 8px; }
+
+    /* ---------- লক্ষ্য ট্র্যাকার ---------- */
+    #page-budget .bm-goal-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--bm-line); font-size: 14px; color: var(--text); }
+    #page-budget .bm-goal-row:last-of-type { border-bottom: 0; }
+    #page-budget .bm-goal-row b { font-weight: 800; font-size: 15px; color: var(--navy); }
+    #page-budget .bm-goal-row b.pos { color: var(--bm-green); }
+    #page-budget .bm-goal-row b.neg { color: var(--bm-red); }
+    #page-budget .bm-goal-bar { padding: 4px 0 8px; }
+    #page-budget .bm-goal-bar .bm-track { height: 7px; margin: 0; }
+
+    /* ---------- সাম্প্রতিক কার্যক্রম ---------- */
+    #page-budget .bm-act { display: grid; grid-template-columns: 38px 1fr auto auto 18px; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--bm-line); border-radius: 10px; margin-bottom: 8px; font-size: 13.5px; }
+    #page-budget .bm-act-ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 16px; }
+    #page-budget .bm-act-title { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #page-budget .bm-act-amt { font-weight: 700; color: var(--navy); white-space: nowrap; }
+    #page-budget .bm-act-date { color: var(--text-muted); font-size: 12.5px; white-space: nowrap; }
+    #page-budget .bm-act-arrow { font-weight: 800; font-size: 16px; }
+    #page-budget .bm-act-arrow.out { color: var(--bm-red); }
+    #page-budget .bm-act-arrow.in { color: var(--bm-green); }
+    #page-budget .bm-link { background: none; border: 0; padding: 6px 0 0; color: var(--bm-blue); font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    #page-budget .bm-link:hover { text-decoration: underline; }
+
+    /* ---------- মোডালের ভেতরের অংশ ---------- */
+    .bm-m-list-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+    .bm-m-list-row:last-child { border-bottom: 0; }
+    .bm-m-grow { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bm-m-muted { color: var(--text-muted); font-size: 12.5px; }
+    .bm-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 5px 10px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .bm-m-mini.danger { color: var(--danger); }
+    .bm-m-note { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; }
+    .bm-m-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .bm-m-table th, .bm-m-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: right; }
+    .bm-m-table th:first-child, .bm-m-table td:first-child { text-align: left; }
+
+    /* ---------- রেসপনসিভ ---------- */
+    @media (max-width: 1280px) {
+      #page-budget .bm-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #page-budget .bm-row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      #page-budget .bm-actions-card { grid-column: 1 / -1; }
+      #page-budget .bm-actions-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+    }
+    @media (max-width: 1000px) {
+      #page-budget .bm-row3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 820px) {
+      #page-budget .bm-row2 { grid-template-columns: 1fr; }
+      #page-budget .bm-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+      #page-budget .bm-kpis { grid-template-columns: 1fr; }
+      #page-budget .bm-act { grid-template-columns: 34px 1fr auto 16px; }
+      #page-budget .bm-act-date { display: none; }
+      #page-budget .bm-toolbar { justify-content: center; }
+    }
+  </style>
+
+  <div class="bm-toolbar">
+    <div class="bm-month">
+      <button type="button" data-act="prev-month" aria-label="আগের মাস">‹</button>
+      <div class="bm-month-label" id="bmMonthLabel">লোড হচ্ছে...</div>
+      <button type="button" data-act="next-month" aria-label="পরের মাস">›</button>
+    </div>
   </div>
+
+  <div class="bm-error" id="bmError"><span id="bmErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+
+  <div class="bm-body" id="bmBody">
+
+    <!-- ৫টি সারসংক্ষেপ কার্ড -->
+    <div class="bm-kpis" id="bmKpis"></div>
+
+    <div class="bm-row2">
+      <div class="bm-card">
+        <div class="bm-card-head">
+          <h3 class="bm-card-title" id="bmChartTitle">আয় বনাম ব্যয়</h3>
+          <select class="bm-select" id="bmTrend" aria-label="চার্টের সময়কাল">
+            <option value="5">মাসিক ভিউ (৫ মাস)</option>
+            <option value="6">মাসিক ভিউ (৬ মাস)</option>
+            <option value="12">মাসিক ভিউ (১২ মাস)</option>
+          </select>
+        </div>
+        <div class="bm-legend">
+          <span><i style="background:#16a34a"></i>আয়</span>
+          <span><i style="background:#ef2b2b"></i>ব্যয়</span>
+          <span><i style="background:#1d4ed8"></i>সঞ্চয়</span>
+        </div>
+        <div class="bm-chart" id="bmChart"></div>
+      </div>
+
+      <div class="bm-card">
+        <div class="bm-card-head"><h3 class="bm-card-title">ব্যয়ের ক্যাটাগরি বিশ্লেষণ</h3></div>
+        <div id="bmDonut"></div>
+      </div>
+
+      <div class="bm-card bm-actions-card">
+        <div class="bm-card-head"><h3 class="bm-card-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
+        <div class="bm-actions-list">
+          <button type="button" class="bm-btn bm-btn-primary" data-act="add-budget">＋ নতুন বাজেট যোগ করুন</button>
+          <button type="button" class="bm-btn" data-act="manage-cats">
+            <svg viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h10"/><circle cx="18" cy="6" r="2"/><circle cx="8" cy="18" r="0.1"/></svg>
+            ক্যাটাগরি ব্যবস্থাপনা
+          </button>
+          <button type="button" class="bm-btn" data-act="set-goal">
+            <svg viewBox="0 0 24 24" style="color:#1d4ed8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+            বাজেট লক্ষ্য সেট করুন
+          </button>
+          <button type="button" class="bm-btn" data-act="pdf">
+            <svg viewBox="0 0 24 24" style="color:#dc2626"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+            বাজেট রিপোর্ট (PDF)
+          </button>
+          <button type="button" class="bm-btn" data-act="excel">
+            <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>
+            এক্সেল এক্সপোর্ট (Excel)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bm-row3">
+      <div class="bm-card">
+        <div class="bm-card-head"><h3 class="bm-card-title" style="color:var(--navy)">বাজেট ক্যাটাগরি তালিকা</h3></div>
+        <div id="bmTable"></div>
+      </div>
+
+      <div class="bm-side">
+        <div class="bm-card">
+          <div class="bm-card-head"><h3 class="bm-card-title" style="color:var(--navy)">🎯 বাজেট লক্ষ্য ট্র্যাকার</h3></div>
+          <div id="bmGoal"></div>
+        </div>
+        <div class="bm-card">
+          <div class="bm-card-head">
+            <h3 class="bm-card-title">সাম্প্রতিক কার্যক্রম</h3>
+            <button type="button" class="bm-btn bm-btn-sm" data-act="add-txn">＋ আয়/ব্যয় যোগ</button>
+          </div>
+          <div id="bmRecent"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__budgetInit) return;
+      window.__budgetInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+
+      /* ছবির মতো ইংরেজি সংখ্যা (৳ 85,000)। বাংলা সংখ্যা চাইলে নিচের মান true করুন। */
+      var USE_BN_DIGITS = false;
+
+      var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      var PALETTE = ['#1d4ed8', '#ef4444', '#f59e0b', '#64748b', '#0ea5e9', '#ec4899', '#10b981', '#8b5cf6', '#14b8a6', '#f97316'];
+
+      var CAT_ICONS = [
+        [/ভাড়া|বাসা|ঘর/, '🏠', '#ede9fe'],
+        [/খাবার|বাজার|খাদ্য|রান্না/, '🍽️', '#dcfce7'],
+        [/যাতায়াত|গাড়ি|পরিবহন|ভ্রমণ খরচ/, '🚗', '#dbeafe'],
+        [/বিদ্যুৎ|বিল|গ্যাস|পানি|ইন্টারনেট|মোবাইল/, '💡', '#e0f2fe'],
+        [/শিক্ষা|স্কুল|পড়া|কোচিং/, '🎓', '#dbeafe'],
+        [/স্বাস্থ্য|চিকিৎসা|ওষুধ|ডাক্তার/, '🩺', '#dcfce7'],
+        [/বিনোদন|ঘুরা|ঘোরা|ভ্রমণ/, '🎉', '#fee2e2'],
+        [/সঞ্চয়|বিনিয়োগ/, '🐷', '#fce7f3'],
+        [/অন্যান্য|ক্যাটাগরিহীন/, '📦', '#ede9fe']
+      ];
+
+      var state = { monthKey: nowKey(), trend: 5, data: null, reqId: 0, loadedAt: 0, everLoaded: false };
+
+      /* ---------- helpers ---------- */
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-budget'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function digits(v) { return USE_BN_DIGITS ? bn(v) : String(v); }
+      function money(n) {
+        n = Number(n) || 0;
+        var s = Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+        return (n < 0 ? '-' : '') + '৳ ' + digits(s);
+      }
+      function pctText(p) {
+        if (p === null || p === undefined || !isFinite(p)) return '—';
+        return digits(p === 100 ? '100%' : p.toFixed(2) + '%');
+      }
+      function nowKey() {
+        var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit' }).formatToParts(new Date());
+        var y = '', m = '';
+        parts.forEach(function (p) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; });
+        return y + '-' + m;
+      }
+      function todayIso() {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+      }
+      function nowTime() {
+        return new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date());
+      }
+      function shiftKey(key, delta) {
+        var p = key.split('-');
+        var idx = Number(p[0]) * 12 + (Number(p[1]) - 1) + delta;
+        var y = Math.floor(idx / 12), m = (idx % 12) + 1;
+        return y + '-' + ('0' + m).slice(-2);
+      }
+      function monthName(key) { return BN_MONTHS[Number(key.split('-')[1]) - 1]; }
+      function monthTitle(key) { return monthName(key) + ' ' + bn(key.split('-')[0]); }
+      function dispDate(s) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+        return m ? digits(m[3] + '/' + m[2] + '/' + m[1]) : esc(s || '');
+      }
+      function catIcon(name) {
+        var n = String(name || '');
+        for (var i = 0; i < CAT_ICONS.length; i++) {
+          if (CAT_ICONS[i][0].test(n)) return { e: CAT_ICONS[i][1], bg: CAT_ICONS[i][2] };
+        }
+        return { e: '🏷️', bg: '#f1f5f9' };
+      }
+      function status(pct, warn, crit) {
+        if (pct >= 100) return 'red';
+        if (pct >= crit) return 'orange';
+        if (pct >= warn) return 'amber';
+        return 'green';
+      }
+      function changePct(cur, prev) {
+        if (!prev || prev <= 0) return null;
+        return (cur - prev) / prev * 100;
+      }
+      function findCat(id) {
+        var list = (state.data && state.data.categories) || [];
+        for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+        return null;
+      }
+      function call(fnName, args, ok, fail) {
+        var runner = google.script.run
+          .withSuccessHandler(ok || function () {})
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger');
+            if (fail) fail(err);
+          });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('bmBody').classList.toggle('busy', !!b); }
+      function showError(msg) {
+        el('bmErrorText').textContent = msg;
+        el('bmError').classList.add('show');
+      }
+      function hideError() { el('bmError').classList.remove('show'); }
+
+      /* ---------- data load ---------- */
+      function load() {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        var id = ++state.reqId;
+        el('bmMonthLabel').textContent = monthTitle(state.monthKey);
+        hideError();
+        setBusy(true);
+
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return; // পুরনো অনুরোধের উত্তর বাদ
+            state.data = d;
+            state.loadedAt = Date.now();
+            state.everLoaded = true;
+            setBusy(false);
+            render();
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'বাজেটের তথ্য লোড করা যায়নি।');
+          })
+          .getBudgetDashboard(token, state.monthKey, state.trend);
+      }
+
+      function render() {
+        var d = state.data;
+        if (!d) return;
+        el('bmMonthLabel').textContent = monthTitle(d.monthKey);
+        el('bmChartTitle').textContent = 'আয় বনাম ব্যয় (' + monthName(d.monthKey) + ', ' + bn(d.year) + ')';
+        renderKpis(d);
+        renderChart(d);
+        renderDonut(d);
+        renderTable(d);
+        renderGoal(d);
+        renderRecent(d);
+      }
+
+      /* ---------- KPI cards ---------- */
+      var SVG = {
+        income: '<svg viewBox="0 0 24 24"><path d="M12 3v11m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg>',
+        expense: '<svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h13v3"/><path d="M3 8v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1H5a2 2 0 0 1-2-1z"/><circle cx="16.5" cy="14.5" r="1"/></svg>',
+        savings: '<svg viewBox="0 0 24 24"><path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4z"/><path d="M4 7l2-3h9"/><circle cx="16" cy="13.5" r="1.3"/></svg>',
+        goal: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg>',
+        coins: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>'
+      };
+
+      function deltaHtml(cur, prev, upIsGood) {
+        var c = changePct(cur, prev);
+        if (c === null) return '<div class="bm-delta">গত মাসের তথ্য নেই</div>';
+        var up = c >= 0;
+        var good = up === upIsGood;
+        return '<div class="bm-delta ' + (good ? 'good' : 'bad') + '"><b>' + (up ? '↑' : '↓') + ' ' + digits(Math.abs(Math.round(c))) + '%</b><span>গত মাসের তুলনায়</span></div>';
+      }
+
+      function kpi(iconCls, svg, label, value, sub, extra) {
+        return '<div class="bm-card"><div class="bm-kpi-top"><div class="bm-kpi-ico ' + iconCls + '">' + svg + '</div>' +
+          '<div><div class="bm-kpi-label">' + label + '</div><div class="bm-kpi-value">' + value + '</div></div></div>' +
+          (sub ? '<div class="bm-kpi-sub">' + sub + '</div>' : '') + (extra || '') + '</div>';
+      }
+
+      function renderKpis(d) {
+        var goalPct = d.goal > 0 ? d.savings / d.goal * 100 : null;
+        var goalExtra;
+        if (goalPct === null) {
+          goalExtra = '<div class="bm-kpi-goal">এই মাসের লক্ষ্য সেট করা হয়নি</div>';
+        } else {
+          goalExtra = '<div class="bm-kpi-goal">লক্ষ্যের ' + digits(Math.round(Math.max(goalPct, 0))) + '% অর্জিত</div>' +
+            '<div class="bm-track"><div class="bm-fill" style="width:' + Math.max(0, Math.min(goalPct, 100)) + '%"></div></div>';
+        }
+        var remaining = d.budgetTotal - d.expense;
+
+        el('bmKpis').innerHTML =
+          kpi('bm-ico-green', SVG.income, 'মোট আয়', money(d.income), 'এই মাসের মোট আয়', deltaHtml(d.income, d.prev.income, true)) +
+          kpi('bm-ico-red', SVG.expense, 'মোট ব্যয়', money(d.expense), 'এই মাসের মোট ব্যয়', deltaHtml(d.expense, d.prev.expense, false)) +
+          kpi('bm-ico-blue', SVG.savings, 'মোট সঞ্চয়', money(d.savings), 'এই মাসের সঞ্চয়', deltaHtml(d.savings, d.prev.savings, true)) +
+          kpi('bm-ico-purple', SVG.goal, 'বাজেট লক্ষ্য', money(d.goal), 'এই মাসের সঞ্চয়ের লক্ষ্য', goalExtra) +
+          kpi('bm-ico-amber', SVG.coins, 'অবশিষ্ট বাজেট', money(remaining),
+            d.budgetTotal > 0 ? (remaining >= 0 ? 'মোট বাজেটের অবশিষ্ট' : 'মোট বাজেট ছাড়িয়ে গেছে') : 'বাজেট সেট করা হয়নি');
+      }
+
+      /* ---------- আয় বনাম ব্যয় চার্ট ---------- */
+      function niceMax(v) {
+        if (v <= 0) return 1000;
+        var p = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
+        var f = v / p;
+        var nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+        return nf * p;
+      }
+
+      function renderChart(d) {
+        var trend = d.trend || [];
+        var host = el('bmChart');
+        var maxVal = 0;
+        trend.forEach(function (t) { maxVal = Math.max(maxVal, t.income, t.expense, t.savings); });
+        if (maxVal <= 0) {
+          host.innerHTML = '<div class="bm-empty">চার্ট দেখাতে আয় বা ব্যয়ের কোনো এন্ট্রি নেই।</div>';
+          return;
+        }
+
+        var max = niceMax(maxVal);
+        var W = 560, H = 300, L = 84, R = 8, T = 10, B = 34;
+        var pw = W - L - R, ph = H - T - B;
+        var n = trend.length;
+        var gw = pw / n;
+        var bw = Math.min(26, gw * 0.22);
+        var gap = Math.max(2, bw * 0.16);
+        var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="আয় ব্যয় ও সঞ্চয়ের মাসভিত্তিক চার্ট">';
+
+        for (var g = 0; g <= 5; g++) {
+          var y = T + ph - (ph * g / 5);
+          svg += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#e5e9f0" stroke-width="1"/>';
+          svg += '<text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="#64748b">' + money(max * g / 5) + '</text>';
+        }
+
+        trend.forEach(function (t, i) {
+          var gx = L + gw * i + gw / 2;
+          var startX = gx - (bw * 3 + gap * 2) / 2;
+          [['income', '#16a34a', 'আয়'], ['expense', '#ef2b2b', 'ব্যয়'], ['savings', '#1d4ed8', 'সঞ্চয়']].forEach(function (s, k) {
+            var val = Math.max(0, t[s[0]]);
+            var h = ph * val / max;
+            var x = startX + k * (bw + gap);
+            svg += '<rect x="' + x + '" y="' + (T + ph - h) + '" width="' + bw + '" height="' + h + '" rx="2" fill="' + s[1] + '"><title>' +
+              esc(t.name + ' — ' + s[2] + ': ' + money(t[s[0]])) + '</title></rect>';
+          });
+          svg += '<text x="' + gx + '" y="' + (H - 12) + '" text-anchor="middle" font-size="' + (n > 6 ? 10 : 12) + '" fill="#334155">' + esc(t.name) + '</text>';
+        });
+
+        host.innerHTML = svg + '</svg>';
+      }
+
+      /* ---------- ডোনাট ---------- */
+      function spentRows(d) {
+        return d.categories.filter(function (c) { return c.spent > 0; });
+      }
+
+      function renderDonut(d) {
+        var host = el('bmDonut');
+        var rows = spentRows(d);
+        var total = d.expense;
+
+        if (!rows.length || total <= 0) {
+          host.innerHTML = '<div class="bm-empty">এই মাসে কোনো ব্যয় নেই।</div>';
+          return;
+        }
+
+        var r = 68, c = 2 * Math.PI * r, offset = 0;
+        var svg = '<svg viewBox="0 0 180 180" role="img" aria-label="ব্যয়ের ক্যাটাগরিভিত্তিক ভাগ">' +
+          '<circle cx="90" cy="90" r="' + r + '" fill="none" stroke="#eef1f6" stroke-width="26"/>';
+        var legend = '';
+
+        rows.forEach(function (row, i) {
+          var frac = row.spent / total;
+          var dash = frac * c;
+          var color = PALETTE[i % PALETTE.length];
+          var visible = rows.length > 1 ? Math.max(dash - 1.5, 0.5) : dash;
+          svg += '<circle cx="90" cy="90" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="26" ' +
+            'stroke-dasharray="' + visible + ' ' + (c - visible) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 90 90)"><title>' +
+            esc(row.name + ': ' + money(row.spent)) + '</title></circle>';
+          offset += dash;
+          legend += '<div class="bm-lg-row"><span class="bm-lg-dot" style="background:' + color + '"></span>' +
+            '<span class="bm-lg-name">' + esc(row.name) + '</span>' +
+            '<span class="bm-lg-amt">' + money(row.spent) + '</span>' +
+            '<span class="bm-lg-pct">' + pctText(frac * 100) + '</span></div>';
+        });
+
+        svg += '<text x="90" y="84" text-anchor="middle" font-size="11" fill="#475569">মোট ব্যয়</text>' +
+          '<text x="90" y="104" text-anchor="middle" font-size="15" font-weight="800" fill="#10233F">' + money(total) + '</text></svg>';
+
+        host.innerHTML = '<div class="bm-donut-wrap"><div class="bm-donut">' + svg + '</div>' +
+          '<div class="bm-legend-list">' + legend + '</div></div>' +
+          '<button type="button" class="bm-btn bm-btn-sm bm-more" data-act="details">বিস্তারিত দেখুন</button>';
+      }
+
+      /* ---------- ক্যাটাগরি তালিকা ---------- */
+      var ICON_EDIT = '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+      var ICON_DEL = '<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>';
+
+      function renderTable(d) {
+        var host = el('bmTable');
+        if (!d.categories.length) {
+          host.innerHTML = '<div class="bm-empty">এই মাসের জন্য কোনো বাজেট ক্যাটাগরি নেই।<br><br>' +
+            '<button type="button" class="bm-btn bm-btn-primary" style="display:inline-flex" data-act="add-budget">＋ নতুন বাজেট যোগ করুন</button> ' +
+            '<button type="button" class="bm-btn" data-act="copy-prev">গত মাসের বাজেট কপি করুন</button></div>';
+          return;
+        }
+
+        var totalBudget = 0, totalSpent = 0;
+        var rows = d.categories.map(function (c) {
+          totalBudget += c.budget;
+          totalSpent += c.spent;
+          var ic = catIcon(c.name);
+          var remaining = c.budget - c.spent;
+          var pct = c.budget > 0 ? c.spent / c.budget * 100 : null;
+          var st = pct === null ? (c.spent > 0 ? 'red' : 'green') : status(pct, c.warn, c.crit);
+          var use = pct === null
+            ? '<span class="bm-use-pct st-' + st + '">—</span>'
+            : '<span class="bm-use-pct st-' + st + '">' + pctText(pct) + '</span>' +
+              '<div class="bm-track"><div class="bm-fill st-' + st + '" style="width:' + Math.min(pct, 100) + '%"></div></div>';
+
+          return '<tr>' +
+            '<td><div class="bm-cat"><span class="bm-cat-ico" style="background:' + ic.bg + '">' + ic.e + '</span>' + esc(c.name) + '</div></td>' +
+            '<td>' + money(c.budget) + '</td>' +
+            '<td>' + money(c.spent) + '</td>' +
+            '<td class="' + (remaining < 0 ? 'bm-neg' : '') + '">' + money(remaining) + '</td>' +
+            '<td><div class="bm-use">' + use + '</div></td>' +
+            '<td>' + (c.uncat ? '' :
+              '<span class="bm-actcol"><button type="button" class="bm-iconbtn edit" data-act="edit-cat" data-id="' + esc(c.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
+              '<button type="button" class="bm-iconbtn del" data-act="del-cat" data-id="' + esc(c.id) + '" title="মুছুন">' + ICON_DEL + '</button></span>') + '</td>' +
+            '</tr>';
+        }).join('');
+
+        var totalPct = totalBudget > 0 ? totalSpent / totalBudget * 100 : null;
+
+        host.innerHTML = '<div class="bm-table-wrap"><table class="bm-table"><thead><tr>' +
+          '<th>ক্যাটাগরি</th><th>বাজেট (৳)</th><th>ব্যয় (৳)</th><th>অবশিষ্ট (৳)</th><th>ব্যবহার (%)</th><th>অ্যাকশন</th></tr></thead><tbody>' +
+          rows + '</tbody><tfoot><tr><td>মোট</td><td>' + money(totalBudget) + '</td><td>' + money(totalSpent) + '</td><td class="' +
+          (totalBudget - totalSpent < 0 ? 'bm-neg' : '') + '">' + money(totalBudget - totalSpent) + '</td><td>' + pctText(totalPct) + '</td><td></td></tr></tfoot></table></div>';
+      }
+
+      /* ---------- লক্ষ্য ট্র্যাকার ---------- */
+      function renderGoal(d) {
+        var host = el('bmGoal');
+        if (!(d.goal > 0)) {
+          host.innerHTML = '<div class="bm-empty" style="padding:14px 6px">এই মাসের সঞ্চয়ের লক্ষ্য এখনো ঠিক করা হয়নি।<br><br>' +
+            '<button type="button" class="bm-btn bm-btn-sm" data-act="set-goal">লক্ষ্য সেট করুন</button></div>';
+          return;
+        }
+        var pct = d.savings / d.goal * 100;
+        var diff = d.savings - d.goal;
+        host.innerHTML =
+          '<div class="bm-goal-row"><span>এই মাসের লক্ষ্য</span><b>' + money(d.goal) + '</b></div>' +
+          '<div class="bm-goal-row"><span>এখন পর্যন্ত সঞ্চয়</span><b>' + money(d.savings) + '</b></div>' +
+          '<div class="bm-goal-row"><span>লক্ষ্যের অর্জন</span><b class="' + (pct >= 100 ? 'pos' : '') + '">' + pctText(pct) + '</b></div>' +
+          '<div class="bm-goal-bar"><div class="bm-track"><div class="bm-fill" style="width:' + Math.max(0, Math.min(pct, 100)) + '%"></div></div></div>' +
+          '<div class="bm-goal-row"><span>' + (diff >= 0 ? 'লক্ষ্যের অতিরিক্ত' : 'লক্ষ্যের ঘাটতি') + '</span><b class="' + (diff >= 0 ? 'pos' : 'neg') + '">' + money(Math.abs(diff)) + '</b></div>';
+      }
+
+      /* ---------- সাম্প্রতিক কার্যক্রম ---------- */
+      function txnRowHtml(t, withDelete) {
+        var isIn = t.type === 'income';
+        var ic = isIn ? { e: '💰', bg: '#dcfce7' } : catIcon(t.categoryName || t.title);
+        return '<div class="bm-act">' +
+          '<span class="bm-act-ico" style="background:' + ic.bg + '">' + ic.e + '</span>' +
+          '<span class="bm-act-title" title="' + esc(t.title) + '">' + esc(t.title) + '</span>' +
+          '<span class="bm-act-amt">' + money(t.amount) + '</span>' +
+          '<span class="bm-act-date">' + dispDate(t.date) + '</span>' +
+          (withDelete
+            ? '<button type="button" class="bm-m-mini danger" data-del-txn="' + esc(t.id) + '" data-type="' + t.type + '" title="মুছুন">✕</button>'
+            : '<span class="bm-act-arrow ' + (isIn ? 'in' : 'out') + '">' + (isIn ? '↑' : '↓') + '</span>') +
+          '</div>';
+      }
+
+      function renderRecent(d) {
+        var host = el('bmRecent');
+        var list = d.transactions || [];
+        if (!list.length) {
+          host.innerHTML = '<div class="bm-empty" style="padding:14px 6px">এই মাসে কোনো আয় বা ব্যয় যোগ করা হয়নি।</div>';
+          return;
+        }
+        host.innerHTML = list.slice(0, 3).map(function (t) { return txnRowHtml(t, false); }).join('') +
+          '<button type="button" class="bm-link" data-act="all-txn">সব কার্যক্রম দেখুন →</button>';
+      }
+
+      /* =====================================================
+         মোডাল: ক্যাটাগরি
+         ===================================================== */
+      function openCategoryModal(cat) {
+        var edit = !!cat;
+        var c = cat || { id: '', name: '', budget: '', warn: 80, crit: 95 };
+
+        var body =
+          '<div class="form-row"><label>ক্যাটাগরির নাম *</label><input type="text" class="form-input" id="bmcName" value="' + esc(c.name) + '"></div>' +
+          '<div class="form-row"><label>মাসিক বাজেট (৳) *</label><input type="number" min="0" step="any" class="form-input" id="bmcBudget" value="' + esc(c.budget) + '"></div>' +
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>সতর্কতা সীমা (%)</label><input type="number" min="1" step="any" class="form-input" id="bmcWarn" value="' + esc(c.warn) + '"></div>' +
+            '<div class="form-row"><label>সংকটকালীন সীমা (%)</label><input type="number" min="1" step="any" class="form-input" id="bmcCrit" value="' + esc(c.crit) + '"></div>' +
+          '</div>' +
+          '<div class="bm-m-note">ব্যবহার সতর্কতা সীমা ছাড়ালে বার হলুদ, সংকটকালীন সীমা ছাড়ালে কমলা এবং ১০০% হলে লাল হবে। বাজেটটি শুধু ' + esc(monthTitle(state.monthKey)) + ' মাসের জন্য।</div>';
+
+        showModal(edit ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন বাজেট যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitCategory(c.id); } }
+        ]);
+      }
+
+      function submitCategory(id) {
+        var name = el('bmcName').value.trim();
+        if (!name) { showToast('ক্যাটাগরির নাম লিখুন।', 'warning'); return; }
+        if (el('bmcBudget').value === '') { showToast('বাজেটের পরিমাণ লিখুন।', 'warning'); return; }
+
+        call('saveBudgetCategory', [getToken(), state.monthKey, {
+          id: id, name: name, budget: el('bmcBudget').value, warn: el('bmcWarn').value, crit: el('bmcCrit').value
+        }], function () {
+          hideModal();
+          showToast('ক্যাটাগরি সংরক্ষণ হয়েছে।', 'success');
+          load();
+        });
+      }
+
+      function openManageModal() {
+        var cats = ((state.data && state.data.categories) || []).filter(function (c) { return !c.uncat; });
+        var rows = cats.length ? cats.map(function (c) {
+          var ic = catIcon(c.name);
+          return '<div class="bm-m-list-row"><span class="bm-cat-ico" style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:' + ic.bg + '">' + ic.e + '</span>' +
+            '<span class="bm-m-grow">' + esc(c.name) + '</span><span class="bm-m-muted">' + money(c.budget) + '</span>' +
+            '<button type="button" class="bm-m-mini" data-m-edit="' + esc(c.id) + '">সম্পাদনা</button>' +
+            '<button type="button" class="bm-m-mini danger" data-m-del="' + esc(c.id) + '">মুছুন</button></div>';
+        }).join('') : '<div class="bm-empty">এই মাসে কোনো ক্যাটাগরি নেই।</div>';
+
+        showModal('ক্যাটাগরি ব্যবস্থাপনা', rows, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ নতুন ক্যাটাগরি', className: 'btn-primary', onClick: function () { openCategoryModal(null); } }
+        ]);
+
+        var body = el('modalBody');
+        body.onclick = function (e) {
+          var ed = e.target.closest('[data-m-edit]');
+          if (ed) { openCategoryModal(findCat(ed.getAttribute('data-m-edit'))); return; }
+          var dl = e.target.closest('[data-m-del]');
+          if (dl) confirmDeleteCategory(dl.getAttribute('data-m-del'));
+        };
+      }
+
+      function confirmDeleteCategory(id) {
+        var c = findCat(id);
+        if (!c) return;
+        var extra = c.spent > 0 ? ' এই ক্যাটাগরির ' + esc(money(c.spent)) + ' ব্যয় মুছবে না, "ক্যাটাগরিহীন" হিসেবে থাকবে।' : '';
+        confirmDialog('"' + esc(c.name) + '" ক্যাটাগরিটি এই মাসের বাজেট থেকে মুছে ফেলবেন?' + extra, function () {
+          call('deleteBudgetCategory', [getToken(), state.monthKey, id], function () {
+            showToast('ক্যাটাগরি মুছে ফেলা হয়েছে।', 'success');
+            load();
+          });
+        });
+      }
+
+      /* =====================================================
+         মোডাল: লক্ষ্য
+         ===================================================== */
+      function openGoalModal() {
+        var cur = (state.data && state.data.goal) || '';
+        var body = '<div class="form-row"><label>' + esc(monthTitle(state.monthKey)) + ' মাসের সঞ্চয়ের লক্ষ্য (৳)</label>' +
+          '<input type="number" min="0" step="any" class="form-input" id="bmgAmount" value="' + esc(cur) + '"></div>' +
+          '<div class="bm-m-note">মোট সঞ্চয় = মোট আয় − মোট ব্যয়। এই লক্ষ্যের সাথে তুলনা করে অর্জন দেখানো হয়।</div>';
+
+        showModal('বাজেট লক্ষ্য সেট করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+              var v = el('bmgAmount').value;
+              if (v === '' || Number(v) < 0) { showToast('সঠিক পরিমাণ লিখুন।', 'warning'); return; }
+              call('setBudgetGoal', [getToken(), state.monthKey, v], function () {
+                hideModal();
+                showToast('লক্ষ্য সংরক্ষণ হয়েছে।', 'success');
+                load();
+              });
+          } }
+        ]);
+      }
+
+      /* =====================================================
+         মোডাল: আয় / ব্যয় যোগ
+         ===================================================== */
+      function openTxnModal() {
+        var d = state.data;
+        var cats = (d && d.categories || []).filter(function (c) { return !c.uncat; });
+        var catOpts = '<option value="">— ক্যাটাগরি নির্বাচন করুন —</option>' + cats.map(function (c) {
+          return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
+        }).join('');
+
+        var defDate = todayIso();
+        if (defDate.substring(0, 7) !== state.monthKey) defDate = state.monthKey + '-01';
+
+        var body =
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>ধরন</label><select class="form-input" id="bmtType"><option value="expense">ব্যয়</option><option value="income">আয়</option></select></div>' +
+            '<div class="form-row"><label>তারিখ</label><input type="date" class="form-input" id="bmtDate" value="' + defDate + '"></div>' +
+            '<div class="form-row"><label>পরিমাণ (৳) *</label><input type="number" min="0" step="any" class="form-input" id="bmtAmount"></div>' +
+            '<div class="form-row" id="bmtCatRow"><label>ক্যাটাগরি</label><select class="form-input" id="bmtCat">' + catOpts + '</select></div>' +
+            '<div class="form-row span-2" id="bmtDescRow"><label>বিবরণ</label><input type="text" class="form-input" id="bmtDesc" placeholder="যেমন: বাজার খরচ"></div>' +
+            '<div class="form-row span-2" id="bmtSrcRow" style="display:none"><label>আয়ের উৎস *</label><input type="text" class="form-input" id="bmtSrc" placeholder="যেমন: বেতন প্রাপ্তি"></div>' +
+          '</div>';
+
+        showModal('আয়/ব্যয় যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: submitTxn }
+        ]);
+
+        el('bmtType').addEventListener('change', function () {
+          var isIn = this.value === 'income';
+          el('bmtCatRow').style.display = isIn ? 'none' : '';
+          el('bmtDescRow').style.display = isIn ? 'none' : '';
+          el('bmtSrcRow').style.display = isIn ? '' : 'none';
+        });
+      }
+
+      function submitTxn() {
+        var type = el('bmtType').value;
+        var amount = el('bmtAmount').value;
+        var date = el('bmtDate').value;
+        if (!date) { showToast('তারিখ দিন।', 'warning'); return; }
+        if (!amount || Number(amount) <= 0) { showToast('পরিমাণ ০-র বেশি লিখুন।', 'warning'); return; }
+        if (type === 'income' && !el('bmtSrc').value.trim()) { showToast('আয়ের উৎস লিখুন।', 'warning'); return; }
+        if (type === 'expense' && !el('bmtCat').value && (state.data.categories || []).some(function (c) { return !c.uncat; })) {
+          showToast('একটি ক্যাটাগরি নির্বাচন করুন।', 'warning'); return;
+        }
+
+        var txn = {
+          type: type, date: date, time: nowTime(), amount: amount,
+          categoryId: el('bmtCat').value, description: el('bmtDesc').value,
+          source: el('bmtSrc').value, notes: ''
+        };
+
+        call('addBudgetTransaction', [getToken(), txn], function (res) {
+          hideModal();
+          showToast(type === 'income' ? 'আয় যোগ হয়েছে।' : 'ব্যয় যোগ হয়েছে।', 'success');
+          if (res && res.monthKey) state.monthKey = res.monthKey;
+          load();
+        });
+      }
+
+      function openAllTxnModal() {
+        var list = (state.data && state.data.transactions) || [];
+        var body = list.length
+          ? '<div style="max-height:60vh;overflow-y:auto">' + list.map(function (t) { return txnRowHtml(t, true); }).join('') + '</div>'
+          : '<div class="bm-empty">এই মাসে কোনো কার্যক্রম নেই।</div>';
+
+        showModal('সব কার্যক্রম — ' + monthTitle(state.monthKey), body, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ আয়/ব্যয় যোগ', className: 'btn-primary', onClick: openTxnModal }
+        ]);
+
+        el('modalBody').onclick = function (e) {
+          var b = e.target.closest('[data-del-txn]');
+          if (!b) return;
+          var id = b.getAttribute('data-del-txn'), type = b.getAttribute('data-type');
+          confirmDialog('এই এন্ট্রিটি মুছে ফেলবেন?', function () {
+            call('deleteBudgetTransaction', [getToken(), state.monthKey, type, id], function () {
+              showToast('এন্ট্রি মুছে ফেলা হয়েছে।', 'success');
+              load();
+            });
+          });
+        };
+      }
+
+      /* =====================================================
+         মোডাল: বিস্তারিত (ডোনাট)
+         ===================================================== */
+      function openDetailsModal() {
+        var d = state.data;
+        var rows = spentRows(d).slice().sort(function (a, b) { return b.spent - a.spent; });
+        var count = {};
+        (d.transactions || []).forEach(function (t) { if (t.type === 'expense') count[t.categoryId] = (count[t.categoryId] || 0) + 1; });
+
+        var html = '<table class="bm-m-table"><thead><tr><th>ক্যাটাগরি</th><th>এন্ট্রি</th><th>ব্যয়</th><th>অংশ</th></tr></thead><tbody>' +
+          rows.map(function (r) {
+            return '<tr><td>' + esc(r.name) + '</td><td>' + digits(count[r.id] || 0) + '</td><td>' + money(r.spent) + '</td><td>' + pctText(r.spent / d.expense * 100) + '</td></tr>';
+          }).join('') +
+          '</tbody><tfoot><tr><td><b>মোট</b></td><td></td><td><b>' + money(d.expense) + '</b></td><td></td></tr></tfoot></table>';
+
+        showModal('ব্যয়ের বিস্তারিত — ' + monthTitle(state.monthKey), html, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }
+        ]);
+      }
+
+      /* =====================================================
+         এক্সপোর্ট: PDF (প্রিন্ট → Save as PDF) ও Excel (CSV)
+         ===================================================== */
+      function buildReportHtml(d) {
+        var trs = d.categories.map(function (c) {
+          var pct = c.budget > 0 ? c.spent / c.budget * 100 : null;
+          return '<tr><td>' + esc(c.name) + '</td><td>' + money(c.budget) + '</td><td>' + money(c.spent) + '</td><td>' + money(c.budget - c.spent) + '</td><td>' + pctText(pct) + '</td></tr>';
+        }).join('');
+        var tx = (d.transactions || []).map(function (t) {
+          return '<tr><td>' + dispDate(t.date) + '</td><td>' + (t.type === 'income' ? 'আয়' : 'ব্যয়') + '</td><td>' + esc(t.title) + '</td><td>' + money(t.amount) + '</td></tr>';
+        }).join('');
+
+        return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>বাজেট রিপোর্ট — ' + esc(monthTitle(d.monthKey)) + '</title>' +
+          '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">' +
+          '<style>body{font-family:"Noto Sans Bengali",Arial,sans-serif;color:#10233F;padding:28px;font-size:13px}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}' +
+          '.sum{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.sum div{border:1px solid #d7dde8;border-radius:8px;padding:10px 14px;min-width:150px}.sum b{display:block;font-size:16px;margin-top:3px}' +
+          'table{width:100%;border-collapse:collapse}th,td{border:1px solid #d7dde8;padding:7px 9px;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f1f5fb}</style></head><body>' +
+          '<h1>বাজেট রিপোর্ট — ' + esc(monthTitle(d.monthKey)) + '</h1>' +
+          '<div class="sum"><div>মোট আয়<b>' + money(d.income) + '</b></div><div>মোট ব্যয়<b>' + money(d.expense) + '</b></div><div>মোট সঞ্চয়<b>' + money(d.savings) + '</b></div>' +
+          '<div>বাজেট লক্ষ্য<b>' + money(d.goal) + '</b></div><div>মোট বাজেট<b>' + money(d.budgetTotal) + '</b></div></div>' +
+          '<h2>বাজেট ক্যাটাগরি</h2><table><thead><tr><th>ক্যাটাগরি</th><th>বাজেট</th><th>ব্যয়</th><th>অবশিষ্ট</th><th>ব্যবহার</th></tr></thead><tbody>' + trs + '</tbody></table>' +
+          '<h2>আয়-ব্যয়ের তালিকা</h2><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>বিবরণ</th><th>পরিমাণ</th></tr></thead><tbody>' + (tx || '<tr><td colspan="4">কোনো এন্ট্রি নেই</td></tr>') + '</tbody></table>' +
+          '</body></html>';
+      }
+
+      function exportPdf() {
+        if (!state.data) return;
+        var w = window.open('', '_blank');
+        if (!w) { showToast('পপআপ আটকে গেছে — ব্রাউজারে পপআপ অনুমতি দিন।', 'warning'); return; }
+        w.document.write(buildReportHtml(state.data));
+        w.document.close();
+        w.focus();
+        setTimeout(function () { w.print(); }, 900);
+        showToast('প্রিন্ট উইন্ডোতে "Save as PDF" নির্বাচন করুন।', 'default');
+      }
+
+      function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+
+      function exportExcel() {
+        var d = state.data;
+        if (!d) return;
+        var lines = [];
+        lines.push([csvCell('বাজেট রিপোর্ট'), csvCell(monthTitle(d.monthKey))].join(','));
+        lines.push([csvCell('মোট আয়'), d.income].join(','));
+        lines.push([csvCell('মোট ব্যয়'), d.expense].join(','));
+        lines.push([csvCell('মোট সঞ্চয়'), d.savings].join(','));
+        lines.push([csvCell('বাজেট লক্ষ্য'), d.goal].join(','));
+        lines.push('');
+        lines.push(['ক্যাটাগরি', 'বাজেট', 'ব্যয়', 'অবশিষ্ট', 'ব্যবহার (%)'].map(csvCell).join(','));
+        d.categories.forEach(function (c) {
+          var pct = c.budget > 0 ? (c.spent / c.budget * 100).toFixed(2) : '';
+          lines.push([csvCell(c.name), c.budget, c.spent, c.budget - c.spent, pct].join(','));
+        });
+        lines.push('');
+        lines.push(['তারিখ', 'সময়', 'ধরন', 'বিবরণ/উৎস', 'ক্যাটাগরি', 'পরিমাণ'].map(csvCell).join(','));
+        (d.transactions || []).forEach(function (t) {
+          lines.push([csvCell(t.date), csvCell(t.time), csvCell(t.type === 'income' ? 'আয়' : 'ব্যয়'), csvCell(t.title), csvCell(t.categoryName), t.amount].join(','));
+        });
+
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'budget-' + d.monthKey + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
+      }
+
+      /* =====================================================
+         ইভেন্ট
+         ===================================================== */
+      function copyPrevious() {
+        call('copyBudgetFromPreviousMonth', [getToken(), state.monthKey], function (n) {
+          showToast(digits(n) + 'টি ক্যাটাগরি কপি হয়েছে।', 'success');
+          load();
+        });
+      }
+
+      root().addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+
+        if (act === 'prev-month') { state.monthKey = shiftKey(state.monthKey, -1); load(); }
+        else if (act === 'next-month') { state.monthKey = shiftKey(state.monthKey, 1); load(); }
+        else if (act === 'retry') load();
+        else if (act === 'add-budget') openCategoryModal(null);
+        else if (act === 'manage-cats') openManageModal();
+        else if (act === 'set-goal') openGoalModal();
+        else if (act === 'pdf') exportPdf();
+        else if (act === 'excel') exportExcel();
+        else if (act === 'details') openDetailsModal();
+        else if (act === 'add-txn') openTxnModal();
+        else if (act === 'all-txn') openAllTxnModal();
+        else if (act === 'copy-prev') copyPrevious();
+        else if (act === 'edit-cat') openCategoryModal(findCat(b.getAttribute('data-id')));
+        else if (act === 'del-cat') confirmDeleteCategory(b.getAttribute('data-id'));
+      });
+
+      el('bmTrend').addEventListener('change', function () {
+        state.trend = Number(this.value) || 5;
+        load();
+      });
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      maybeLoad();
+    })();
+  </script>
+
 </section>
