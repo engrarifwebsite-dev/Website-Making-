@@ -1,4 +1,96 @@
 <section id="page-personal-info" class="page">
+
+  <style>
+    /* ---------- Education documents (certificates & other papers per qualification) ---------- */
+    #page-personal-info .education-docs {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    #page-personal-info .education-docs-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #page-personal-info .education-docs-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    #page-personal-info .education-doc-add {
+      background: none;
+      border: 1px dashed var(--accent);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    #page-personal-info .education-doc-add:hover { background: var(--accent-soft); }
+
+    #page-personal-info .education-doc-list { margin-top: 8px; display: flex; flex-direction: column; }
+    #page-personal-info .education-doc-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+    }
+    #page-personal-info .education-doc-row:first-child { border-top: none; }
+    #page-personal-info .education-doc-icon { font-size: 20px; flex-shrink: 0; }
+    #page-personal-info .education-doc-info { flex: 1; min-width: 0; }
+    #page-personal-info .education-doc-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #page-personal-info .education-doc-meta {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    #page-personal-info .education-doc-type {
+      display: inline-block;
+      padding: 1px 8px;
+      margin-right: 8px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--navy);
+      font-weight: 600;
+    }
+    #page-personal-info .education-doc-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    #page-personal-info .education-doc-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    #page-personal-info .education-doc-btn:hover { background: var(--bg); }
+    #page-personal-info .education-doc-btn.danger { color: var(--danger); }
+    #page-personal-info .education-doc-btn:disabled { opacity: 0.5; cursor: default; }
+    #page-personal-info .education-docs-empty { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+    #page-personal-info .education-remove-hint { font-size: 12px; color: var(--danger); margin: 6px 0 8px; }
+
+    @media (max-width: 520px) {
+      #page-personal-info .education-doc-row { flex-wrap: wrap; }
+      #page-personal-info .education-doc-actions { width: 100%; justify-content: flex-end; }
+    }
+  </style>
+
   <div class="subtabs">
     <button class="subtab-btn active" data-subtab="profile">প্রোফাইল</button>
     <button class="subtab-btn" data-subtab="family-tree">ফ্যামিলি ট্রি</button>
@@ -253,8 +345,105 @@
 
     /* ---------- Education timeline (separate multi-entry section) ---------- */
     var currentEducation = [];
+    var educationLoaded = false;
     var EDU_DOT_COLORS = ['#3B82F6', '#10B981', '#10B981', '#F59E0B'];
     var eduRowCounter = 0;
+
+    /* ---------- Education documents (certificates & other papers) ---------- */
+    var currentEducationDocs = [];
+    var educationDocsState = 'loading'; // 'loading' | 'ready' | 'error'
+    var educationDocBusy = false;       // true while an upload batch is running
+    var educationDownloading = {};      // docId -> true while a download is being prepared
+
+    var EDU_DOC_TYPES = ['সার্টিফিকেট', 'মার্কশিট / ট্রান্সক্রিপ্ট', 'প্রবেশপত্র (অ্যাডমিট কার্ড)', 'প্রশংসাপত্র / টেস্টিমোনিয়াল', 'অন্যান্য'];
+    var EDU_DOC_MAX_BYTES = 10 * 1024 * 1024; // 10 MB per file
+    var EDU_DOC_MIME_BY_EXT = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    };
+
+    function fileExt_(name) {
+      var m = /\.([^.]+)$/.exec(String(name || ''));
+      return m ? m[1].toLowerCase() : '';
+    }
+
+    function docIcon_(mime) {
+      mime = String(mime || '');
+      if (mime === 'application/pdf') return '📄';
+      if (mime.indexOf('image/') === 0) return '🖼️';
+      return '📝';
+    }
+
+    function formatFileSize_(bytes) {
+      bytes = Number(bytes) || 0;
+      if (bytes >= 1048576) return bnDigits_((bytes / 1048576).toFixed(1)) + ' MB';
+      if (bytes >= 1024) return bnDigits_(Math.round(bytes / 1024)) + ' KB';
+      return bnDigits_(bytes) + ' B';
+    }
+
+    function docsFor_(eduId) {
+      eduId = String(eduId || '');
+      return currentEducationDocs.filter(function (d) { return String(d.educationId) === eduId; });
+    }
+
+    function findDoc_(docId) {
+      for (var i = 0; i < currentEducationDocs.length; i++) {
+        if (currentEducationDocs[i].docId === docId) return currentEducationDocs[i];
+      }
+      return null;
+    }
+
+    function docRowHtml_(d) {
+      var metaParts = [];
+      if (d.size) metaParts.push(formatFileSize_(d.size));
+      if (d.uploadedAt) metaParts.push(formatDateBn_(d.uploadedAt));
+
+      return '' +
+        '<div class="education-doc-row">' +
+          '<div class="education-doc-icon">' + docIcon_(d.mimeType) + '</div>' +
+          '<div class="education-doc-info">' +
+            '<div class="education-doc-name" title="' + escapeHtml_(d.fileName) + '">' + escapeHtml_(d.fileName) + '</div>' +
+            '<div class="education-doc-meta">' +
+              '<span class="education-doc-type">' + escapeHtml_(d.docType) + '</span>' +
+              metaParts.map(function (p) { return escapeHtml_(p); }).join('&nbsp;&nbsp;|&nbsp;&nbsp;') +
+            '</div>' +
+          '</div>' +
+          '<div class="education-doc-actions">' +
+            '<button type="button" class="education-doc-btn" data-action="download-doc" data-doc-id="' + escapeHtml_(d.docId) + '">⬇️ ডাউনলোড</button>' +
+            '<button type="button" class="education-doc-btn danger" data-action="delete-doc" data-doc-id="' + escapeHtml_(d.docId) + '" title="মুছুন" aria-label="মুছুন">🗑️</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function educationDocsHtml_(item) {
+      var eduId = String(item.id || '');
+      var docs = docsFor_(eduId);
+      var head, body;
+
+      if (educationDocsState === 'ready') {
+        head = '<div class="education-docs-head">' +
+          '<span class="education-docs-title">📎 কাগজপত্র (' + bnDigits_(docs.length) + ')</span>' +
+          '<button type="button" class="education-doc-add" data-action="add-doc" data-edu-id="' + escapeHtml_(eduId) + '">+ কাগজ যোগ করুন</button>' +
+          '</div>';
+        body = docs.length
+          ? '<div class="education-doc-list">' + docs.map(docRowHtml_).join('') + '</div>'
+          : '<div class="education-docs-empty">এখনো কোনো কাগজ আপলোড করা হয়নি।</div>';
+      } else if (educationDocsState === 'error') {
+        head = '<div class="education-docs-head"><span class="education-docs-title">📎 কাগজপত্র</span></div>';
+        body = '<div class="education-docs-empty">কাগজপত্রের তালিকা লোড করা যায়নি। ' +
+          '<button type="button" class="education-doc-btn" data-action="reload-docs">আবার চেষ্টা করুন</button></div>';
+      } else {
+        head = '<div class="education-docs-head"><span class="education-docs-title">📎 কাগজপত্র</span></div>';
+        body = '<div class="education-docs-empty">লোড হচ্ছে...</div>';
+      }
+
+      return '<div class="education-docs">' + head + body + '</div>';
+    }
 
     function renderEducationTimeline(list) {
       var el = document.getElementById('educationTimeline');
@@ -273,6 +462,7 @@
           '<div class="education-degree">' + escapeHtml_(item.degree) + '</div>' +
           (item.institution ? '<div class="education-institution">' + escapeHtml_(item.institution) + '</div>' : '') +
           (metaParts.length ? '<div class="education-meta">' + metaParts.map(function (p) { return escapeHtml_(p); }).join('&nbsp;&nbsp;|&nbsp;&nbsp;') + '</div>' : '') +
+          educationDocsHtml_(item) +
           '</div>';
       }).join('');
     }
@@ -281,6 +471,7 @@
       google.script.run
         .withSuccessHandler(function (list) {
           currentEducation = list || [];
+          educationLoaded = true;
           renderEducationTimeline(currentEducation);
         })
         .withFailureHandler(function () {
@@ -289,13 +480,227 @@
         .getEducationList();
     }
 
+    function loadEducationDocs() {
+      if (educationDocsState !== 'ready') {
+        educationDocsState = 'loading';
+        if (educationLoaded) renderEducationTimeline(currentEducation);
+      }
+      google.script.run
+        .withSuccessHandler(function (list) {
+          currentEducationDocs = list || [];
+          educationDocsState = 'ready';
+          if (educationLoaded) renderEducationTimeline(currentEducation);
+        })
+        .withFailureHandler(function () {
+          educationDocsState = 'error';
+          if (educationLoaded) renderEducationTimeline(currentEducation);
+        })
+        .getEducationDocuments();
+    }
+
+    /* ----- Upload ----- */
+    function openEducationDocUploadModal_(eduId) {
+      var edu = null;
+      currentEducation.forEach(function (x) { if (String(x.id) === String(eduId)) edu = x; });
+      if (!edu) return;
+
+      var typeOptions = EDU_DOC_TYPES.map(function (t) {
+        return '<option value="' + escapeHtml_(t) + '">' + escapeHtml_(t) + '</option>';
+      }).join('');
+
+      var bodyHtml =
+        '<div class="form-row"><label>কাগজের ধরন</label>' +
+          '<select class="form-input" id="eduDocType">' + typeOptions + '</select></div>' +
+        '<div class="form-row"><label>ফাইল নির্বাচন করুন (একসাথে একাধিক ফাইল দেওয়া যাবে)</label>' +
+          '<input type="file" class="form-input" id="eduDocFiles" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"></div>' +
+        '<div class="profile-photo-hint" style="text-align:left;">PDF, JPG, PNG, WEBP, DOC, DOCX — প্রতিটি ফাইল সর্বোচ্চ ১০ MB</div>';
+
+      showModal('কাগজ যোগ করুন — ' + edu.degree, bodyHtml, [
+        { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+        { label: 'আপলোড করুন', className: 'btn-primary', onClick: function () { submitEducationDocUpload_(eduId); } }
+      ]);
+    }
+
+    function submitEducationDocUpload_(eduId) {
+      var input = document.getElementById('eduDocFiles');
+      var docType = document.getElementById('eduDocType').value;
+      var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
+
+      if (!files.length) {
+        showToast('অন্তত একটি ফাইল নির্বাচন করুন।', 'warning');
+        return;
+      }
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        if (!EDU_DOC_MIME_BY_EXT[fileExt_(f.name)]) {
+          showToast('"' + f.name + '" — এই ধরনের ফাইল আপলোড করা যাবে না।', 'warning');
+          return;
+        }
+        if (!f.size) {
+          showToast('"' + f.name + '" ফাইলটি খালি।', 'warning');
+          return;
+        }
+        if (f.size > EDU_DOC_MAX_BYTES) {
+          showToast('"' + f.name + '" — ফাইলের সাইজ ১০ MB-এর বেশি।', 'warning');
+          return;
+        }
+      }
+
+      hideModal();
+      uploadEducationDocs_(eduId, docType, files);
+    }
+
+    function readFileAsBase64_(file, onDone, onError) {
+      var reader = new FileReader();
+      reader.onload = function () { onDone(String(reader.result).split(',')[1] || ''); };
+      reader.onerror = onError;
+      reader.readAsDataURL(file);
+    }
+
+    function uploadEducationDocs_(eduId, docType, files) {
+      if (educationDocBusy) {
+        showToast('আরেকটি আপলোড চলছে, একটু অপেক্ষা করুন।', 'warning');
+        return;
+      }
+      educationDocBusy = true;
+
+      var total = files.length;
+      var done = 0;
+      var failed = 0;
+      var token = localStorage.getItem(TOKEN_KEY);
+
+      function finish() {
+        educationDocBusy = false;
+        if (done > 0) {
+          showToast(bnDigits_(done) + 'টি কাগজ আপলোড হয়েছে।' + (failed ? ' ' + bnDigits_(failed) + 'টি ব্যর্থ হয়েছে।' : ''), failed ? 'warning' : 'success');
+        }
+      }
+
+      function next() {
+        if (!files.length) { finish(); return; }
+        var file = files.shift();
+        showToast('আপলোড হচ্ছে (' + bnDigits_(done + failed + 1) + '/' + bnDigits_(total) + '): ' + file.name, 'default');
+
+        readFileAsBase64_(file, function (base64) {
+          google.script.run
+            .withSuccessHandler(function (doc) {
+              done++;
+              currentEducationDocs.push(doc);
+              renderEducationTimeline(currentEducation);
+              next();
+            })
+            .withFailureHandler(function (err) {
+              failed++;
+              showToast('"' + file.name + '": ' + ((err && err.message) || 'আপলোড ব্যর্থ হয়েছে।'), 'danger');
+              next();
+            })
+            .uploadEducationDocument(token, eduId, docType, file.name, base64, EDU_DOC_MIME_BY_EXT[fileExt_(file.name)]);
+        }, function () {
+          failed++;
+          showToast('"' + file.name + '" ফাইলটি পড়া যায়নি।', 'danger');
+          next();
+        });
+      }
+
+      next();
+    }
+
+    /* ----- Download ----- */
+    function saveBase64AsFile_(base64, mimeType, fileName) {
+      var bin = atob(base64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+      var blob = new Blob([bytes], { type: mimeType || 'application/octet-stream' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'document';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1500);
+    }
+
+    function downloadEducationDoc_(docId, btn) {
+      if (educationDownloading[docId]) return;
+      educationDownloading[docId] = true;
+      if (btn) btn.disabled = true;
+      showToast('ডাউনলোড প্রস্তুত হচ্ছে...', 'default');
+
+      var token = localStorage.getItem(TOKEN_KEY);
+      google.script.run
+        .withSuccessHandler(function (res) {
+          educationDownloading[docId] = false;
+          if (btn) btn.disabled = false;
+          try {
+            saveBase64AsFile_(res.base64, res.mimeType, res.fileName);
+            showToast('ডাউনলোড শুরু হয়েছে।', 'success');
+          } catch (e) {
+            showToast('ডাউনলোড করা যায়নি।', 'danger');
+          }
+        })
+        .withFailureHandler(function (err) {
+          educationDownloading[docId] = false;
+          if (btn) btn.disabled = false;
+          showToast((err && err.message) || 'ডাউনলোড ব্যর্থ হয়েছে।', 'danger');
+        })
+        .getEducationDocumentData(token, docId);
+    }
+
+    /* ----- Delete ----- */
+    function confirmDeleteEducationDoc_(docId) {
+      var doc = findDoc_(docId);
+      if (!doc) return;
+
+      confirmDialog('"' + escapeHtml_(doc.fileName) + '" কাগজটি মুছে ফেলবেন? ফাইলটি ড্রাইভের ট্র্যাশে চলে যাবে।', function () {
+        var token = localStorage.getItem(TOKEN_KEY);
+        google.script.run
+          .withSuccessHandler(function () {
+            currentEducationDocs = currentEducationDocs.filter(function (d) { return d.docId !== docId; });
+            renderEducationTimeline(currentEducation);
+            showToast('কাগজ মুছে ফেলা হয়েছে।', 'success');
+          })
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'মুছে ফেলা যায়নি।', 'danger');
+          })
+          .deleteEducationDocument(token, docId);
+      });
+    }
+
+    /* ----- One click handler for every button inside the timeline ----- */
+    document.getElementById('educationTimeline').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+
+      if (action === 'add-doc') {
+        openEducationDocUploadModal_(btn.getAttribute('data-edu-id'));
+      } else if (action === 'download-doc') {
+        downloadEducationDoc_(btn.getAttribute('data-doc-id'), btn);
+      } else if (action === 'delete-doc') {
+        confirmDeleteEducationDoc_(btn.getAttribute('data-doc-id'));
+      } else if (action === 'reload-docs') {
+        loadEducationDocs();
+      }
+    });
+
+    /* ----- Education edit modal ----- */
     function educationRowHtml_(r, idx) {
       var gradeTypeOptions = ['', 'CGPA', 'GPA', 'Division', 'অন্যান্য'].map(function (o) {
         return '<option value="' + o + '"' + ((r.gradeType || '') === o ? ' selected' : '') + '>' + (o || 'নির্বাচন করুন') + '</option>';
       }).join('');
 
+      var docCount = r.id ? docsFor_(r.id).length : 0;
+      var removeHint = docCount
+        ? '<div class="education-remove-hint">⚠️ এই এন্ট্রিতে ' + bnDigits_(docCount) + 'টি কাগজ সংযুক্ত আছে — এন্ট্রি মুছলে সেগুলোও ড্রাইভের ট্র্যাশে চলে যাবে।</div>'
+        : '';
+
       return '' +
-        '<div class="education-edit-row" id="eduRow_' + idx + '">' +
+        '<div class="education-edit-row" id="eduRow_' + idx + '" data-edu-id="' + escapeHtml_(r.id || '') + '">' +
           '<div class="form-grid">' +
             '<div class="form-row span-2"><label>ডিগ্রি/পরীক্ষার নাম</label><input type="text" class="form-input" id="eduDegree_' + idx + '" value="' + escapeHtml_(r.degree) + '"></div>' +
             '<div class="form-row span-2"><label>প্রতিষ্ঠান</label><input type="text" class="form-input" id="eduInst_' + idx + '" value="' + escapeHtml_(r.institution) + '"></div>' +
@@ -304,6 +709,7 @@
             '<div class="form-row"><label>গ্রেড মান</label><input type="text" class="form-input" id="eduGVal_' + idx + '" value="' + escapeHtml_(r.gradeValue) + '"></div>' +
             '<div class="form-row"><label>স্কেল (out of)</label><input type="text" class="form-input" id="eduGScale_' + idx + '" value="' + escapeHtml_(r.gradeScale) + '"></div>' +
           '</div>' +
+          removeHint +
           '<button type="button" class="btn btn-danger education-remove-btn" id="eduRemove_' + idx + '">🗑️ এই এন্ট্রি মুছুন</button>' +
           '<hr class="education-row-divider">' +
         '</div>';
@@ -348,6 +754,7 @@
       rowEls.forEach(function (rowEl) {
         var idx = rowEl.id.replace('eduRow_', '');
         entries.push({
+          id: rowEl.getAttribute('data-edu-id') || '',
           degree: (document.getElementById('eduDegree_' + idx) || {}).value || '',
           institution: (document.getElementById('eduInst_' + idx) || {}).value || '',
           passingYear: (document.getElementById('eduYear_' + idx) || {}).value || '',
@@ -362,6 +769,7 @@
         .withSuccessHandler(function () {
           hideModal();
           loadEducation();
+          loadEducationDocs();
           showToast('শিক্ষাগত তথ্য সংরক্ষণ হয়েছে।', 'success');
         })
         .withFailureHandler(function (err) {
@@ -390,6 +798,7 @@
 
     loadProfile();
     loadEducation();
+    loadEducationDocs();
 
   })();
 </script>

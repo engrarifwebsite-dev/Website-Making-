@@ -2,6 +2,26 @@
 
 ## 2026-09-20
 
+### Education Documents (Personal Information)
+- Each qualification in the "শিক্ষাগত যোগ্যতা" card now has its own
+  "কাগজপত্র" list: upload certificates, marksheets, admit cards and other
+  papers (PDF, JPG, PNG, WEBP, DOC, DOCX; up to 10 MB per file; several
+  files can be selected at once).
+- Files are stored in Drive under Photos and Files > EducationDocuments;
+  the list is tracked in the new Personal_Info > EducationDocuments tab
+  (created automatically on first use).
+- Each document has a download button (served through the server with a
+  session check, so the Drive files stay private) and a delete button
+  (the Drive file goes to the trash, so it can be recovered).
+- `setEducationList()` now keeps an entry's ID when the list is re-saved,
+  so attached documents stay linked. Removing an entry also removes its
+  documents (files go to the Drive trash); the edit modal warns about this.
+- New server functions: `getEducationDocuments`, `uploadEducationDocument`,
+  `getEducationDocumentData`, `deleteEducationDocument`.
+- Files changed: `Server_PersonalInfo.gs`, `Page_PersonalInfo.html`
+  (the new styles live inside the page file; `Stylesheet_Global.html`
+  is unchanged).
+
 ### Documentation Sync
 - Synced CHANGELOG.md and TODO.md with the actual state of the codebase.
   Both files previously stated that application development had not started.

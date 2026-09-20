@@ -11,6 +11,7 @@
 - [x] Home page (clock, dates, prayer times, weather, slideshow)
 - [x] Personal Information: Profile (with independent photo)
 - [x] Personal Information: Education timeline
+- [x] Personal Information: Education documents (upload, download, delete per qualification)
 - [x] Global footer hadith rotation
 
 ## In Progress
@@ -36,4 +37,5 @@
 - [ ] Apply the `HijriAdjustment` setting on the Home page; it is seeded in Settings but not used yet.
 - [ ] Sidebar footer still says "Version 1.0 · Phase 3"; update it.
 - [ ] `Page_FamilyTree.html` is an old placeholder and is not included in Index.html; remove it once Family Tree lives inside Personal Info.
+- [ ] Add the `EducationDocuments` tab to `Setup_PersonalInfo.gs` (columns: DocID, EducationID, DocType, FileName, FileID, MimeType, SizeBytes, UploadedAt). It is currently created automatically on first use.
 - [ ] Suspicious-login detection in `logLoginActivity_` (planned for Phase 17).
