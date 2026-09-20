@@ -19,7 +19,7 @@ Islamic information and other important personal data.
 1. Home
 2. Personal Information
 3. Budget Management
-4. Salary & CPF
+4. Power Grid (Salary, CPF, Leave, Increment)
 5. Tax
 6. Zakat & Fitra
 7. Prince Account
