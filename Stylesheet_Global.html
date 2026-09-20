@@ -573,6 +573,66 @@
 
   .profile-contact-card { margin-top: 16px; }
 
+  /* ---------- Education timeline (শিক্ষাগত যোগ্যতা) ---------- */
+  .education-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .education-edit-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: inherit;
+  }
+  .education-timeline {
+    display: flex;
+    flex-direction: column;
+  }
+  .education-item {
+    position: relative;
+    padding-left: 20px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .education-item:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  .education-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--dot-color, var(--accent));
+  }
+  .education-degree {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--dot-color, var(--navy));
+    margin-bottom: 4px;
+  }
+  .education-institution {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .education-meta {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
   /* ---------- Edit form grid (used inside the profile edit modal) ---------- */
   .form-grid {
     display: grid;
