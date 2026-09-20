@@ -141,38 +141,7 @@
     var initialPage = (window.location.hash || '#home').replace('#', '');
     navigateTo(initialPage);
 
-    // ---------- Global footer: rotating hadith (same design/position on every page) ----------
-    (function initFooterHadith() {
-      var ROTATE_MS = 5 * 60 * 1000; // 5 minutes
-      var hadiths = [];
-
-      function showHadithAtCurrentSlot() {
-        if (!hadiths.length) return;
-        // Time-bucketed index: naturally changes every 5 minutes, and stays
-        // in sync even after a page reload or in another tab — no timer drift.
-        var slot = Math.floor(Date.now() / ROTATE_MS) % hadiths.length;
-        var item = hadiths[slot];
-        document.getElementById('footerHadithText').textContent = item.text;
-        document.getElementById('footerHadithRef').textContent = item.reference ? '— ' + item.reference : '';
-      }
-
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(function (list) {
-            hadiths = list || [];
-            if (!hadiths.length) {
-              document.getElementById('footerHadithText').textContent =
-                'Islamic_Corner স্প্রেডশিটের "Hadiths" ট্যাবে হাদিস যোগ করুন।';
-              return;
-            }
-            showHadithAtCurrentSlot();
-            setInterval(showHadithAtCurrentSlot, 30 * 1000); // check every 30s, switches exactly on the 5-min boundary
-          })
-          .withFailureHandler(function () {
-            document.getElementById('footerHadithText').textContent = 'হাদিস লোড করা যায়নি।';
-          })
-          .getFooterHadiths();
-      }
-    })();
+    // NOTE: the global footer (date / time / weather bar) has its own
+    // script inside Partial_Footer.html — nothing to wire up here.
   })();
 </script>

@@ -2,39 +2,19 @@
 
 ## 2026-09-20
 
-### Age Calculator (Personal Information > এজ ক্যালকুলেটর)
-- New subtab next to ফ্যামিলি ট্রি: pick two dates and get the exact age in
-  years, months and days.
-- Also shows total months, weeks, days and hours, the weekday of the start
-  date, and the days left until the next birthday (Feb 29 births are handled).
-- "আজ" fills today's date; "আমার জন্ম তারিখ" pulls the DOB saved in the
-  Profile; results update as soon as a date changes.
-- Runs fully in the browser; no server code needed.
-- New file: `Partial_AgeCalculator.html`. `Index.html` gets one more include line.
-  The partial adds its own subtab button and panel to the Personal Info page at
-  load time, so `Page_PersonalInfo.html` is unchanged.
-
-### Family Tree (Personal Information > ফ্যামিলি ট্রি)
-- New colourful family tree: every branch shows a round photo (gender-coloured
-  ring) and the name; each generation has its own line/name colour. Couples are
-  shown side by side with a heart link, children hang below them.
-- Click a photo to open a popup with birth year (and full date), death year,
-  age (age at death for deceased members), gender/status, parent, spouse,
-  children and notes. Click the same photo again (or anywhere else, or Esc)
-  to hide it.
-- "+" on each photo adds a new branch under that member; the toolbar button adds
-  a new root member; the popup also has edit, add spouse and delete.
-- Deceased members show a grey ring, greyscale photo and a dove badge.
-- Zoom in/out/reset for large trees, and summary chips (total, living,
-  deceased, generations).
-- Photos are resized in the browser (max 600px) before upload.
-- New files: `Partial_FamilyTree.html`, `Server_FamilyTree.gs`.
-  `Index.html` now includes the partial (one added line).
-  `Page_PersonalInfo.html` and `Server_PersonalInfo.gs` are unchanged.
-- New server functions: `saveFamilyTreeMember` (keeps spouse links two-way,
-  blocks a member from becoming a child of their own descendant) and
-  `deleteFamilyTreeMember` (refuses if the member still has children, clears the
-  spouse link, sends the photo to the Drive trash).
+### Global Footer (every page)
+- The hadith-rotation footer is replaced by a dark info bar with three
+  sections: today's date (Bangla, English and Hijri), the current time
+  (with day period such as সকাল / দুপুর) and the weather (temperature,
+  condition, humidity, wind, location).
+- The bar is live: the clock ticks every second, weather refreshes every
+  5 minutes, the Hijri date every 10 minutes and on date change.
+- Location comes from `getHomeConfig()` (Settings > Global), the same as the
+  Home dashboard. On phones the three sections stack vertically.
+- Files: `Partial_Footer.html` (markup, styles and script together) and
+  `JS_App.html` (the old hadith block removed). `Server_Footer.gs` and the
+  Islamic_Corner > Hadiths tab are kept, since they are not used by the
+  footer any more but may serve the Islamic Corner page later.
 
 ### Education Documents (Personal Information)
 - Each qualification in the "শিক্ষাগত যোগ্যতা" card now has its own
@@ -94,8 +74,7 @@
 - Responsive layout with mobile sidebar and hash-based page routing.
 - Generic subtab, modal, confirm dialog and toast systems (`JS_App.html`).
 - Global stylesheet (`Stylesheet_Global.html`).
-- Footer hadith rotation every 5 minutes, sourced from the
-  Islamic_Corner > Hadiths sheet.
+- Global footer with live date, time and weather (see Global Footer above).
 
 ### Home Dashboard (Phase 5)
 - Live clock and day name (Asia/Dhaka).
@@ -112,13 +91,13 @@
 - Profile edit modal (main and contact fields), stored as key/value rows.
 - Education timeline with a multi-entry edit modal.
 - Server helpers: `cleanupDuplicateProfileFields()`, `debugGetProfile()`.
-- Family Tree server functions: `listFamilyMembers`,
+- Family Tree server functions ready: `listFamilyMembers`,
   `saveFamilyMember`, `deleteFamilyMember`.
 
 ### Current Status
-- Completed: Home, Personal Info (Profile, Education, Family Tree), Auth,
-  app shell, all spreadsheet setups.
-- In progress: none.
+- Completed: Home, Personal Info (Profile and Education), Auth, app shell,
+  all spreadsheet setups.
+- In progress: Family Tree UI (server ready, UI is still a placeholder).
 - Placeholder pages: Budget, Power Grid, Tax, Zakat, Prince Hisab,
   My Transactions, Emergency Documents, Islamic Corner, Assets, AI Hub,
   Settings.

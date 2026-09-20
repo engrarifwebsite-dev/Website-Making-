@@ -12,12 +12,11 @@
 - [x] Personal Information: Profile (with independent photo)
 - [x] Personal Information: Education timeline
 - [x] Personal Information: Education documents (upload, download, delete per qualification)
-- [x] Personal Information: Family Tree UI (colourful tree, photo + name, click photo for details popup, add branch / spouse, edit, delete)
-- [x] Personal Information: Age Calculator subtab (two dates -> years/months/days)
-- [x] Global footer hadith rotation
+- [x] Global footer: live date, time and weather bar (replaced the hadith rotation)
 
 ## In Progress
-- (none)
+- [ ] Personal Information: Family Tree UI
+  (server functions are done; the subtab in Page_PersonalInfo.html is still a placeholder)
 
 ## Pending (by phase)
 - [ ] Budget Management (Phase 7)
@@ -37,8 +36,8 @@
 - [ ] Show `getMonthlyHolidays()` data on the Home page; the server function exists but nothing calls it.
 - [ ] Apply the `HijriAdjustment` setting on the Home page; it is seeded in Settings but not used yet.
 - [ ] Sidebar footer still says "Version 1.0 · Phase 3"; update it.
-- [ ] `Page_FamilyTree.html` is an old placeholder and is not included in Index.html; remove it.
-- [ ] Family Tree markup lives in `Partial_FamilyTree.html` and is moved into the Personal Info "ফ্যামিলি ট্রি" subtab at load time. When convenient, replace the placeholder inside `Page_PersonalInfo.html` (`#subtab-family-tree`) with `<?!= include('Partial_FamilyTree'); ?>` and remove the include from `Index.html`.
+- [ ] `Page_FamilyTree.html` is an old placeholder and is not included in Index.html; remove it once Family Tree lives inside Personal Info.
 - [ ] Add the `EducationDocuments` tab to `Setup_PersonalInfo.gs` (columns: DocID, EducationID, DocType, FileName, FileID, MimeType, SizeBytes, UploadedAt). It is currently created automatically on first use.
+- [ ] `Stylesheet_Global.html` still has the old `.app-footer*` rules (unused now); delete them when convenient.
+- [ ] Decide whether `Server_Footer.gs` (`getFooterHadiths`) is still needed or should move to the Islamic Corner page (Phase 13).
 - [ ] Suspicious-login detection in `logLoginActivity_` (planned for Phase 17).
-- [ ] Age Calculator subtab is injected by `Partial_AgeCalculator.html` at load time. When convenient, add its button and `#subtab-age-calculator` panel directly to `Page_PersonalInfo.html` (with `<?!= include('Partial_AgeCalculator'); ?>`) and remove the include from `Index.html`.
