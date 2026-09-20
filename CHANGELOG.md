@@ -2,6 +2,28 @@
 
 ## 2026-09-20
 
+### Family Tree (Personal Information > ফ্যামিলি ট্রি)
+- New colourful family tree: every branch shows a round photo (gender-coloured
+  ring) and the name; each generation has its own line/name colour. Couples are
+  shown side by side with a heart link, children hang below them.
+- Click a photo to open a popup with birth year (and full date), death year,
+  age (age at death for deceased members), gender/status, parent, spouse,
+  children and notes. Click the same photo again (or anywhere else, or Esc)
+  to hide it.
+- "+" on each photo adds a new branch under that member; the toolbar button adds
+  a new root member; the popup also has edit, add spouse and delete.
+- Deceased members show a grey ring, greyscale photo and a dove badge.
+- Zoom in/out/reset for large trees, and summary chips (total, living,
+  deceased, generations).
+- Photos are resized in the browser (max 600px) before upload.
+- New files: `Partial_FamilyTree.html`, `Server_FamilyTree.gs`.
+  `Index.html` now includes the partial (one added line).
+  `Page_PersonalInfo.html` and `Server_PersonalInfo.gs` are unchanged.
+- New server functions: `saveFamilyTreeMember` (keeps spouse links two-way,
+  blocks a member from becoming a child of their own descendant) and
+  `deleteFamilyTreeMember` (refuses if the member still has children, clears the
+  spouse link, sends the photo to the Drive trash).
+
 ### Education Documents (Personal Information)
 - Each qualification in the "শিক্ষাগত যোগ্যতা" card now has its own
   "কাগজপত্র" list: upload certificates, marksheets, admit cards and other
@@ -78,13 +100,13 @@
 - Profile edit modal (main and contact fields), stored as key/value rows.
 - Education timeline with a multi-entry edit modal.
 - Server helpers: `cleanupDuplicateProfileFields()`, `debugGetProfile()`.
-- Family Tree server functions ready: `listFamilyMembers`,
+- Family Tree server functions: `listFamilyMembers`,
   `saveFamilyMember`, `deleteFamilyMember`.
 
 ### Current Status
-- Completed: Home, Personal Info (Profile and Education), Auth, app shell,
-  all spreadsheet setups.
-- In progress: Family Tree UI (server ready, UI is still a placeholder).
+- Completed: Home, Personal Info (Profile, Education, Family Tree), Auth,
+  app shell, all spreadsheet setups.
+- In progress: none.
 - Placeholder pages: Budget, Power Grid, Tax, Zakat, Prince Hisab,
   My Transactions, Emergency Documents, Islamic Corner, Assets, AI Hub,
   Settings.

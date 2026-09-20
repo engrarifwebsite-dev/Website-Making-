@@ -1,6 +1,874 @@
-<section id="page-family-tree" class="page">
-  <div class="page-placeholder">
-    <h2>ফ্যামিলি ট্রি</h2>
-    <p>এই পেজের কন্টেন্ট Phase 6-এ যুক্ত হবে।</p>
+<!--
+  Partial_FamilyTree.html
+  ফ্যামিলি ট্রি UI (ব্যক্তিগত তথ্য > ফ্যামিলি ট্রি সাবট্যাব)।
+  Index.html-এ Page_PersonalInfo-এর পরে include করা হয়; নিচের স্ক্রিপ্ট
+  #ftRoot-কে #subtab-family-tree প্যানেলের ভেতরে বসিয়ে দেয়।
+  সার্ভার: listFamilyMembers (Server_PersonalInfo.gs),
+           saveFamilyTreeMember / deleteFamilyTreeMember (Server_FamilyTree.gs)
+-->
+<style>
+  /* =========================================================
+     FAMILY TREE  (সব ক্লাস ft- দিয়ে শুরু — অন্য পেজের সাথে সংঘর্ষ নেই)
+     ========================================================= */
+  .ft-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .ft-title { font-size: 19px; font-weight: 800; color: var(--navy); margin: 0 0 4px; }
+  .ft-sub { font-size: 13px; color: var(--text-muted); margin: 0; }
+  .ft-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .ft-zoom { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff; }
+  .ft-zoom button { border: none; background: #fff; padding: 8px 13px; cursor: pointer; font-size: 15px; font-weight: 700; color: var(--navy); font-family: inherit; }
+  .ft-zoom button:hover { background: var(--accent-soft); }
+  .ft-zoom button + button { border-left: 1px solid var(--border); }
+
+  .ft-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .ft-chip { padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: #fff; }
+  .ft-chip.c1 { background: linear-gradient(135deg, #38bdf8, #2563eb); }
+  .ft-chip.c2 { background: linear-gradient(135deg, #34d399, #059669); }
+  .ft-chip.c3 { background: linear-gradient(135deg, #94a3b8, #475569); }
+  .ft-chip.c4 { background: linear-gradient(135deg, #f472b6, #a855f7); }
+
+  .ft-canvas {
+    position: relative;
+    overflow: auto;
+    min-height: 320px;
+    padding: 36px 24px 44px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 10% 8%, rgba(14, 165, 233, .13), transparent 38%),
+      radial-gradient(circle at 90% 12%, rgba(236, 72, 153, .11), transparent 38%),
+      radial-gradient(circle at 50% 100%, rgba(16, 185, 129, .14), transparent 45%),
+      linear-gradient(180deg, #ffffff, #f6faff);
+  }
+  .ft-tree { width: max-content; margin: 0 auto; }
+  .ft-msg { text-align: center; color: var(--text-muted); font-size: 14px; padding: 60px 10px; }
+  .ft-msg .btn { margin-top: 14px; }
+
+  /* ---------- Tree lines (ul/li) ---------- */
+  .ft-tree ul { list-style: none; margin: 0; padding: 28px 0 0; display: flex; justify-content: center; position: relative; }
+  .ft-tree li { list-style: none; position: relative; padding: 28px 14px 0; display: flex; flex-direction: column; align-items: center; }
+
+  .ft-tree li::before,
+  .ft-tree li::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 28px; border-top: 3px solid var(--c, #94a3b8); }
+  .ft-tree li::after { right: auto; left: 50%; border-left: 3px solid var(--c, #94a3b8); }
+  .ft-tree li:first-child::before { border: 0 none; }
+  .ft-tree li:last-child::after { border: 0 none; }
+  .ft-tree li:last-child::before { border-right: 3px solid var(--c, #94a3b8); border-radius: 0 14px 0 0; }
+  .ft-tree li:first-child::after { border-radius: 14px 0 0 0; }
+  .ft-tree li:only-child::before { display: none; }
+  .ft-tree li:only-child::after { border-top: 0; border-left: 3px solid var(--c, #94a3b8); border-radius: 0; }
+
+  .ft-tree li > ul::before { content: ''; position: absolute; top: 0; left: 50%; height: 28px; border-left: 3px solid var(--c, #94a3b8); }
+
+  /* মূল (root) স্তরে কোনো সংযোগ রেখা নেই */
+  .ft-tree > ul { padding-top: 0 !important; }
+  .ft-tree > ul > li { padding-top: 0 !important; padding-left: 26px; padding-right: 26px; }
+  .ft-tree > ul > li::before,
+  .ft-tree > ul > li::after { display: none !important; }
+
+  /* ---------- Couple unit ---------- */
+  .ft-unit { display: flex; align-items: flex-start; justify-content: center; }
+  .ft-bond {
+    position: relative;
+    width: 50px;
+    height: 0;
+    margin-top: 50px;
+    border-top: 3px dashed #f472b6;
+  }
+  .ft-bond::after {
+    content: '\2764';
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -52%);
+    width: 24px; height: 24px; line-height: 24px;
+    text-align: center; font-size: 13px; color: #ec4899;
+    background: #fff; border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, .3);
+  }
+
+  /* ---------- Member card ---------- */
+  .ft-node { position: relative; width: 122px; display: flex; flex-direction: column; align-items: center; }
+  .ft-ring-wrap { position: relative; }
+
+  .ft-photo-ring {
+    width: 98px; height: 98px;
+    padding: 4px;
+    border-radius: 50%;
+    background: var(--ring);
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .2);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .ft-photo-ring:hover { transform: translateY(-3px) scale(1.05); }
+  .ft-photo-ring:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  .ft-ring-male   { --ring: linear-gradient(135deg, #38bdf8, #2563eb); }
+  .ft-ring-female { --ring: linear-gradient(135deg, #f472b6, #a855f7); }
+  .ft-ring-other  { --ring: linear-gradient(135deg, #fbbf24, #f97316); }
+  .ft-deceased .ft-photo-ring { --ring: linear-gradient(135deg, #94a3b8, #475569); }
+  .ft-deceased .ft-photo img { filter: grayscale(.9); }
+
+  .ft-photo {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #fff;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ft-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ft-photo.ft-initial { background: var(--ring); color: #fff; font-size: 36px; font-weight: 800; }
+
+  .ft-node.active .ft-photo-ring {
+    transform: scale(1.07);
+    box-shadow: 0 0 0 6px rgba(198, 155, 61, .38), 0 12px 28px rgba(15, 23, 42, .28);
+  }
+
+  .ft-add {
+    position: absolute; right: -4px; bottom: 2px;
+    width: 27px; height: 27px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: var(--g);
+    color: #fff;
+    font-size: 18px; font-weight: 700; line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .3);
+    transition: transform .15s ease;
+    padding: 0;
+  }
+  .ft-add:hover { transform: scale(1.2); }
+
+  .ft-dead-badge {
+    position: absolute; left: -4px; top: -2px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 3px 8px rgba(15, 23, 42, .25);
+  }
+
+  .ft-name {
+    margin-top: 10px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--g);
+    color: #fff;
+    font-size: 13px; font-weight: 700; line-height: 1.4;
+    max-width: 122px;
+    word-break: break-word;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .18);
+  }
+  .ft-rel { margin-top: 5px; font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+
+  /* ---------- Popup (ছবিতে ক্লিক করলে) ---------- */
+  .ft-pop {
+    position: fixed; z-index: 80;
+    width: 294px; max-height: 82vh; overflow: auto;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, .3);
+    display: none;
+  }
+  .ft-pop.open { display: block; animation: ftPopIn .18s ease; }
+  @keyframes ftPopIn { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
+
+  .ft-pop-head { padding: 14px 16px; display: flex; align-items: center; gap: 12px; color: #fff; }
+  .ft-pop-avatar {
+    width: 54px; height: 54px; flex-shrink: 0;
+    border-radius: 50%; overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, .85);
+    background: rgba(255, 255, 255, .25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800;
+  }
+  .ft-pop-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .ft-pop-name { font-size: 15.5px; font-weight: 800; line-height: 1.35; }
+  .ft-pop-rel { font-size: 12px; opacity: .92; margin-top: 2px; }
+
+  .ft-pop-body { padding: 6px 16px 2px; }
+  .ft-pop-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .ft-pop-row:last-child { border-bottom: none; }
+  .ft-pop-ico { width: 22px; text-align: center; flex-shrink: 0; font-size: 15px; }
+  .ft-pop-label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); }
+  .ft-pop-val { font-size: 13.5px; font-weight: 700; color: var(--text); margin-top: 1px; word-break: break-word; }
+
+  .ft-pop-foot { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px 6px; }
+  .ft-pop-btn {
+    flex: 1 1 auto;
+    border: 1px solid var(--border); background: #f8fafc;
+    border-radius: 8px; padding: 7px 10px;
+    font-size: 12px; font-weight: 700; font-family: inherit;
+    color: var(--text); cursor: pointer;
+  }
+  .ft-pop-btn:hover { background: var(--accent-soft); }
+  .ft-pop-btn.danger { color: var(--danger); }
+  .ft-pop-hint { font-size: 11px; color: var(--text-muted); text-align: center; padding: 0 16px 12px; }
+
+  /* ---------- Form (modal) ---------- */
+  .ft-form-photo { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .ft-form-preview {
+    width: 72px; height: 72px; flex-shrink: 0;
+    border-radius: 50%; overflow: hidden;
+    background: var(--accent-soft); color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800;
+    border: 3px solid var(--border);
+  }
+  .ft-form-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .ft-form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  @media (max-width: 640px) {
+    .ft-canvas { padding: 26px 10px 34px; }
+    .ft-pop { width: 270px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ft-pop.open { animation: none; }
+    .ft-photo-ring, .ft-add { transition: none; }
+  }
+</style>
+
+<div id="ftRoot">
+  <div class="card">
+    <div class="ft-toolbar">
+      <div>
+        <h2 class="ft-title">🌳 ফ্যামিলি ট্রি</h2>
+        <p class="ft-sub">ছবিতে ক্লিক করলে বিস্তারিত তথ্য দেখা যাবে, আবার ক্লিক করলে বন্ধ হবে। ছবির কোণার <b>+</b> চেপে নতুন ব্রাঞ্চ যোগ করুন।</p>
+      </div>
+      <div class="ft-actions">
+        <div class="ft-zoom">
+          <button type="button" id="ftZoomOut" aria-label="ছোট করুন">−</button>
+          <button type="button" id="ftZoomReset" aria-label="স্বাভাবিক">১০০%</button>
+          <button type="button" id="ftZoomIn" aria-label="বড় করুন">+</button>
+        </div>
+        <button type="button" class="btn btn-primary" id="ftAddRoot">➕ নতুন ব্রাঞ্চ / সদস্য</button>
+      </div>
+    </div>
+
+    <div class="ft-stats" id="ftStats"></div>
+
+    <div class="ft-canvas" id="ftCanvas">
+      <div class="ft-tree" id="ftTree"><div class="ft-msg">লোড হচ্ছে...</div></div>
+    </div>
   </div>
-</section>
+</div>
+
+<datalist id="ftRelList">
+  <option value="নিজে"></option><option value="পিতা"></option><option value="মাতা"></option>
+  <option value="স্ত্রী"></option><option value="স্বামী"></option>
+  <option value="ছেলে"></option><option value="মেয়ে"></option>
+  <option value="ভাই"></option><option value="বোন"></option>
+  <option value="দাদা"></option><option value="দাদি"></option>
+  <option value="নানা"></option><option value="নানি"></option>
+  <option value="চাচা"></option><option value="ফুফু"></option>
+  <option value="মামা"></option><option value="খালা"></option>
+  <option value="নাতি"></option><option value="নাতনি"></option>
+</datalist>
+
+<script>
+  (function () {
+    if (window.__familyTreeInit) return;
+    window.__familyTreeInit = true;
+
+    /* ---------- সাবট্যাব প্যানেলের ভেতরে বসানো ---------- */
+    var root = document.getElementById('ftRoot');
+    var host = document.getElementById('subtab-family-tree');
+    if (host && root) {
+      host.innerHTML = '';
+      host.appendChild(root);
+    }
+
+    var TOKEN_KEY = 'personalAppSessionToken';
+    var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+    var PALETTE = ['#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#6366f1'];
+    var GENDER_BN = { Male: 'পুরুষ', Female: 'মহিলা', Other: 'অন্যান্য' };
+    var RING_GRADIENT = {
+      male: 'linear-gradient(135deg,#38bdf8,#2563eb)',
+      female: 'linear-gradient(135deg,#f472b6,#a855f7)',
+      other: 'linear-gradient(135deg,#fbbf24,#f97316)',
+      dead: 'linear-gradient(135deg,#94a3b8,#475569)'
+    };
+
+    function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+    function esc(s) {
+      return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function colorFor(depth) { return PALETTE[depth % PALETTE.length]; }
+    function photoUrl(fileId) { return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(fileId) + '&sz=w300'; }
+    function initialOf(m) { return String(m.name || '?').trim().charAt(0) || '?'; }
+
+    function parseIso(s) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+      return m ? { y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]) } : null;
+    }
+    function fmtDate(s) {
+      var p = parseIso(s);
+      return p ? bn(p.d) + ' ' + BN_MONTHS[p.mo - 1] + ' ' + bn(p.y) : '';
+    }
+    function ageText(m) {
+      var b = parseIso(m.dob);
+      if (!b) return '—';
+      var e;
+      var dead = m.status === 'Deceased';
+      if (dead) {
+        e = parseIso(m.deathDate);
+        if (!e) return '—';
+      } else {
+        var now = new Date();
+        e = { y: now.getFullYear(), mo: now.getMonth() + 1, d: now.getDate() };
+      }
+      var years = e.y - b.y;
+      if (e.mo < b.mo || (e.mo === b.mo && e.d < b.d)) years--;
+      var text;
+      if (years >= 1) {
+        text = bn(years) + ' বছর';
+      } else {
+        var months = (e.y - b.y) * 12 + (e.mo - b.mo) - (e.d < b.d ? 1 : 0);
+        if (months < 0) return '—';
+        text = bn(months) + ' মাস';
+      }
+      return dead ? 'মৃত্যুকালে ' + text : text;
+    }
+
+    /* ---------- State ---------- */
+    var members = [];
+    var byId = {};
+    var partner = {};
+    var secondary = {};
+    var state = 'loading'; // loading | ready | error
+    var maxDepth = 0;
+    var openId = null;
+    var zoom = 1;
+    var saving = false;
+    var pendingPhoto = null;
+
+    var canvasEl = document.getElementById('ftCanvas');
+    var treeEl = document.getElementById('ftTree');
+    var statsEl = document.getElementById('ftStats');
+
+    var pop = document.createElement('div');
+    pop.className = 'ft-pop';
+    document.body.appendChild(pop);
+
+    /* ---------- Data structure ---------- */
+    function hasParent(m) { return !!(m.parentMemberId && byId[m.parentMemberId]); }
+
+    function buildIndex() {
+      byId = {}; partner = {}; secondary = {};
+      members.forEach(function (m) { byId[m.memberId] = m; });
+
+      // দম্পতি জোড়া বাঁধা
+      members.forEach(function (m) {
+        var s = m.spouseMemberId;
+        if (s && byId[s] && s !== m.memberId && !partner[m.memberId] && !partner[s]) {
+          partner[m.memberId] = s;
+          partner[s] = m.memberId;
+        }
+      });
+
+      // জোড়ার মধ্যে যার পিতা/মাতা ট্রিতে আছে সে-ই মূল; অন্যজন পাশে বসে
+      members.forEach(function (m) {
+        var pid = partner[m.memberId];
+        if (!pid || secondary[m.memberId] || secondary[pid]) return;
+        var s = byId[pid];
+        var a = hasParent(m), b = hasParent(s);
+        var prim;
+        if (a && !b) prim = m;
+        else if (b && !a) prim = s;
+        else prim = members.indexOf(m) <= members.indexOf(s) ? m : s;
+        secondary[(prim === m ? s : m).memberId] = true;
+      });
+    }
+
+    function sortByBirth(list) {
+      return list.map(function (m, i) { return { m: m, i: i, k: m.dob || '9999' }; })
+        .sort(function (a, b) { return a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i; })
+        .map(function (x) { return x.m; });
+    }
+
+    function kidsOf(m) {
+      var ids = {};
+      ids[m.memberId] = true;
+      if (partner[m.memberId]) ids[partner[m.memberId]] = true;
+      return sortByBirth(members.filter(function (x) {
+        return !secondary[x.memberId] && x.parentMemberId && ids[x.parentMemberId];
+      }));
+    }
+
+    function descendantsOf(id) {
+      var out = {}, stack = [id];
+      while (stack.length) {
+        var cur = stack.pop();
+        members.forEach(function (x) {
+          if (x.parentMemberId === cur && !out[x.memberId]) { out[x.memberId] = true; stack.push(x.memberId); }
+        });
+      }
+      return out;
+    }
+
+    /* ---------- Render ---------- */
+    function genderClass(m) { return m.gender === 'Male' ? 'male' : (m.gender === 'Female' ? 'female' : 'other'); }
+
+    function cardHtml(m, depth) {
+      var g = genderClass(m);
+      var dead = m.status === 'Deceased';
+      var ini = initialOf(m);
+      var photo = m.photoFileId
+        ? '<div class="ft-photo"><img src="' + esc(photoUrl(m.photoFileId)) + '" alt="' + esc(m.name) + '" data-initial="' + esc(ini) + '"></div>'
+        : '<div class="ft-photo ft-initial">' + esc(ini) + '</div>';
+
+      return '' +
+        '<div class="ft-node' + (dead ? ' ft-deceased' : '') + '" data-id="' + esc(m.memberId) + '" style="--g:' + colorFor(depth) + '">' +
+          '<div class="ft-ring-wrap">' +
+            '<div class="ft-photo-ring ft-ring-' + g + '" role="button" tabindex="0" aria-label="' + esc(m.name) + ' — তথ্য দেখুন">' + photo + '</div>' +
+            (dead ? '<div class="ft-dead-badge" title="প্রয়াত">🕊️</div>' : '') +
+            '<button type="button" class="ft-add" title="এই সদস্যের অধীনে নতুন ব্রাঞ্চ যোগ করুন" aria-label="নতুন ব্রাঞ্চ যোগ করুন">+</button>' +
+          '</div>' +
+          '<div class="ft-name">' + esc(m.name) + '</div>' +
+          (m.relationship ? '<div class="ft-rel">' + esc(m.relationship) + '</div>' : '') +
+        '</div>';
+    }
+
+    function renderUnit(m, depth, visited) {
+      visited[m.memberId] = true;
+      if (depth > maxDepth) maxDepth = depth;
+
+      var sp = partner[m.memberId] ? byId[partner[m.memberId]] : null;
+      if (sp) visited[sp.memberId] = true;
+
+      var left = m, right = sp;
+      if (sp && m.gender === 'Female' && sp.gender === 'Male') { left = sp; right = m; }
+
+      var html = '<li><div class="ft-unit">' + cardHtml(left, depth) +
+        (right ? '<div class="ft-bond"></div>' + cardHtml(right, depth) : '') + '</div>';
+
+      var kids = kidsOf(m).filter(function (k) { return !visited[k.memberId]; });
+      if (kids.length) {
+        html += '<ul style="--c:' + colorFor(depth + 1) + '">' +
+          kids.map(function (k) { return renderUnit(k, depth + 1, visited); }).join('') + '</ul>';
+      }
+      return html + '</li>';
+    }
+
+    function renderStats() {
+      if (state !== 'ready' || !members.length) { statsEl.innerHTML = ''; return; }
+      var dead = members.filter(function (m) { return m.status === 'Deceased'; }).length;
+      statsEl.innerHTML =
+        '<span class="ft-chip c1">👨‍👩‍👧 মোট সদস্য: ' + bn(members.length) + '</span>' +
+        '<span class="ft-chip c2">💚 জীবিত: ' + bn(members.length - dead) + '</span>' +
+        '<span class="ft-chip c3">🕊️ প্রয়াত: ' + bn(dead) + '</span>' +
+        '<span class="ft-chip c4">🌿 প্রজন্ম: ' + bn(maxDepth + 1) + '</span>';
+    }
+
+    function render() {
+      closePop();
+      buildIndex();
+      maxDepth = 0;
+
+      if (state === 'loading') {
+        treeEl.innerHTML = '<div class="ft-msg">লোড হচ্ছে...</div>';
+        renderStats();
+        return;
+      }
+      if (state === 'error') {
+        treeEl.innerHTML = '<div class="ft-msg">ফ্যামিলি ট্রি লোড করা যায়নি।<br><button type="button" class="btn btn-outline" data-action="retry">আবার চেষ্টা করুন</button></div>';
+        renderStats();
+        return;
+      }
+      if (!members.length) {
+        treeEl.innerHTML = '<div class="ft-msg">🌱 এখনো কোনো সদস্য নেই।<br>প্রথমে নিজেকে বা বংশের মূল ব্যক্তিকে যোগ করে ট্রি শুরু করুন।<br>' +
+          '<button type="button" class="btn btn-primary" data-action="add-root">➕ প্রথম সদস্য যোগ করুন</button></div>';
+        renderStats();
+        return;
+      }
+
+      var visited = {};
+      var items = sortByBirth(members.filter(function (m) { return !secondary[m.memberId] && !hasParent(m); }))
+        .map(function (m) { return renderUnit(m, 0, visited); });
+
+      // চক্রের কারণে বাদ পড়া কেউ থাকলে যেন হারিয়ে না যায়
+      members.forEach(function (m) {
+        if (!visited[m.memberId] && !secondary[m.memberId]) items.push(renderUnit(m, 0, visited));
+      });
+
+      treeEl.innerHTML = '<ul>' + items.join('') + '</ul>';
+      treeEl.style.zoom = zoom;
+      renderStats();
+    }
+
+    function loadMembers() {
+      state = 'loading';
+      render();
+      google.script.run
+        .withSuccessHandler(function (list) {
+          members = list || [];
+          state = 'ready';
+          render();
+        })
+        .withFailureHandler(function () {
+          state = 'error';
+          render();
+        })
+        .listFamilyMembers();
+    }
+
+    /* ---------- Popup ---------- */
+    function popHtml(m) {
+      var g = genderClass(m);
+      var dead = m.status === 'Deceased';
+      var grad = dead ? RING_GRADIENT.dead : RING_GRADIENT[g];
+      var ini = initialOf(m);
+      var b = parseIso(m.dob), d = parseIso(m.deathDate);
+      var parent = m.parentMemberId && byId[m.parentMemberId] ? byId[m.parentMemberId] : null;
+      var spouse = partner[m.memberId] ? byId[partner[m.memberId]] : null;
+      var kids = kidsOf(m);
+
+      function row(icon, label, value) {
+        return '<div class="ft-pop-row"><div class="ft-pop-ico">' + icon + '</div><div><div class="ft-pop-label">' + label +
+          '</div><div class="ft-pop-val">' + value + '</div></div></div>';
+      }
+
+      var birth = b ? bn(b.y) + ' <span style="font-weight:600;color:var(--text-muted)">(' + fmtDate(m.dob) + ')</span>' : '—';
+      var rows = row('🎂', 'জন্মসাল', birth);
+      if (dead) {
+        rows += row('🕊️', 'মৃত্যুসাল', d ? bn(d.y) + ' <span style="font-weight:600;color:var(--text-muted)">(' + fmtDate(m.deathDate) + ')</span>' : '—');
+      }
+      rows += row('⏳', 'বয়স', esc(ageText(m)));
+      rows += row('🧬', 'লিঙ্গ ও অবস্থা', esc(GENDER_BN[m.gender] || '—') + ' · ' + (dead ? (m.gender === 'Female' ? 'মরহুমা' : 'মরহুম') : 'জীবিত'));
+      if (parent) rows += row('👪', 'পিতা/মাতা (ট্রিতে)', esc(parent.name));
+      if (spouse) rows += row('💞', 'স্ত্রী/স্বামী', esc(spouse.name));
+      if (kids.length) {
+        rows += row('👶', 'সন্তান (' + bn(kids.length) + ')', kids.map(function (k) { return esc(k.name); }).join(', '));
+      }
+      if (m.notes) rows += row('📝', 'অন্যান্য তথ্য', esc(m.notes).replace(/\n/g, '<br>'));
+
+      var avatar = m.photoFileId
+        ? '<img src="' + esc(photoUrl(m.photoFileId)) + '" alt="" data-initial="' + esc(ini) + '">'
+        : esc(ini);
+
+      return '' +
+        '<div class="ft-pop-head" style="background:' + grad + '">' +
+          '<div class="ft-pop-avatar">' + avatar + '</div>' +
+          '<div><div class="ft-pop-name">' + esc(m.name) + '</div>' +
+          (m.relationship ? '<div class="ft-pop-rel">' + esc(m.relationship) + '</div>' : '') + '</div>' +
+        '</div>' +
+        '<div class="ft-pop-body">' + rows + '</div>' +
+        '<div class="ft-pop-foot" data-id="' + esc(m.memberId) + '">' +
+          '<button type="button" class="ft-pop-btn" data-pop="edit">✏️ সম্পাদনা</button>' +
+          '<button type="button" class="ft-pop-btn" data-pop="add-child">🌿 ব্রাঞ্চ যোগ</button>' +
+          (spouse ? '' : '<button type="button" class="ft-pop-btn" data-pop="add-spouse">💍 স্ত্রী/স্বামী যোগ</button>') +
+          '<button type="button" class="ft-pop-btn danger" data-pop="delete">🗑️ মুছুন</button>' +
+        '</div>' +
+        '<div class="ft-pop-hint">ছবিতে আবার ক্লিক করলে এটি বন্ধ হবে</div>';
+    }
+
+    function positionPop() {
+      if (!openId) return;
+      var ring = canvasEl.querySelector('.ft-node[data-id="' + openId + '"] .ft-photo-ring');
+      if (!ring) { closePop(); return; }
+      var r = ring.getBoundingClientRect();
+      var pw = pop.offsetWidth, ph = pop.offsetHeight;
+      var vw = window.innerWidth, vh = window.innerHeight;
+
+      var left = r.left + r.width / 2 - pw / 2;
+      left = Math.max(8, Math.min(left, vw - pw - 8));
+
+      var top = r.bottom + 12;
+      if (top + ph > vh - 8) {
+        top = r.top - ph - 12;
+        if (top < 8) top = Math.max(8, vh - ph - 8);
+      }
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+    }
+
+    function clearActive() {
+      var act = canvasEl.querySelectorAll('.ft-node.active');
+      for (var i = 0; i < act.length; i++) act[i].classList.remove('active');
+    }
+
+    function openPop(id) {
+      var m = byId[id];
+      if (!m) return;
+      clearActive();
+      openId = id;
+      var node = canvasEl.querySelector('.ft-node[data-id="' + id + '"]');
+      if (node) node.classList.add('active');
+      pop.innerHTML = popHtml(m);
+      pop.classList.add('open');
+      positionPop();
+    }
+
+    function closePop() {
+      openId = null;
+      pop.classList.remove('open');
+      clearActive();
+    }
+
+    /* ছবি লোড না হলে নামের প্রথম অক্ষর দেখাও */
+    function onImgError(e) {
+      var img = e.target;
+      if (!img || img.tagName !== 'IMG') return;
+      var parent = img.parentNode;
+      var ini = img.getAttribute('data-initial') || '?';
+      if (parent.classList.contains('ft-photo')) parent.classList.add('ft-initial');
+      parent.textContent = ini;
+    }
+    canvasEl.addEventListener('error', onImgError, true);
+    pop.addEventListener('error', onImgError, true);
+
+    canvasEl.addEventListener('click', function (e) {
+      var t = e.target;
+
+      var addBtn = t.closest('.ft-add');
+      if (addBtn) {
+        var pid = addBtn.closest('.ft-node').getAttribute('data-id');
+        closePop();
+        openForm({ parentId: pid });
+        return;
+      }
+
+      var ring = t.closest('.ft-photo-ring');
+      if (ring) {
+        var id = ring.closest('.ft-node').getAttribute('data-id');
+        if (openId === id) closePop(); else openPop(id);
+        return;
+      }
+
+      var act = t.closest('[data-action]');
+      if (act) {
+        var a = act.getAttribute('data-action');
+        if (a === 'retry') loadMembers();
+        if (a === 'add-root') openForm({});
+      }
+    });
+
+    canvasEl.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var ring = e.target.closest ? e.target.closest('.ft-photo-ring') : null;
+      if (!ring) return;
+      e.preventDefault();
+      var id = ring.closest('.ft-node').getAttribute('data-id');
+      if (openId === id) closePop(); else openPop(id);
+    });
+
+    pop.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-pop]');
+      if (!btn) return;
+      var id = btn.parentNode.getAttribute('data-id');
+      var m = byId[id];
+      if (!m) return;
+      var action = btn.getAttribute('data-pop');
+      closePop();
+
+      if (action === 'edit') openForm({ member: m });
+      else if (action === 'add-child') openForm({ parentId: id });
+      else if (action === 'add-spouse') openForm({ spouseId: id, gender: m.gender === 'Male' ? 'Female' : (m.gender === 'Female' ? 'Male' : ''), relationship: m.gender === 'Male' ? 'স্ত্রী' : (m.gender === 'Female' ? 'স্বামী' : '') });
+      else if (action === 'delete') confirmDelete(m);
+    });
+
+    // পপআপের বাইরে ক্লিক করলে বন্ধ (ছবির ক্লিক আলাদা করে টগল হয়)
+    document.addEventListener('click', function (e) {
+      if (!openId) return;
+      if (pop.contains(e.target)) return;
+      if (e.target.closest && e.target.closest('.ft-photo-ring')) return;
+      closePop();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
+    window.addEventListener('resize', positionPop);
+    window.addEventListener('scroll', positionPop, true);
+    window.addEventListener('hashchange', closePop);
+
+    /* ---------- Zoom ---------- */
+    function setZoom(z) {
+      zoom = Math.max(0.5, Math.min(1.5, Math.round(z * 10) / 10));
+      treeEl.style.zoom = zoom;
+      document.getElementById('ftZoomReset').textContent = bn(Math.round(zoom * 100)) + '%';
+      closePop();
+    }
+    document.getElementById('ftZoomIn').addEventListener('click', function () { setZoom(zoom + 0.1); });
+    document.getElementById('ftZoomOut').addEventListener('click', function () { setZoom(zoom - 0.1); });
+    document.getElementById('ftZoomReset').addEventListener('click', function () { setZoom(1); });
+    document.getElementById('ftAddRoot').addEventListener('click', function () { openForm({}); });
+
+    /* ---------- Add / Edit form ---------- */
+    function optionHtml(value, label, selected) {
+      return '<option value="' + esc(value) + '"' + (selected ? ' selected' : '') + '>' + esc(label) + '</option>';
+    }
+    function labelOf(x) { return x.name + (x.relationship ? ' (' + x.relationship + ')' : ''); }
+    function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+    function openForm(cfg) {
+      var edit = cfg.member || null;
+      var m = edit || {};
+      pendingPhoto = null;
+
+      var blocked = edit ? descendantsOf(edit.memberId) : {};
+      var selParent = edit ? (m.parentMemberId || '') : (cfg.parentId || '');
+      var selSpouse = edit ? (partner[edit.memberId] || '') : (cfg.spouseId || '');
+
+      var parentOpts = optionHtml('', '— নেই (নতুন মূল ব্রাঞ্চ) —', !selParent) +
+        members.filter(function (x) { return !edit || (x.memberId !== edit.memberId && !blocked[x.memberId]); })
+          .map(function (x) { return optionHtml(x.memberId, labelOf(x), x.memberId === selParent); }).join('');
+
+      var spouseOpts = optionHtml('', '— নেই —', !selSpouse) +
+        members.filter(function (x) {
+          if (edit && x.memberId === edit.memberId) return false;
+          return !partner[x.memberId] || x.memberId === selSpouse;
+        }).map(function (x) { return optionHtml(x.memberId, labelOf(x), x.memberId === selSpouse); }).join('');
+
+      var gender = edit ? (m.gender || '') : (cfg.gender || '');
+      var status = edit ? (m.status || 'Living') : 'Living';
+      var rel = edit ? (m.relationship || '') : (cfg.relationship || '');
+
+      var previewInner = (edit && m.photoFileId)
+        ? '<img src="' + esc(photoUrl(m.photoFileId)) + '" alt="">'
+        : esc(edit ? initialOf(m) : '👤');
+
+      var body =
+        '<div class="ft-form-photo">' +
+          '<div class="ft-form-preview" id="ftfPreview">' + previewInner + '</div>' +
+          '<div style="flex:1;min-width:0;"><input type="file" class="form-input" id="ftfPhoto" accept="image/*">' +
+          '<div class="ft-form-hint">ছবি স্বয়ংক্রিয়ভাবে ছোট করে আপলোড হবে।</div></div>' +
+        '</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-row span-2"><label>নাম *</label><input type="text" class="form-input" id="ftfName" value="' + esc(m.name || '') + '"></div>' +
+          '<div class="form-row"><label>লিঙ্গ</label><select class="form-input" id="ftfGender">' +
+            optionHtml('', 'নির্বাচন করুন', !gender) + optionHtml('Male', 'পুরুষ', gender === 'Male') +
+            optionHtml('Female', 'মহিলা', gender === 'Female') + optionHtml('Other', 'অন্যান্য', gender === 'Other') + '</select></div>' +
+          '<div class="form-row"><label>অবস্থা</label><select class="form-input" id="ftfStatus">' +
+            optionHtml('Living', 'জীবিত', status !== 'Deceased') + optionHtml('Deceased', 'প্রয়াত', status === 'Deceased') + '</select></div>' +
+          '<div class="form-row span-2"><label>সম্পর্ক (যেমন: পিতা, ছেলে, ভাই)</label><input type="text" class="form-input" id="ftfRel" list="ftRelList" value="' + esc(rel) + '"></div>' +
+          '<div class="form-row"><label>জন্ম তারিখ</label><input type="date" class="form-input" id="ftfDob" value="' + esc(m.dob || '') + '"></div>' +
+          '<div class="form-row" id="ftfDeathRow" style="' + (status === 'Deceased' ? '' : 'display:none;') + '"><label>মৃত্যুর তারিখ</label><input type="date" class="form-input" id="ftfDeath" value="' + esc(m.deathDate || '') + '"></div>' +
+          '<div class="form-row span-2"><label>পিতা/মাতা (কার ব্রাঞ্চে যুক্ত হবে)</label><select class="form-input" id="ftfParent">' + parentOpts + '</select></div>' +
+          '<div class="form-row span-2"><label>স্ত্রী/স্বামী</label><select class="form-input" id="ftfSpouse">' + spouseOpts + '</select></div>' +
+          '<div class="form-row span-2"><label>অন্যান্য তথ্য</label><textarea class="form-input" id="ftfNotes" rows="2">' + esc(m.notes || '') + '</textarea></div>' +
+        '</div>' +
+        '<div class="ft-form-hint">সঠিক তারিখ জানা না থাকলে শুধু বছর ঠিক রেখে ১ জানুয়ারি দিন।</div>';
+
+      var title = edit ? 'সদস্যের তথ্য সম্পাদনা' : (cfg.parentId ? 'নতুন ব্রাঞ্চ যোগ করুন' : (cfg.spouseId ? 'স্ত্রী/স্বামী যোগ করুন' : 'নতুন সদস্য যোগ করুন'));
+
+      showModal(title, body, [
+        { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+        { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitForm(edit); } }
+      ]);
+
+      document.getElementById('ftfStatus').addEventListener('change', function () {
+        document.getElementById('ftfDeathRow').style.display = this.value === 'Deceased' ? '' : 'none';
+      });
+
+      document.getElementById('ftfPhoto').addEventListener('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) { pendingPhoto = null; return; }
+        processPhoto(file, function (result) {
+          pendingPhoto = result;
+          document.getElementById('ftfPreview').innerHTML = '<img src="' + result.dataUrl + '" alt="">';
+        });
+      });
+    }
+
+    function processPhoto(file, done) {
+      if (!/^image\//.test(file.type)) {
+        showToast('শুধু ছবির ফাইল দিন (JPG, PNG)।', 'warning');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var max = 600;
+          var scale = Math.min(1, max / Math.max(img.width, img.height));
+          var c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(img.width * scale));
+          c.height = Math.max(1, Math.round(img.height * scale));
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          var url = c.toDataURL('image/jpeg', 0.85);
+          done({ dataUrl: url, base64: url.split(',')[1], mime: 'image/jpeg' });
+        };
+        img.onerror = function () { showToast('ছবিটি পড়া যায়নি।', 'danger'); };
+        img.src = reader.result;
+      };
+      reader.onerror = function () { showToast('ছবিটি পড়া যায়নি।', 'danger'); };
+      reader.readAsDataURL(file);
+    }
+
+    function submitForm(edit) {
+      if (saving) return;
+      var name = val('ftfName').trim();
+      if (!name) { showToast('নাম লিখুন।', 'warning'); return; }
+
+      var status = val('ftfStatus') || 'Living';
+      var dob = val('ftfDob');
+      var death = status === 'Deceased' ? val('ftfDeath') : '';
+      if (dob && death && death < dob) {
+        showToast('মৃত্যুর তারিখ জন্ম তারিখের আগে হতে পারে না।', 'warning');
+        return;
+      }
+
+      var member = {
+        memberId: edit ? edit.memberId : '',
+        name: name,
+        photoFileId: edit ? (edit.photoFileId || '') : '',
+        dob: dob,
+        relationship: val('ftfRel').trim(),
+        gender: val('ftfGender'),
+        status: status,
+        deathDate: death,
+        notes: val('ftfNotes').trim(),
+        parentMemberId: val('ftfParent'),
+        spouseMemberId: val('ftfSpouse')
+      };
+      if (pendingPhoto) {
+        member.photoBase64 = pendingPhoto.base64;
+        member.photoMimeType = pendingPhoto.mime;
+      }
+
+      saving = true;
+      showToast('সংরক্ষণ হচ্ছে...', 'default');
+      google.script.run
+        .withSuccessHandler(function () {
+          saving = false;
+          pendingPhoto = null;
+          hideModal();
+          showToast(edit ? 'সদস্যের তথ্য আপডেট হয়েছে।' : 'নতুন সদস্য ট্রিতে যুক্ত হয়েছে।', 'success');
+          loadMembers();
+        })
+        .withFailureHandler(function (err) {
+          saving = false;
+          showToast((err && err.message) || 'সংরক্ষণ ব্যর্থ হয়েছে।', 'danger');
+        })
+        .saveFamilyTreeMember(localStorage.getItem(TOKEN_KEY), member);
+    }
+
+    /* ---------- Delete ---------- */
+    function confirmDelete(m) {
+      if (kidsOf(m).length || members.some(function (x) { return x.parentMemberId === m.memberId; })) {
+        showToast('এই সদস্যের অধীনে ব্রাঞ্চ আছে। আগে তাদের সরান বা মুছুন।', 'warning');
+        return;
+      }
+      confirmDialog('"' + esc(m.name) + '" কে ফ্যামিলি ট্রি থেকে মুছে ফেলবেন? ছবিটি ড্রাইভের ট্র্যাশে চলে যাবে।', function () {
+        google.script.run
+          .withSuccessHandler(function () {
+            showToast('সদস্য মুছে ফেলা হয়েছে।', 'success');
+            loadMembers();
+          })
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'মুছে ফেলা যায়নি।', 'danger');
+          })
+          .deleteFamilyTreeMember(localStorage.getItem(TOKEN_KEY), m.memberId);
+      });
+    }
+
+    /* ---------- Start ---------- */
+    loadMembers();
+  })();
+</script>

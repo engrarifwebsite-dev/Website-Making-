@@ -12,11 +12,11 @@
 - [x] Personal Information: Profile (with independent photo)
 - [x] Personal Information: Education timeline
 - [x] Personal Information: Education documents (upload, download, delete per qualification)
+- [x] Personal Information: Family Tree UI (colourful tree, photo + name, click photo for details popup, add branch / spouse, edit, delete)
 - [x] Global footer hadith rotation
 
 ## In Progress
-- [ ] Personal Information: Family Tree UI
-  (server functions are done; the subtab in Page_PersonalInfo.html is still a placeholder)
+- (none)
 
 ## Pending (by phase)
 - [ ] Budget Management (Phase 7)
@@ -36,6 +36,7 @@
 - [ ] Show `getMonthlyHolidays()` data on the Home page; the server function exists but nothing calls it.
 - [ ] Apply the `HijriAdjustment` setting on the Home page; it is seeded in Settings but not used yet.
 - [ ] Sidebar footer still says "Version 1.0 · Phase 3"; update it.
-- [ ] `Page_FamilyTree.html` is an old placeholder and is not included in Index.html; remove it once Family Tree lives inside Personal Info.
+- [ ] `Page_FamilyTree.html` is an old placeholder and is not included in Index.html; remove it.
+- [ ] Family Tree markup lives in `Partial_FamilyTree.html` and is moved into the Personal Info "ফ্যামিলি ট্রি" subtab at load time. When convenient, replace the placeholder inside `Page_PersonalInfo.html` (`#subtab-family-tree`) with `<?!= include('Partial_FamilyTree'); ?>` and remove the include from `Index.html`.
 - [ ] Add the `EducationDocuments` tab to `Setup_PersonalInfo.gs` (columns: DocID, EducationID, DocType, FileName, FileID, MimeType, SizeBytes, UploadedAt). It is currently created automatically on first use.
 - [ ] Suspicious-login detection in `logLoginActivity_` (planned for Phase 17).
