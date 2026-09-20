@@ -1,0 +1,395 @@
+<section id="page-personal-info" class="page">
+  <div class="subtabs">
+    <button class="subtab-btn active" data-subtab="profile">প্রোফাইল</button>
+    <button class="subtab-btn" data-subtab="family-tree">ফ্যামিলি ট্রি</button>
+  </div>
+
+  <div class="subtab-panel active" id="subtab-profile">
+
+    <div class="card profile-card">
+      <div class="profile-card-header">
+        <div>
+          <h2 class="profile-card-title">ব্যক্তিগত তথ্য</h2>
+          <p class="profile-card-subtitle">আপনার ব্যক্তিগত তথ্য ও প্রোফাইল তথ্যসমূহ এখানে দেখুন ও আপডেট করুন।</p>
+        </div>
+        <button type="button" class="btn btn-outline" id="btnEditProfile">✏️ তথ্য সম্পাদনা করুন</button>
+      </div>
+
+      <div class="profile-card-body">
+        <div class="profile-photo-col">
+          <div class="profile-photo-wrap" id="profilePhotoWrap">
+            <div class="profile-photo-fallback" id="profilePhotoFallback">?</div>
+          </div>
+          <button type="button" class="btn btn-outline profile-photo-btn" id="btnChangeProfilePhotoPI">📷 ছবি পরিবর্তন করুন</button>
+          <div class="profile-photo-hint">JPG, PNG (Max 2MB)</div>
+        </div>
+
+        <div class="profile-fields-col" id="profileFieldsView">
+          <div class="profile-empty">লোড হচ্ছে...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card profile-contact-card" id="profileContactCard" style="display:none;">
+      <div class="home-card-title">যোগাযোগ ও অন্যান্য তথ্য</div>
+      <div class="profile-fields-col" id="profileContactView"></div>
+    </div>
+
+    <div class="card education-card">
+      <div class="education-card-header">
+        <div class="education-card-title">🎓 শিক্ষাগত যোগ্যতা</div>
+        <button type="button" class="education-edit-link" id="btnEditEducation">সম্পাদনা</button>
+      </div>
+      <div class="education-timeline" id="educationTimeline">
+        <div class="profile-empty">লোড হচ্ছে...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="subtab-panel" id="subtab-family-tree">
+    <div class="page-placeholder">
+      <h2>ফ্যামিলি ট্রি</h2>
+      <p>এই সেকশনের কন্টেন্ট পরবর্তী ধাপে যুক্ত হবে।</p>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  (function () {
+    if (window.__personalInfoInit) return;
+    window.__personalInfoInit = true;
+
+    var TOKEN_KEY = 'personalAppSessionToken';
+
+    var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    function bnDigits_(v) {
+      return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; });
+    }
+
+    var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+    function formatDateBn_(isoStr) {
+      if (!isoStr) return '';
+      var d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return bnDigits_(d.getDate()) + ' ' + BN_MONTHS[d.getMonth()] + ' ' + bnDigits_(d.getFullYear());
+    }
+
+    function escapeHtml_(str) {
+      return String(str || '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    /* ---------- Field definitions ---------- */
+    var MAIN_FIELDS = [
+      { key: 'NameBn', label: 'নাম (বাংলা)', icon: '👤', span: 2 },
+      { key: 'NameEn', label: 'নাম (English)', icon: '🌐', span: 2 },
+      { key: 'Father', label: 'পিতা', icon: '👨', span: 2 },
+      { key: 'Mother', label: 'মাতা', icon: '👩', span: 2 },
+      { key: 'DOB', label: 'জন্ম তারিখ', icon: '🎂', span: 1, type: 'date' },
+      { key: 'Nationality', label: 'জাতীয়তা', icon: '🌍', span: 1 },
+      { key: 'BloodGroup', label: 'রক্তের গ্রুপ', icon: '🩸', span: 1, type: 'select',
+        options: ['A+','A-','B+','B-','AB+','AB-','O+','O-'] },
+      { key: 'Religion', label: 'ধর্ম', icon: '🕌', span: 1 },
+      { key: 'MaritalStatus', label: 'বৈবাহিক অবস্থা', icon: '💍', span: 2, type: 'select',
+        options: ['অবিবাহিত','বিবাহিত','বিধবা/বিপত্নীক','তালাকপ্রাপ্ত'] },
+      { key: 'Spouse', label: 'স্ত্রী/স্বামী', icon: '💑', span: 2 },
+      { key: 'Children', label: 'সন্তান', icon: '👶', span: 2 }
+    ];
+
+    var CONTACT_FIELDS = [
+      { key: 'Phone', label: 'ফোন', icon: '📞', span: 1 },
+      { key: 'Email', label: 'ইমেইল', icon: '✉️', span: 1 },
+      { key: 'PermanentAddress', label: 'স্থায়ী ঠিকানা', icon: '🏠', span: 2, type: 'textarea' },
+      { key: 'CurrentAddress', label: 'বর্তমান ঠিকানা', icon: '📍', span: 2, type: 'textarea' },
+      { key: 'Occupation', label: 'পেশা', icon: '💼', span: 2 },
+      { key: 'Notes', label: 'অন্যান্য তথ্য', icon: '📝', span: 2, type: 'textarea' }
+    ];
+
+    var currentProfile = {};
+
+    /* ---------- Photo (INDEPENDENT of the header avatar — its own upload) ---------- */
+    function renderProfilePhoto() {
+      var wrap = document.getElementById('profilePhotoWrap');
+      var fileId = currentProfile.PhotoFileID;
+      var initial = (currentProfile.NameBn || currentProfile.NameEn || '?').trim().charAt(0);
+      wrap.innerHTML = '';
+      if (fileId) {
+        var img = document.createElement('img');
+        img.alt = 'Profile';
+        img.src = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w300';
+        img.onerror = function () {
+          wrap.innerHTML = '<div class="profile-photo-fallback">' + escapeHtml_(initial) + '</div>';
+        };
+        wrap.appendChild(img);
+      } else {
+        wrap.innerHTML = '<div class="profile-photo-fallback">' + escapeHtml_(initial) + '</div>';
+      }
+    }
+
+    var profilePhotoInput = document.createElement('input');
+    profilePhotoInput.type = 'file';
+    profilePhotoInput.accept = 'image/*';
+    profilePhotoInput.style.display = 'none';
+    document.body.appendChild(profilePhotoInput);
+
+    document.getElementById('btnChangeProfilePhotoPI').addEventListener('click', function () {
+      profilePhotoInput.click();
+    });
+
+    profilePhotoInput.addEventListener('change', function () {
+      var file = profilePhotoInput.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        var base64 = reader.result.split(',')[1];
+        var token = localStorage.getItem(TOKEN_KEY);
+        showToast('ছবি আপলোড হচ্ছে...', 'default');
+
+        google.script.run
+          .withSuccessHandler(function (fileId) {
+            currentProfile.PhotoFileID = fileId;
+            renderProfilePhoto();
+            showToast('প্রোফাইল ছবি পরিবর্তন হয়েছে।', 'success');
+          })
+          .withFailureHandler(function (err) {
+            showToast(err.message || 'ছবি আপলোড ব্যর্থ হয়েছে।', 'danger');
+          })
+          .uploadProfileMainPhoto(token, base64, file.type);
+      };
+      reader.readAsDataURL(file);
+      profilePhotoInput.value = '';
+    });
+
+    /* ---------- Render view mode ---------- */
+    function renderFieldRow(field, value) {
+      var displayValue = value;
+      if (field.type === 'date') displayValue = formatDateBn_(value);
+      if (!displayValue) return '';
+      return '' +
+        '<div class="profile-field' + (field.span === 2 ? ' span-2' : '') + '">' +
+          '<div class="profile-field-icon">' + field.icon + '</div>' +
+          '<div>' +
+            '<div class="profile-field-label">' + field.label + '</div>' +
+            '<div class="profile-field-value">' + escapeHtml_(displayValue).replace(/\n/g, '<br>') + '</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function renderProfileView(profile) {
+      var mainHtml = MAIN_FIELDS.map(function (f) { return renderFieldRow(f, profile[f.key]); }).join('');
+      var viewEl = document.getElementById('profileFieldsView');
+      viewEl.innerHTML = mainHtml || '<div class="profile-empty">এখনো কোনো তথ্য যোগ করা হয়নি — "তথ্য সম্পাদনা করুন" চেপে শুরু করুন।</div>';
+
+      var contactHtml = CONTACT_FIELDS.map(function (f) { return renderFieldRow(f, profile[f.key]); }).join('');
+      var contactCard = document.getElementById('profileContactCard');
+      if (contactHtml) {
+        document.getElementById('profileContactView').innerHTML = contactHtml;
+        contactCard.style.display = 'block';
+      } else {
+        contactCard.style.display = 'none';
+      }
+    }
+
+    /* ---------- Edit mode (modal, reusing the global modal system) ---------- */
+    function fieldInputHtml_(field, value) {
+      var id = 'edit_' + field.key;
+      if (field.type === 'select') {
+        var opts = '<option value="">নির্বাচন করুন</option>' + field.options.map(function (o) {
+          return '<option value="' + o + '"' + (value === o ? ' selected' : '') + '>' + o + '</option>';
+        }).join('');
+        return '<select class="form-input" id="' + id + '">' + opts + '</select>';
+      }
+      if (field.type === 'textarea') {
+        return '<textarea class="form-input" id="' + id + '" rows="2">' + escapeHtml_(value) + '</textarea>';
+      }
+      if (field.type === 'date') {
+        return '<input type="date" class="form-input" id="' + id + '" value="' + escapeHtml_(value) + '">';
+      }
+      return '<input type="text" class="form-input" id="' + id + '" value="' + escapeHtml_(value) + '">';
+    }
+
+    function openProfileEditModal() {
+      var allFields = MAIN_FIELDS.concat(CONTACT_FIELDS);
+      var bodyHtml = '<div class="form-grid">' + allFields.map(function (f) {
+        return '<div class="form-row' + (f.span === 2 ? ' span-2' : '') + '">' +
+          '<label>' + f.icon + ' ' + f.label + '</label>' +
+          fieldInputHtml_(f, currentProfile[f.key] || '') +
+          '</div>';
+      }).join('') + '</div>';
+
+      showModal('তথ্য সম্পাদনা করুন', bodyHtml, [
+        { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+        { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: submitProfileEdit }
+      ]);
+    }
+
+    function submitProfileEdit() {
+      var allFields = MAIN_FIELDS.concat(CONTACT_FIELDS);
+      var changed = {};
+      allFields.forEach(function (f) {
+        var el = document.getElementById('edit_' + f.key);
+        if (el) changed[f.key] = el.value;
+      });
+
+      var token = localStorage.getItem(TOKEN_KEY);
+      google.script.run
+        .withSuccessHandler(function () {
+          Object.keys(changed).forEach(function (k) { currentProfile[k] = changed[k]; });
+          hideModal();
+          renderProfileView(currentProfile);
+          showToast('প্রোফাইল তথ্য সংরক্ষণ হয়েছে।', 'success');
+        })
+        .withFailureHandler(function (err) {
+          showToast(err.message || 'সংরক্ষণ ব্যর্থ হয়েছে।', 'danger');
+        })
+        .saveProfile(token, changed);
+    }
+
+    document.getElementById('btnEditProfile').addEventListener('click', openProfileEditModal);
+
+    /* ---------- Education timeline (separate multi-entry section) ---------- */
+    var currentEducation = [];
+    var EDU_DOT_COLORS = ['#3B82F6', '#10B981', '#10B981', '#F59E0B'];
+    var eduRowCounter = 0;
+
+    function renderEducationTimeline(list) {
+      var el = document.getElementById('educationTimeline');
+      if (!list || !list.length) {
+        el.innerHTML = '<div class="profile-empty">এখনো কোনো শিক্ষাগত তথ্য যোগ করা হয়নি।</div>';
+        return;
+      }
+      el.innerHTML = list.map(function (item, i) {
+        var metaParts = [];
+        if (item.passingYear) metaParts.push('Passing Year: ' + item.passingYear);
+        if (item.gradeValue) {
+          metaParts.push((item.gradeType || 'গ্রেড') + ': ' + item.gradeValue + (item.gradeScale ? ' (out of ' + item.gradeScale + ')' : ''));
+        }
+        var color = EDU_DOT_COLORS[i % EDU_DOT_COLORS.length];
+        return '<div class="education-item" style="--dot-color:' + color + '">' +
+          '<div class="education-degree">' + escapeHtml_(item.degree) + '</div>' +
+          (item.institution ? '<div class="education-institution">' + escapeHtml_(item.institution) + '</div>' : '') +
+          (metaParts.length ? '<div class="education-meta">' + metaParts.map(function (p) { return escapeHtml_(p); }).join('&nbsp;&nbsp;|&nbsp;&nbsp;') + '</div>' : '') +
+          '</div>';
+      }).join('');
+    }
+
+    function loadEducation() {
+      google.script.run
+        .withSuccessHandler(function (list) {
+          currentEducation = list || [];
+          renderEducationTimeline(currentEducation);
+        })
+        .withFailureHandler(function () {
+          document.getElementById('educationTimeline').innerHTML = '<div class="profile-empty">লোড করা যায়নি।</div>';
+        })
+        .getEducationList();
+    }
+
+    function educationRowHtml_(r, idx) {
+      var gradeTypeOptions = ['', 'CGPA', 'GPA', 'Division', 'অন্যান্য'].map(function (o) {
+        return '<option value="' + o + '"' + ((r.gradeType || '') === o ? ' selected' : '') + '>' + (o || 'নির্বাচন করুন') + '</option>';
+      }).join('');
+
+      return '' +
+        '<div class="education-edit-row" id="eduRow_' + idx + '">' +
+          '<div class="form-grid">' +
+            '<div class="form-row span-2"><label>ডিগ্রি/পরীক্ষার নাম</label><input type="text" class="form-input" id="eduDegree_' + idx + '" value="' + escapeHtml_(r.degree) + '"></div>' +
+            '<div class="form-row span-2"><label>প্রতিষ্ঠান</label><input type="text" class="form-input" id="eduInst_' + idx + '" value="' + escapeHtml_(r.institution) + '"></div>' +
+            '<div class="form-row"><label>পাসের বছর</label><input type="text" class="form-input" id="eduYear_' + idx + '" value="' + escapeHtml_(r.passingYear) + '"></div>' +
+            '<div class="form-row"><label>গ্রেড ধরন</label><select class="form-input" id="eduGType_' + idx + '">' + gradeTypeOptions + '</select></div>' +
+            '<div class="form-row"><label>গ্রেড মান</label><input type="text" class="form-input" id="eduGVal_' + idx + '" value="' + escapeHtml_(r.gradeValue) + '"></div>' +
+            '<div class="form-row"><label>স্কেল (out of)</label><input type="text" class="form-input" id="eduGScale_' + idx + '" value="' + escapeHtml_(r.gradeScale) + '"></div>' +
+          '</div>' +
+          '<button type="button" class="btn btn-danger education-remove-btn" id="eduRemove_' + idx + '">🗑️ এই এন্ট্রি মুছুন</button>' +
+          '<hr class="education-row-divider">' +
+        '</div>';
+    }
+
+    function attachEduRemoveHandler_(idx) {
+      var btn = document.getElementById('eduRemove_' + idx);
+      if (btn) {
+        btn.addEventListener('click', function () {
+          var row = document.getElementById('eduRow_' + idx);
+          if (row) row.remove();
+        });
+      }
+    }
+
+    function openEducationEditModal() {
+      eduRowCounter = 0;
+      var rows = currentEducation.length ? currentEducation.slice() : [{}];
+      var bodyHtml = '<div id="eduRowsContainer">' +
+        rows.map(function (r) { return educationRowHtml_(r, eduRowCounter++); }).join('') +
+        '</div>' +
+        '<button type="button" class="btn btn-outline" id="btnAddEduRow" style="margin-top:4px;">+ নতুন যোগ করুন</button>';
+
+      showModal('শিক্ষাগত যোগ্যতা সম্পাদনা', bodyHtml, [
+        { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+        { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: submitEducationEdit }
+      ]);
+
+      rows.forEach(function (r, i) { attachEduRemoveHandler_(i); });
+
+      document.getElementById('btnAddEduRow').addEventListener('click', function () {
+        var container = document.getElementById('eduRowsContainer');
+        var idx = eduRowCounter++;
+        container.insertAdjacentHTML('beforeend', educationRowHtml_({}, idx));
+        attachEduRemoveHandler_(idx);
+      });
+    }
+
+    function submitEducationEdit() {
+      var rowEls = document.querySelectorAll('#eduRowsContainer .education-edit-row');
+      var entries = [];
+      rowEls.forEach(function (rowEl) {
+        var idx = rowEl.id.replace('eduRow_', '');
+        entries.push({
+          degree: (document.getElementById('eduDegree_' + idx) || {}).value || '',
+          institution: (document.getElementById('eduInst_' + idx) || {}).value || '',
+          passingYear: (document.getElementById('eduYear_' + idx) || {}).value || '',
+          gradeType: (document.getElementById('eduGType_' + idx) || {}).value || '',
+          gradeValue: (document.getElementById('eduGVal_' + idx) || {}).value || '',
+          gradeScale: (document.getElementById('eduGScale_' + idx) || {}).value || ''
+        });
+      });
+
+      var token = localStorage.getItem(TOKEN_KEY);
+      google.script.run
+        .withSuccessHandler(function () {
+          hideModal();
+          loadEducation();
+          showToast('শিক্ষাগত তথ্য সংরক্ষণ হয়েছে।', 'success');
+        })
+        .withFailureHandler(function (err) {
+          showToast(err.message || 'সংরক্ষণ ব্যর্থ হয়েছে।', 'danger');
+        })
+        .setEducationList(token, entries);
+    }
+
+    document.getElementById('btnEditEducation').addEventListener('click', openEducationEditModal);
+
+    /* ---------- Initial load ---------- */
+    function loadProfile() {
+      google.script.run
+        .withSuccessHandler(function (profile) {
+          currentProfile = profile || {};
+          renderProfileView(currentProfile);
+          renderProfilePhoto();
+        })
+        .withFailureHandler(function () {
+          document.getElementById('profileFieldsView').innerHTML =
+            '<div class="profile-empty">তথ্য লোড করা যায়নি।</div>';
+          renderProfilePhoto();
+        })
+        .getProfile();
+    }
+
+    loadProfile();
+    loadEducation();
+
+  })();
+</script>

@@ -1,0 +1,43 @@
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-brand">
+      <div class="auth-brand-logo" id="authBrandLogo"></div>
+      <div class="auth-brand-title">প্রকৌশলী মোঃ আরিফ হোসাইন</div>
+      <div class="auth-brand-sub">ইঞ্জিনিয়ার, পটুয়াখালী গ্রিড</div>
+    </div>
+
+    <div class="auth-loading" id="authLoading">লোড হচ্ছে...</div>
+
+    <!-- First-run only: create the one owner account -->
+    <form id="setupForm" class="auth-form" style="display:none;">
+      <h2>অ্যাকাউন্ট সেটআপ</h2>
+      <p class="auth-note">প্রথমবার ব্যবহারের জন্য একটি অ্যাকাউন্ট তৈরি করুন।</p>
+
+      <label>নাম</label>
+      <input type="text" id="setupName" class="form-input" required>
+
+      <label>ইমেইল</label>
+      <input type="email" id="setupEmail" class="form-input" required>
+
+      <label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>
+      <input type="password" id="setupPassword" class="form-input" required minlength="6">
+
+      <div class="auth-error" id="setupError"></div>
+      <button type="submit" class="btn btn-primary auth-submit">অ্যাকাউন্ট তৈরি করুন</button>
+    </form>
+
+    <!-- Normal login -->
+    <form id="loginForm" class="auth-form" style="display:none;">
+      <h2>লগইন করুন</h2>
+
+      <label>ইমেইল</label>
+      <input type="email" id="loginEmail" class="form-input" required>
+
+      <label>পাসওয়ার্ড</label>
+      <input type="password" id="loginPassword" class="form-input" required>
+
+      <div class="auth-error" id="loginError"></div>
+      <button type="submit" class="btn btn-primary auth-submit">লগইন</button>
+    </form>
+  </div>
+</div>

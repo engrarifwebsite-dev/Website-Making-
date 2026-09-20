@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <?!= include('Stylesheet_Global'); ?>
+</head>
+<body>
+  <?!= include('Partial_Auth'); ?>
+
+  <div id="app">
+    <?!= include('Partial_Sidebar'); ?>
+
+    <div class="app-main">
+      <?!= include('Partial_Header'); ?>
+
+      <main id="content" class="content">
+        <?!= include('Page_Home'); ?>
+        <?!= include('Page_PersonalInfo'); ?>
+        <?!= include('Page_Budget'); ?>
+        <?!= include('Page_PowerGrid'); ?>
+        <?!= include('Page_Tax'); ?>
+        <?!= include('Page_Zakat'); ?>
+        <?!= include('Page_PrinceHisab'); ?>
+        <?!= include('Page_MyTransactions'); ?>
+        <?!= include('Page_EmergencyDocuments'); ?>
+        <?!= include('Page_IslamicCorner'); ?>
+        <?!= include('Page_Assets'); ?>
+        <?!= include('Page_AIHub'); ?>
+        <?!= include('Page_Settings'); ?>
+      </main>
+
+      <?!= include('Partial_Footer'); ?>
+    </div>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  </div>
+
+  <?!= include('Partial_Modals'); ?>
+
+  <?!= include('JS_App'); ?>
+  <?!= include('JS_Auth'); ?>
+</body>
+</html>

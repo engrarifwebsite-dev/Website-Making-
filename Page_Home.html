@@ -1,0 +1,905 @@
+<section id="page-home" class="page active">
+
+  <style>
+    /* =========================================================
+       PREMIUM HOME DASHBOARD
+       ========================================================= */
+
+    #page-home {
+      --navy: #071a33;
+      --blue: #1769aa;
+      --gold: #d6a84f;
+      --text: #172033;
+      --muted: #718096;
+      --border: #e5ebf2;
+      --bg: #f5f8fc;
+
+      width: 100%;
+    }
+
+    #page-home * {
+      box-sizing: border-box;
+    }
+
+    #page-home .home-grid {
+      display: grid;
+      grid-template-columns:
+        minmax(280px, 0.85fr)
+        minmax(480px, 1.6fr)
+        minmax(300px, 0.95fr);
+      gap: 18px;
+      width: 100%;
+    }
+
+    /* =========================================================
+       HERO SLIDESHOW
+       ========================================================= */
+
+    #page-home .hero-slideshow {
+      position: relative;
+      width: 100%;
+      height: 260px;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      background: #0b1830;
+      box-shadow: 0 15px 40px rgba(7, 26, 51, .12);
+    }
+
+    #page-home .hero-slide-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #page-home .hero-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 0.7s ease;
+    }
+
+    #page-home .hero-slide.active {
+      opacity: 1;
+    }
+
+    #page-home .hero-slide::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, rgba(7,26,51,.75) 0%, rgba(7,26,51,.15) 45%, transparent 70%);
+    }
+
+    #page-home .hero-caption {
+      position: absolute;
+      left: 24px;
+      right: 90px;
+      bottom: 22px;
+      z-index: 2;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.6;
+      text-shadow: 0 2px 8px rgba(0,0,0,.4);
+    }
+
+    #page-home .hero-caption-source {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    #page-home .hero-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(7,26,51,.45);
+      color: #fff;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #page-home .hero-nav:hover { background: rgba(7,26,51,.7); }
+    #page-home .hero-nav-prev { left: 14px; }
+    #page-home .hero-nav-next { right: 14px; }
+
+    #page-home .hero-counter {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      z-index: 3;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(7,26,51,.5);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    #page-home .hero-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    #page-home .hero-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.45);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    #page-home .hero-dot.active {
+      background: #fff;
+      width: 18px;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 780px) {
+      #page-home .hero-slideshow { height: 190px; }
+      #page-home .hero-caption { font-size: 13px; right: 60px; bottom: 16px; }
+    }
+
+    #page-home .home-card {
+      position: relative;
+      min-width: 0;
+      padding: 22px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(7, 26, 51, .09);
+      overflow: hidden;
+    }
+
+    #page-home .home-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--navy), var(--blue), var(--gold));
+    }
+
+    #page-home .home-card-title {
+      margin-bottom: 16px;
+      color: var(--navy);
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    #page-home .date-card {
+      background:
+        radial-gradient(circle at 90% 10%, rgba(23,105,170,.10), transparent 35%),
+        linear-gradient(145deg, #ffffff, #f8fbff);
+    }
+
+    #page-home .home-clock {
+      margin: 5px 0 12px;
+      color: var(--navy);
+      font-size: clamp(32px, 3vw, 46px);
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    #page-home .home-day {
+      margin-bottom: 17px;
+      color: var(--blue);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    #page-home .home-date-row {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    #page-home .home-date-row:last-child { border-bottom: 0; }
+    #page-home .home-date-row span:first-child { color: var(--muted); font-size: 12px; font-weight: 800; }
+    #page-home .home-date-row span:last-child { color: var(--text); font-size: 14px; font-weight: 700; }
+    #page-home .hijri-live { color: #16794c !important; }
+
+    #page-home .prayer-card { display: flex; flex-direction: column; }
+
+    #page-home .prayer-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      background: #f5f8fc;
+      border-radius: 12px;
+    }
+
+    #page-home .prayer-location { color: var(--muted); font-size: 12px; font-weight: 700; }
+    #page-home .prayer-next { color: var(--navy); font-size: 12px; font-weight: 800; text-align: right; }
+
+    #page-home .prayer-list {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(65px, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    #page-home .prayer-item {
+      padding: 12px 6px 10px;
+      text-align: center;
+      background: #fbfcfe;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    #page-home .prayer-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(7,26,51,.08);
+    }
+
+    #page-home .prayer-item.next {
+      background: linear-gradient(180deg, #eef6ff, #ffffff);
+      border-color: rgba(23,105,170,.45);
+      box-shadow: inset 0 0 0 1px rgba(23,105,170,.06);
+    }
+
+    #page-home .prayer-name { min-height: 30px; color: var(--muted); font-size: 11px; font-weight: 800; line-height: 1.35; }
+    #page-home .prayer-item.next .prayer-name { color: var(--blue); }
+    #page-home .prayer-time { margin: 6px 0 7px; color: var(--navy); font-size: 14px; font-weight: 900; white-space: nowrap; }
+    #page-home .prayer-span { min-height: 32px; color: #7b8798; font-size: 9.5px; font-weight: 700; line-height: 1.35; }
+
+    #page-home .weather-card {
+      background:
+        radial-gradient(circle at 90% 8%, rgba(214,168,79,.12), transparent 32%),
+        linear-gradient(145deg, #ffffff, #f9fbfe);
+    }
+
+    #page-home .weather-head { display: flex; align-items: center; gap: 12px; margin: 4px 0 17px; }
+
+    #page-home .weather-icon {
+      width: 55px; height: 55px;
+      display: grid; place-items: center;
+      background: #eef5fc;
+      border-radius: 16px;
+      font-size: 29px;
+    }
+
+    #page-home .weather-temp { color: var(--navy); font-size: 35px; font-weight: 900; line-height: 1; }
+    #page-home .weather-condition { margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 800; }
+
+    #page-home .weather-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+    #page-home .weather-stat {
+      padding: 10px 11px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    #page-home .weather-label { margin-bottom: 4px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    #page-home .weather-value { color: var(--text); font-size: 12px; font-weight: 900; line-height: 1.35; }
+    #page-home .weather-updated { margin-top: 13px; color: #8994a4; font-size: 9.5px; font-weight: 700; text-align: right; }
+
+    @media (max-width: 1180px) {
+      #page-home .home-grid { grid-template-columns: 1fr 1fr; }
+      #page-home .weather-card { grid-column: 1 / -1; }
+      #page-home .prayer-list { grid-template-columns: repeat(7, minmax(60px, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      #page-home .home-grid { grid-template-columns: 1fr; }
+      #page-home .weather-card { grid-column: auto; }
+      #page-home .home-card { padding: 18px; border-radius: 17px; }
+      #page-home .prayer-list { grid-template-columns: 1fr 1fr; }
+      #page-home .prayer-item:first-child { grid-column: span 2; }
+    }
+
+    @media (max-width: 430px) {
+      #page-home .weather-grid { grid-template-columns: 1fr; }
+      #page-home .home-date-row { grid-template-columns: 55px 1fr; }
+    }
+  </style>
+
+  <div class="hero-slideshow" id="heroSlideshow" style="display:none;">
+    <div class="hero-slide-track" id="heroSlideTrack"></div>
+    <button type="button" class="hero-nav hero-nav-prev" id="heroPrev" aria-label="আগের ছবি">‹</button>
+    <button type="button" class="hero-nav hero-nav-next" id="heroNext" aria-label="পরের ছবি">›</button>
+    <div class="hero-counter" id="heroCounter">১/১</div>
+    <div class="hero-dots" id="heroDots"></div>
+  </div>
+
+  <div class="home-grid">
+
+    <div class="card home-card date-card">
+      <div class="home-card-title">📅 তারিখ ও সময়</div>
+      <div class="home-clock" id="homeClock">--:--:--</div>
+      <div class="home-day" id="homeDayName">লোড হচ্ছে...</div>
+      <div class="home-date-row"><span>বাংলা</span><span id="homeBanglaDate">লোড হচ্ছে...</span></div>
+      <div class="home-date-row"><span>হিজরি</span><span id="homeHijriDate" class="hijri-live">রিয়েল-টাইমে লোড হচ্ছে...</span></div>
+      <div class="home-date-row"><span>ইংরেজি</span><span id="homeGregDate">লোড হচ্ছে...</span></div>
+    </div>
+
+    <div class="card home-card prayer-card">
+      <div class="home-card-title">🕌 নামাজের সময়সূচী</div>
+      <div class="prayer-meta">
+        <div class="prayer-location" id="prayerLocation">লোকেশন লোড হচ্ছে...</div>
+        <div class="prayer-next" id="prayerNext">হিসাব হচ্ছে...</div>
+      </div>
+      <div class="prayer-list" id="prayerList"><div>নামাজের সময় লোড হচ্ছে...</div></div>
+    </div>
+
+    <div class="card home-card weather-card">
+      <div class="home-card-title">🌤️ আবহাওয়া — <span id="weatherLocationName">লোড হচ্ছে...</span></div>
+
+      <div class="weather-head">
+        <div class="weather-icon" id="weatherIcon">⏳</div>
+        <div>
+          <div class="weather-temp" id="weatherTemp">--°C</div>
+          <div class="weather-condition" id="weatherMain">আবহাওয়ার তথ্য লোড হচ্ছে...</div>
+        </div>
+      </div>
+
+      <div class="weather-grid">
+        <div class="weather-stat">
+          <div class="weather-label">🌡️ তাপমাত্রা</div>
+          <div class="weather-value" id="weatherTemperature">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">🌧️ বৃষ্টিপাত</div>
+          <div class="weather-value" id="weatherRain">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">💧 আর্দ্রতা</div>
+          <div class="weather-value" id="weatherHumidity">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">🌫️ শিশিরাঙ্ক</div>
+          <div class="weather-value" id="weatherDewPoint">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">🧭 বায়ুচাপ</div>
+          <div class="weather-value" id="weatherPressure">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">💨 বায়ুপ্রবাহ</div>
+          <div class="weather-value" id="weatherWind">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">🥶 শৈত্যপ্রবাহ</div>
+          <div class="weather-value" id="weatherColdWave">--</div>
+        </div>
+
+        <div class="weather-stat">
+          <div class="weather-label">☁️ আকাশের অবস্থা</div>
+          <div class="weather-value" id="weatherSky">--</div>
+        </div>
+      </div>
+
+      <div class="weather-updated" id="weatherUpdated">সর্বশেষ তথ্য: --</div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__homeRealtimeLoaded) return;
+      window.__homeRealtimeLoaded = true;
+
+      // Fire this off first — it's the slowest-feeling card if delayed,
+      // and google.script.run calls are async/non-blocking anyway, so
+      // starting it before the clock/prayer/weather setup below lets it
+      // load in parallel instead of waiting its turn.
+      loadHeroSlideshow();
+
+      var TIMEZONE = 'Asia/Dhaka';
+
+      var DEFAULT_CONFIG = {
+        lat: 22.3596,
+        lng: 90.3298,
+        prayerMethod: '1',
+        prayerSchool: '1',
+        locationName: 'পটুয়াখালী'
+      };
+
+      var currentConfig = null;
+      var prayerTimings = null;
+      var prayerDateKey = null;
+      var lastDateKey = null;
+
+      var PRAYERS = [
+        { key: 'Fajr', label: 'ফজর' },
+        { key: 'Sunrise', label: 'সূর্যদয়' },
+        { key: 'Dhuhr', label: 'যোহর' },
+        { key: 'Asr', label: 'আসর' },
+        { key: 'Sunset', label: 'সূর্যাস্ত' },
+        { key: 'Maghrib', label: 'মাগরিব' },
+        { key: 'Isha', label: 'এশা' }
+      ];
+
+      var HIJRI_MONTHS = [
+        'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জমাদিউল আউয়াল', 'জমাদিউস সানি',
+        'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'
+      ];
+
+      var BANGLA_MONTHS = [
+        'বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন',
+        'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'
+      ];
+
+      var BANGLA_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+
+      var WIND_DIRECTIONS_BN = [
+        'উত্তর', 'উত্তর-পূর্ব', 'পূর্ব', 'দক্ষিণ-পূর্ব',
+        'দক্ষিণ', 'দক্ষিণ-পশ্চিম', 'পশ্চিম', 'উত্তর-পশ্চিম'
+      ];
+
+      function el(id) { return document.getElementById(id); }
+
+      function bnDigits(value) {
+        return String(value).replace(/[0-9]/g, function (d) { return BANGLA_DIGITS[Number(d)]; });
+      }
+
+      function pad2(value) { return String(value).padStart(2, '0'); }
+
+      /** Converts wind degrees (0-360) into an 8-point Bengali compass direction. */
+      function windDirectionText(deg) {
+        if (deg === null || deg === undefined || isNaN(deg)) return '';
+        var index = Math.round(Number(deg) / 45) % 8;
+        if (index < 0) index += 8;
+        return WIND_DIRECTIONS_BN[index];
+      }
+
+      function dhakaParts() {
+        var now = new Date();
+        var parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+        }).formatToParts(now);
+
+        var data = {};
+        parts.forEach(function (part) { if (part.type !== 'literal') data[part.type] = part.value; });
+
+        data.year = Number(data.year);
+        data.month = Number(data.month);
+        data.day = Number(data.day);
+        data.hour = Number(data.hour);
+        data.minute = Number(data.minute);
+        data.second = Number(data.second);
+
+        return data;
+      }
+
+      function dateKey() {
+        var p = dhakaParts();
+        return p.year + '-' + pad2(p.month) + '-' + pad2(p.day);
+      }
+
+      function aladhanDate() {
+        var p = dhakaParts();
+        return pad2(p.day) + '-' + pad2(p.month) + '-' + p.year;
+      }
+
+      function updateClock() {
+        var now = new Date();
+        var p = dhakaParts();
+
+        el('homeClock').textContent = new Intl.DateTimeFormat('bn-BD', {
+          timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        }).format(now);
+
+        el('homeDayName').textContent = new Intl.DateTimeFormat('bn-BD', { timeZone: TIMEZONE, weekday: 'long' }).format(now);
+
+        el('homeGregDate').textContent = new Intl.DateTimeFormat('bn-BD', {
+          timeZone: TIMEZONE, day: 'numeric', month: 'long', year: 'numeric'
+        }).format(now);
+
+        el('homeBanglaDate').textContent = bengaliDate();
+
+        var currentKey = p.year + '-' + pad2(p.month) + '-' + pad2(p.day);
+
+        if (lastDateKey && currentKey !== lastDateKey && currentConfig) {
+          loadHijri();
+          loadPrayerTimes();
+        }
+
+        lastDateKey = currentKey;
+      }
+
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      function bengaliDate() {
+        var p = dhakaParts();
+        var year = p.year, month = p.month, day = p.day;
+
+        var newYearYear = (month > 4 || (month === 4 && day >= 14)) ? year : year - 1;
+        var start = Date.UTC(newYearYear, 3, 14);
+        var current = Date.UTC(year, month - 1, day);
+        var days = Math.floor((current - start) / 86400000);
+        var bengaliYear = (month > 4 || (month === 4 && day >= 14)) ? year - 593 : year - 594;
+
+        var monthDays = [31,31,31,31,31,30,30,30,30,30,30,30];
+        var leap = ((bengaliYear + 594) % 4 === 0);
+        monthDays[11] = leap ? 31 : 30;
+
+        var monthIndex = 0;
+        while (monthIndex < 11 && days >= monthDays[monthIndex]) {
+          days -= monthDays[monthIndex];
+          monthIndex++;
+        }
+
+        return bnDigits(days + 1) + ' ' + BANGLA_MONTHS[monthIndex] + ' ' + bnDigits(bengaliYear);
+      }
+
+      function loadHijri() {
+        var url = 'https://api.aladhan.com/v1/gToH?date=' + encodeURIComponent(aladhanDate());
+        el('homeHijriDate').textContent = 'রিয়েল-টাইমে যাচাই হচ্ছে...';
+
+        fetch(url, { cache: 'no-store' })
+          .then(function (response) { if (!response.ok) throw new Error('Hijri API error'); return response.json(); })
+          .then(function (result) {
+            if (!result || !result.data || !result.data.hijri) throw new Error('Invalid Hijri data');
+            var h = result.data.hijri;
+            var monthNumber = Number(h.month.number);
+            var monthName = HIJRI_MONTHS[monthNumber - 1] || h.month.en;
+            el('homeHijriDate').textContent = bnDigits(h.day) + ' ' + monthName + ' ' + bnDigits(h.year) + ' হিজরি';
+          })
+          .catch(function () { el('homeHijriDate').textContent = 'হিজরি তারিখ লোড হয়নি'; });
+      }
+
+      function loadPrayerTimes() {
+        if (!currentConfig) return;
+
+        var date = aladhanDate();
+        var method = currentConfig.prayerMethod || '1';
+        var school = currentConfig.prayerSchool || '1';
+
+        var url = 'https://api.aladhan.com/v1/timings/' + date +
+          '?latitude=' + encodeURIComponent(currentConfig.lat) +
+          '&longitude=' + encodeURIComponent(currentConfig.lng) +
+          '&method=' + encodeURIComponent(method) +
+          '&school=' + encodeURIComponent(school);
+
+        el('prayerLocation').textContent = currentConfig.locationName || 'বাংলাদেশ';
+
+        fetch(url, { cache: 'no-store' })
+          .then(function (response) { if (!response.ok) throw new Error('Prayer API error'); return response.json(); })
+          .then(function (result) {
+            if (!result || !result.data || !result.data.timings) throw new Error('Invalid prayer data');
+            prayerTimings = result.data.timings;
+            prayerDateKey = dateKey();
+            renderPrayer();
+            updatePrayerStatus();
+          })
+          .catch(function () {
+            el('prayerList').innerHTML = '<div>নামাজের সময় লোড করা যায়নি।</div>';
+            el('prayerNext').textContent = 'API সংযোগ পরীক্ষা করুন';
+          });
+      }
+
+      function timeMinutes(time) {
+        if (!time) return null;
+        var clean = String(time).split(' ')[0];
+        var parts = clean.split(':');
+        return Number(parts[0]) * 60 + Number(parts[1]);
+      }
+
+      function formatTime(time) {
+        if (!time) return '--:--';
+        var clean = String(time).split(' ')[0];
+        var parts = clean.split(':');
+        var hour = Number(parts[0]);
+        var minute = parts[1];
+        var ampm = hour >= 12 ? 'PM' : 'AM';
+        var hour12 = hour % 12 || 12;
+        return bnDigits(hour12) + ':' + bnDigits(minute) + ' ' + ampm;
+      }
+
+      function duration(minutes) {
+        minutes = Math.max(0, Math.round(minutes));
+        var hours = Math.floor(minutes / 60);
+        var mins = minutes % 60;
+        if (hours === 0) return bnDigits(mins) + ' মিনিট';
+        if (mins === 0) return bnDigits(hours) + ' ঘণ্টা';
+        return bnDigits(hours) + ' ঘণ্টা ' + bnDigits(mins) + ' মিনিট';
+      }
+
+      function renderPrayer() {
+        var list = el('prayerList');
+        list.innerHTML = '';
+
+        PRAYERS.forEach(function (item, index) {
+          var current = prayerTimings[item.key];
+          var next = PRAYERS[index + 1] || PRAYERS[0];
+          var nextTime = prayerTimings[next.key];
+          var currentMin = timeMinutes(current);
+          var nextMin = timeMinutes(nextTime);
+          var span = nextMin - currentMin;
+          if (index === PRAYERS.length - 1) span += 1440;
+
+          var box = document.createElement('div');
+          box.className = 'prayer-item';
+          box.dataset.key = item.key;
+          box.innerHTML =
+            '<div class="prayer-name">' + item.label + '</div>' +
+            '<div class="prayer-time">' + formatTime(current) + '</div>' +
+            '<div class="prayer-span">পরবর্তী ' + next.label + ' পর্যন্ত<br>' + duration(span) + '</div>';
+          list.appendChild(box);
+        });
+      }
+
+      function updatePrayerStatus() {
+        if (!prayerTimings) return;
+
+        var now = dhakaParts();
+        var nowMinutes = now.hour * 60 + now.minute + now.second / 60;
+
+        var nextIndex = -1;
+        var nextTime = null;
+
+        for (var i = 0; i < PRAYERS.length; i++) {
+          var mins = timeMinutes(prayerTimings[PRAYERS[i].key]);
+          if (mins !== null && mins > nowMinutes) { nextIndex = i; nextTime = mins; break; }
+        }
+
+        if (nextIndex === -1) {
+          nextIndex = 0;
+          nextTime = timeMinutes(prayerTimings.Fajr) + 1440;
+        }
+
+        var remaining = nextTime - nowMinutes;
+
+        el('prayerNext').textContent =
+          'পরবর্তী: ' + PRAYERS[nextIndex].label + ' — আর ' + duration(Math.ceil(remaining)) + ' বাকি';
+
+        var boxes = document.querySelectorAll('#page-home .prayer-item');
+        boxes.forEach(function (box) { box.classList.remove('next'); });
+        if (boxes[nextIndex]) boxes[nextIndex].classList.add('next');
+      }
+
+      setInterval(updatePrayerStatus, 1000);
+
+      function weatherText(code) {
+        var map = {
+          0: ['পরিষ্কার আকাশ', '☀️'], 1: ['প্রায় পরিষ্কার', '🌤️'], 2: ['আংশিক মেঘলা', '⛅'], 3: ['মেঘলা', '☁️'],
+          45: ['কুয়াশা', '🌫️'], 48: ['কুয়াশা', '🌫️'],
+          51: ['হালকা গুঁড়ি বৃষ্টি', '🌦️'], 53: ['গুঁড়ি বৃষ্টি', '🌦️'], 55: ['ঘন গুঁড়ি বৃষ্টি', '🌧️'],
+          61: ['হালকা বৃষ্টি', '🌦️'], 63: ['বৃষ্টি', '🌧️'], 65: ['ভারী বৃষ্টি', '🌧️'],
+          71: ['হালকা তুষারপাত', '🌨️'], 73: ['তুষারপাত', '🌨️'], 75: ['ভারী তুষারপাত', '❄️'],
+          80: ['বৃষ্টির ঝাপটা', '🌦️'], 81: ['বৃষ্টির ঝাপটা', '🌧️'], 82: ['ভারী বৃষ্টির ঝাপটা', '⛈️'],
+          95: ['বজ্রঝড়', '⛈️'], 96: ['শিলাসহ বজ্রঝড়', '⛈️'], 99: ['ভারী শিলাসহ বজ্রঝড়', '⛈️']
+        };
+        return map[Number(code)] || ['আবহাওয়ার তথ্য', '🌤️'];
+      }
+
+      function coldWaveStatus(temperature, apparent) {
+        var t = Number(temperature);
+        var feel = Number(apparent);
+        var effective = isFinite(feel) ? Math.min(t, feel) : t;
+        /* Dashboard indicator only — not an official BMD cold-wave declaration. */
+        if (effective <= 10) return 'সম্ভাবনা বেশি';
+        if (effective <= 12) return 'ঠান্ডা';
+        return 'নেই';
+      }
+
+      function loadWeather() {
+        if (!currentConfig) return;
+
+        el('weatherLocationName').textContent = currentConfig.locationName || 'বাংলাদেশ';
+
+        var url = 'https://api.open-meteo.com/v1/forecast' +
+          '?latitude=' + encodeURIComponent(currentConfig.lat) +
+          '&longitude=' + encodeURIComponent(currentConfig.lng) +
+          '&current=' +
+          'temperature_2m,' +
+          'relative_humidity_2m,' +
+          'dew_point_2m,' +
+          'apparent_temperature,' +
+          'precipitation,' +
+          'pressure_msl,' +
+          'wind_speed_10m,' +
+          'wind_direction_10m,' +
+          'wind_gusts_10m,' +
+          'weather_code' +
+          '&timezone=Asia%2FDhaka' +
+          '&temperature_unit=celsius' +
+          '&wind_speed_unit=kmh' +
+          '&precipitation_unit=mm';
+
+        fetch(url, { cache: 'no-store' })
+          .then(function (response) { if (!response.ok) throw new Error('Weather API error'); return response.json(); })
+          .then(function (result) {
+            var c = result.current;
+
+            var weather = weatherText(c.weather_code);
+            var temperature = Number(c.temperature_2m);
+            var humidity = Number(c.relative_humidity_2m);
+            var dewPoint = Number(c.dew_point_2m);
+            var pressure = Number(c.pressure_msl);
+            var rain = Number(c.precipitation);
+            var wind = Number(c.wind_speed_10m);
+            var windDir = Number(c.wind_direction_10m);
+            var gust = Number(c.wind_gusts_10m);
+            var apparent = Number(c.apparent_temperature);
+
+            el('weatherIcon').textContent = weather[1];
+            el('weatherTemp').textContent = bnDigits(Math.round(temperature)) + '°C';
+            el('weatherMain').textContent = weather[0];
+            el('weatherTemperature').textContent = bnDigits(temperature.toFixed(1)) + '°C';
+            el('weatherRain').textContent = bnDigits(rain.toFixed(1)) + ' মিমি';
+            el('weatherHumidity').textContent = bnDigits(Math.round(humidity)) + '%';
+
+            el('weatherDewPoint').textContent = isFinite(dewPoint) ? bnDigits(dewPoint.toFixed(1)) + '°C' : '--';
+            el('weatherPressure').textContent = isFinite(pressure) ? bnDigits(Math.round(pressure)) + ' hPa' : '--';
+
+            var windText = bnDigits(Math.round(wind)) + ' কিমি/ঘণ্টা';
+            var dirText = windDirectionText(windDir);
+            if (dirText) windText += ' (' + dirText + ')';
+            if (isFinite(gust)) windText += ' • ঝোড়ো ' + bnDigits(Math.round(gust));
+            el('weatherWind').textContent = windText;
+
+            el('weatherColdWave').textContent = coldWaveStatus(temperature, apparent);
+            el('weatherSky').textContent = weather[0];
+
+            var updateTime = new Intl.DateTimeFormat('bn-BD', {
+              timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+            }).format(new Date());
+
+            el('weatherUpdated').textContent = 'সর্বশেষ তথ্য: ' + updateTime;
+          })
+          .catch(function () {
+            el('weatherIcon').textContent = '⚠️';
+            el('weatherTemp').textContent = '--°C';
+            el('weatherMain').textContent = 'আবহাওয়ার তথ্য পাওয়া যায়নি';
+            el('weatherTemperature').textContent = '--';
+            el('weatherRain').textContent = '--';
+            el('weatherHumidity').textContent = '--';
+            el('weatherDewPoint').textContent = '--';
+            el('weatherPressure').textContent = '--';
+            el('weatherWind').textContent = '--';
+            el('weatherColdWave').textContent = '--';
+            el('weatherSky').textContent = '--';
+            el('weatherUpdated').textContent = 'পুনরায় চেষ্টা করা হবে...';
+          });
+      }
+
+      function initialize(config) {
+        currentConfig = Object.assign({}, DEFAULT_CONFIG, config || {});
+        el('prayerLocation').textContent = currentConfig.locationName;
+        el('weatherLocationName').textContent = currentConfig.locationName;
+        loadHijri();
+        loadPrayerTimes();
+        loadWeather();
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (config) { initialize(config); })
+          .withFailureHandler(function () { initialize(DEFAULT_CONFIG); })
+          .getHomeConfig();
+      } else {
+        initialize(DEFAULT_CONFIG);
+      }
+
+      setInterval(function () { if (currentConfig) loadWeather(); }, 5 * 60 * 1000);
+      setInterval(function () { if (currentConfig) loadHijri(); }, 10 * 60 * 1000);
+      setInterval(function () { if (currentConfig) loadPrayerTimes(); }, 30 * 60 * 1000);
+
+
+      /* =====================================================
+         HERO SLIDESHOW (Drive: photos and files > HomeSlideshow)
+         ===================================================== */
+
+      var heroSlides = [];
+      var heroIndex = 0;
+      var heroTimer = null;
+
+      function renderHeroSlides() {
+        var track = el('heroSlideTrack');
+        var dots = el('heroDots');
+        track.innerHTML = '';
+        dots.innerHTML = '';
+
+        heroSlides.forEach(function (slide, i) {
+          var div = document.createElement('div');
+          div.className = 'hero-slide' + (i === 0 ? ' active' : '');
+          div.style.backgroundImage = "url('https://drive.google.com/thumbnail?id=" + slide.id + "&sz=w1600')";
+
+          if (slide.caption) {
+            var cap = document.createElement('div');
+            cap.className = 'hero-caption';
+            cap.textContent = slide.caption;
+            div.appendChild(cap);
+          }
+
+          track.appendChild(div);
+
+          var dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
+          dot.addEventListener('click', function () { goToHeroSlide(i); });
+          dots.appendChild(dot);
+        });
+
+        updateHeroCounter();
+      }
+
+      function updateHeroCounter() {
+        el('heroCounter').textContent = bnDigits(heroIndex + 1) + '/' + bnDigits(heroSlides.length);
+      }
+
+      function goToHeroSlide(i) {
+        if (!heroSlides.length) return;
+        heroIndex = (i + heroSlides.length) % heroSlides.length;
+
+        document.querySelectorAll('#page-home .hero-slide').forEach(function (s, idx) {
+          s.classList.toggle('active', idx === heroIndex);
+        });
+        document.querySelectorAll('#page-home .hero-dot').forEach(function (d, idx) {
+          d.classList.toggle('active', idx === heroIndex);
+        });
+
+        updateHeroCounter();
+        restartHeroTimer();
+      }
+
+      function restartHeroTimer() {
+        if (heroTimer) clearInterval(heroTimer);
+        if (heroSlides.length > 1) {
+          heroTimer = setInterval(function () { goToHeroSlide(heroIndex + 1); }, 5000);
+        }
+      }
+
+      el('heroPrev').addEventListener('click', function () { goToHeroSlide(heroIndex - 1); });
+      el('heroNext').addEventListener('click', function () { goToHeroSlide(heroIndex + 1); });
+
+      function loadHeroSlideshow() {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        google.script.run
+          .withSuccessHandler(function (images) {
+            if (!images || images.length === 0) return;
+            heroSlides = images;
+            heroIndex = 0;
+            el('heroSlideshow').style.display = 'block';
+            renderHeroSlides();
+            restartHeroTimer();
+          })
+          .withFailureHandler(function () { /* No slideshow images yet — card stays hidden. */ })
+          .getHomeSlideshowMeta();
+      }
+
+    })();
+  </script>
+
+</section>

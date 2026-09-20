@@ -1,0 +1,178 @@
+<script>
+  (function () {
+    var PAGE_TITLES = {
+      'home': 'হোম',
+      'personal-info': 'ব্যক্তিগত তথ্য',
+      'budget': 'বাজেট ব্যবস্থাপনা',
+      'power-grid': 'পাওয়ার গ্রিড',
+      'tax': 'ট্যাক্স',
+      'zakat': 'যাকাত ও ফিতরা',
+      'prince-hisab': 'প্রিন্স হিসাব',
+      'my-transactions': 'আমার লেনদেন',
+      'emergency-documents': 'জরুরি ডকুমেন্টস',
+      'islamic-corner': 'ইসলামিক কর্নার',
+      'assets': 'আমার সম্পদ ও সামগ্রী',
+      'ai-hub': 'AI Assistant Hub',
+      'settings': 'Settings'
+    };
+
+    var sidebar = document.getElementById('sidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    var menuToggle = document.getElementById('menuToggle');
+    var pageTitleEl = document.getElementById('pageTitle');
+
+    function navigateTo(pageId) {
+      if (!PAGE_TITLES.hasOwnProperty(pageId)) { pageId = 'home'; }
+
+      document.querySelectorAll('.page').forEach(function (el) {
+        el.classList.remove('active');
+      });
+      var target = document.getElementById('page-' + pageId);
+      if (target) { target.classList.add('active'); }
+
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.classList.toggle('active', el.getAttribute('data-page') === pageId);
+      });
+
+      pageTitleEl.textContent = PAGE_TITLES[pageId];
+      closeSidebar();
+      window.location.hash = pageId;
+    }
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      backdrop.classList.add('open');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('open');
+    }
+
+    document.querySelectorAll('.nav-item').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        navigateTo(el.getAttribute('data-page'));
+      });
+    });
+
+    menuToggle.addEventListener('click', function () {
+      if (sidebar.classList.contains('open')) { closeSidebar(); } else { openSidebar(); }
+    });
+    backdrop.addEventListener('click', closeSidebar);
+
+    // ---------- Subtabs (generic — works for any .subtabs block on any page) ----------
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.subtab-btn');
+      if (!btn) { return; }
+      var group = btn.closest('.subtabs');
+      var wrapper = group.parentElement;
+
+      wrapper.querySelectorAll('.subtab-btn').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+
+      wrapper.querySelectorAll('.subtab-panel').forEach(function (p) {
+        p.classList.remove('active');
+      });
+      var target = wrapper.querySelector('#subtab-' + btn.getAttribute('data-subtab'));
+      if (target) { target.classList.add('active'); }
+    });
+
+    // ---------- Toast (window.showToast(message, type)) ----------
+    // type: 'default' | 'success' | 'warning' | 'danger'
+    window.showToast = function (message, type) {
+      type = type || 'default';
+      var container = document.getElementById('toastContainer');
+      var toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(function () {
+        toast.remove();
+      }, 3500);
+    };
+
+    // ---------- Modal (window.showModal(title, bodyHtml, footerButtons)) ----------
+    var modalOverlay = document.getElementById('modalOverlay');
+    document.getElementById('modalCloseBtn').addEventListener('click', hideModal);
+    modalOverlay.addEventListener('click', function (e) {
+      if (e.target === modalOverlay) { hideModal(); }
+    });
+
+    window.showModal = function (title, bodyHtml, footerButtons) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = bodyHtml || '';
+      var footer = document.getElementById('modalFooter');
+      footer.innerHTML = '';
+      (footerButtons || []).forEach(function (btn) {
+        var button = document.createElement('button');
+        button.className = 'btn ' + (btn.className || 'btn-outline');
+        button.textContent = btn.label;
+        button.addEventListener('click', btn.onClick);
+        footer.appendChild(button);
+      });
+      modalOverlay.classList.add('open');
+    };
+
+    function hideModal() {
+      modalOverlay.classList.remove('open');
+    }
+    window.hideModal = hideModal;
+
+    // ---------- Confirmation dialog (built on top of the modal) ----------
+    // window.confirmDialog(message, onConfirm)
+    window.confirmDialog = function (message, onConfirm) {
+      showModal('নিশ্চিত করুন', '<p>' + message + '</p>', [
+        { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+        {
+          label: 'নিশ্চিত করুন',
+          className: 'btn-danger',
+          onClick: function () {
+            hideModal();
+            onConfirm();
+          }
+        }
+      ]);
+    };
+
+    // ---------- Initial route (supports reload-to-same-page via #hash) ----------
+    var initialPage = (window.location.hash || '#home').replace('#', '');
+    navigateTo(initialPage);
+
+    // ---------- Global footer: rotating hadith (same design/position on every page) ----------
+    (function initFooterHadith() {
+      var ROTATE_MS = 5 * 60 * 1000; // 5 minutes
+      var hadiths = [];
+
+      function showHadithAtCurrentSlot() {
+        if (!hadiths.length) return;
+        // Time-bucketed index: naturally changes every 5 minutes, and stays
+        // in sync even after a page reload or in another tab — no timer drift.
+        var slot = Math.floor(Date.now() / ROTATE_MS) % hadiths.length;
+        var item = hadiths[slot];
+        document.getElementById('footerHadithText').textContent = item.text;
+        document.getElementById('footerHadithRef').textContent = item.reference ? '— ' + item.reference : '';
+      }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (list) {
+            hadiths = list || [];
+            if (!hadiths.length) {
+              document.getElementById('footerHadithText').textContent =
+                'Islamic_Corner স্প্রেডশিটের "Hadiths" ট্যাবে হাদিস যোগ করুন।';
+              return;
+            }
+            showHadithAtCurrentSlot();
+            setInterval(showHadithAtCurrentSlot, 30 * 1000); // check every 30s, switches exactly on the 5-min boundary
+          })
+          .withFailureHandler(function () {
+            document.getElementById('footerHadithText').textContent = 'হাদিস লোড করা যায়নি।';
+          })
+          .getFooterHadiths();
+      }
+    })();
+  })();
+</script>

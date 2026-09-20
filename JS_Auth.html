@@ -1,0 +1,241 @@
+<script>
+  (function () {
+    var TOKEN_KEY = 'personalAppSessionToken';
+
+    var authOverlay = document.getElementById('authOverlay');
+    var authLoading = document.getElementById('authLoading');
+    var setupForm = document.getElementById('setupForm');
+    var loginForm = document.getElementById('loginForm');
+
+    // ---------- Logo on the auth screen (reuses the same fixed logo) ----------
+    (function renderAuthLogo() {
+      var logoUri = "<?!= getLogoDataUri() ?>";
+      var el = document.getElementById('authBrandLogo');
+      if (logoUri) {
+        var img = document.createElement('img');
+        img.alt = 'Logo';
+        img.src = logoUri;
+        el.appendChild(img);
+      } else {
+        el.classList.add('auth-brand-logo-fallback');
+        el.textContent = 'আ';
+      }
+    })();
+
+    function showApp(user) {
+      document.body.classList.add('authenticated');
+      window.currentUser = user;
+      var avatar = document.getElementById('userAvatar');
+      if (avatar && user) {
+        renderAvatar(avatar, user);
+      }
+    }
+
+    function renderAvatar(avatarEl, user) {
+      avatarEl.innerHTML = '';
+      if (user.photoFileId) {
+        var img = document.createElement('img');
+        img.alt = 'Profile';
+        img.src = 'https://drive.google.com/thumbnail?id=' + user.photoFileId + '&sz=w300';
+        img.onerror = function () { avatarEl.textContent = (user.name || '?').trim().charAt(0); };
+        avatarEl.appendChild(img);
+      } else {
+        avatarEl.textContent = (user.name || '?').trim().charAt(0);
+      }
+    }
+
+    function showForm(which) {
+      authLoading.style.display = 'none';
+      setupForm.style.display = which === 'setup' ? 'block' : 'none';
+      loginForm.style.display = which === 'login' ? 'block' : 'none';
+    }
+
+    function init() {
+      var token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        checkFirstRun();
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function (user) {
+          if (user) {
+            showApp(user);
+          } else {
+            localStorage.removeItem(TOKEN_KEY);
+            checkFirstRun();
+          }
+        })
+        .withFailureHandler(function () {
+          localStorage.removeItem(TOKEN_KEY);
+          checkFirstRun();
+        })
+        .validateSession(token);
+    }
+
+    function checkFirstRun() {
+      google.script.run
+        .withSuccessHandler(function (exists) {
+          showForm(exists ? 'login' : 'setup');
+        })
+        .withFailureHandler(function () {
+          showForm('login');
+        })
+        .hasAccount();
+    }
+
+    setupForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = document.getElementById('setupName').value.trim();
+      var email = document.getElementById('setupEmail').value.trim();
+      var password = document.getElementById('setupPassword').value;
+      var errorEl = document.getElementById('setupError');
+      errorEl.textContent = '';
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          localStorage.setItem(TOKEN_KEY, result.token);
+          google.script.run.withSuccessHandler(showApp).validateSession(result.token);
+        })
+        .withFailureHandler(function (err) {
+          errorEl.textContent = err.message || 'একটি সমস্যা হয়েছে।';
+        })
+        .setupAccount(name, email, password);
+    });
+
+    loginForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = document.getElementById('loginEmail').value.trim();
+      var password = document.getElementById('loginPassword').value;
+      var errorEl = document.getElementById('loginError');
+      errorEl.textContent = '';
+      var deviceInfo = navigator.userAgent;
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          localStorage.setItem(TOKEN_KEY, result.token);
+          google.script.run.withSuccessHandler(showApp).validateSession(result.token);
+        })
+        .withFailureHandler(function (err) {
+          errorEl.textContent = err.message || 'লগইন ব্যর্থ হয়েছে।';
+        })
+        .login(email, password, deviceInfo);
+    });
+
+    // ---------- Logout ----------
+    window.doLogout = function () {
+      var token = localStorage.getItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_KEY);
+      document.body.classList.remove('authenticated');
+      loginForm.reset();
+      if (token) {
+        google.script.run.logout(token);
+      }
+      showForm('login');
+    };
+
+    // ---------- Change password ----------
+    window.doChangePassword = function (oldPassword, newPassword, onSuccess, onError) {
+      var token = localStorage.getItem(TOKEN_KEY);
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(function (err) { onError(err.message || 'পরিবর্তন ব্যর্থ হয়েছে।'); })
+        .changePassword(token, oldPassword, newPassword);
+    };
+
+    // ---------- Profile photo upload ----------
+    var photoInput = document.createElement('input');
+    photoInput.type = 'file';
+    photoInput.accept = 'image/*';
+    photoInput.style.display = 'none';
+    document.body.appendChild(photoInput);
+    window.changeProfilePhoto = function () { photoInput.click(); };
+
+    photoInput.addEventListener('change', function () {
+      var file = photoInput.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        var base64 = reader.result.split(',')[1];
+        var token = localStorage.getItem(TOKEN_KEY);
+        showToast('ছবি আপলোড হচ্ছে...', 'default');
+
+        google.script.run
+          .withSuccessHandler(function (fileId) {
+            if (window.currentUser) window.currentUser.photoFileId = fileId;
+            var avatar = document.getElementById('userAvatar');
+            renderAvatar(avatar, window.currentUser || {});
+            showToast('প্রোফাইল ছবি পরিবর্তন হয়েছে।', 'success');
+            if (typeof window.onProfilePhotoUpdated === 'function') {
+              window.onProfilePhotoUpdated(fileId);
+            }
+          })
+          .withFailureHandler(function (err) {
+            showToast(err.message || 'ছবি আপলোড ব্যর্থ হয়েছে।', 'danger');
+          })
+          .uploadProfilePhoto(token, base64, file.type);
+      };
+      reader.readAsDataURL(file);
+      photoInput.value = '';
+    });
+
+    // ---------- Account menu (click avatar -> Change Password / Logout) ----------
+    var avatarBtn = document.getElementById('userAvatar');
+    if (avatarBtn) {
+      avatarBtn.addEventListener('click', function () {
+        showModal('অ্যাকাউন্ট', '' +
+          '<div class="account-menu">' +
+            '<button type="button" class="btn btn-outline account-menu-btn" id="btnChangePhoto">প্রোফাইল ছবি পরিবর্তন</button>' +
+            '<button type="button" class="btn btn-outline account-menu-btn" id="btnChangePassword">পাসওয়ার্ড পরিবর্তন</button>' +
+            '<button type="button" class="btn btn-danger account-menu-btn" id="btnLogout">লগআউট</button>' +
+          '</div>', []);
+
+        document.getElementById('btnChangePhoto').addEventListener('click', function () {
+          hideModal();
+          photoInput.click();
+        });
+
+        document.getElementById('btnLogout').addEventListener('click', function () {
+          hideModal();
+          confirmDialog('আপনি কি লগআউট করতে চান?', function () {
+            doLogout();
+          });
+        });
+
+        document.getElementById('btnChangePassword').addEventListener('click', function () {
+          showChangePasswordForm();
+        });
+      });
+    }
+
+    function showChangePasswordForm() {
+      showModal('পাসওয়ার্ড পরিবর্তন', '' +
+        '<label>বর্তমান পাসওয়ার্ড</label>' +
+        '<input type="password" id="cpOld" class="form-input">' +
+        '<label style="margin-top:12px;display:block;">নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>' +
+        '<input type="password" id="cpNew" class="form-input">' +
+        '<div class="auth-error" id="cpError"></div>',
+        [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          {
+            label: 'পরিবর্তন করুন',
+            className: 'btn-primary',
+            onClick: function () {
+              var oldP = document.getElementById('cpOld').value;
+              var newP = document.getElementById('cpNew').value;
+              document.getElementById('cpError').textContent = '';
+              doChangePassword(oldP, newP, function () {
+                hideModal();
+                showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে।', 'success');
+              }, function (msg) {
+                document.getElementById('cpError').textContent = msg;
+              });
+            }
+          }
+        ]
+      );
+    }
+
+    init();
+  })();
+</script>
