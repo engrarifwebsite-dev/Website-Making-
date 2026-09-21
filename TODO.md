@@ -18,12 +18,14 @@
 - [x] Budget Management: dashboard, categories, goal, income/expense entries, PDF/Excel export
 - [x] Power Grid: salary statements, CPF annual summary and earlier CPF entries, PDF/Excel export (Phase 8, first part)
 - [x] Power Grid: CPF card rule (Employee's = CPF Deduction − Employer's Contribution) and removal of the info note card
+- [x] Power Grid: two subtabs ("বেতন ও ভাতা", "ছুটির হিসাব") and the Training Bill earning line
+- [x] Power Grid: CPF card renamed "CPF হিসাব" and a new "CPF হিসাব" tab (monthly list with running total, chart, yearly summary, add/edit earlier entries, PDF/CSV)
 
 ## In Progress
 - (none)
 
 ## Pending (by phase)
-- [ ] Power Grid: Leave, CPF Loan and Increment sections (Phase 8, remaining part)
+- [ ] Power Grid: ছুটির হিসাব tab content (Leave), then CPF Loan and Increment sections (Phase 8, remaining part)
 - [ ] Tax (Phase 9)
 - [ ] Zakat & Fitra (Phase 10)
 - [ ] Prince Account (Phase 11)
@@ -54,5 +56,4 @@
 - [ ] Power Grid: sync the net salary into the Budget monthly Income using GlobalSyncID (Phase 17).
 - [ ] Power Grid: add the `SalaryStatements`, `EmployeeInfo` and `CPFHistory` tabs to `Setup_PowerGrid.gs` (currently created on first use).
 - [ ] Power Grid: "মোট ভাতা" is calculated as total earnings minus basic salary; confirm this is the intended definition.
-- [ ] Power Grid: the comments in `Server_PowerGrid.gs` (header and `PG_EXTRA_FIELDS`) still say the employee's CPF is the CPF Deduction; update them to the new rule (Employee's = CPF Deduction − Employer's Contribution). Comments only, no code change.
 - [ ] Power Grid: check old salary statements once; the CPF Deduction of each month should include the employer's share, otherwise the Employee's CPF shows too low.

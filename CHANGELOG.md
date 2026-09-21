@@ -2,6 +2,41 @@
 
 ## 2026-09-21
 
+### Power Grid: CPF হিসাব tab and card rename
+- The CPF card in the right column of "বেতন ও ভাতা" is renamed from
+  "CPF বার্ষিক সারাংশ" to "CPF হিসাব". The year moved out of the title into a
+  small chip beside it, and a new "সম্পূর্ণ CPF হিসাব দেখুন →" button opens the
+  new tab.
+- New subtab "CPF হিসাব" (between "বেতন ও ভাতা" and "ছুটির হিসাব"):
+  - four cards (total CPF of all years, Employee's CPF, Company's CPF, total of
+    the chosen year) and a "নতুন CPF এন্ট্রি" button;
+  - monthly list for a chosen year (‹ › to change year), always showing all 12
+    months with Employee, Company, total, running cumulative total (all years)
+    and the source. A month with no record shows "＋ এন্ট্রি যোগ";
+  - Employee's vs Company's monthly bar chart for that year;
+  - year-by-year summary table (click a row to jump to that year);
+  - Employee/Company ratio donut for the chosen year;
+  - quick actions: this year's CPF summary (PDF), CPF list (Excel/CSV),
+    earlier CPF entries list.
+- Earlier CPF contributions (months without a salary statement) can be added,
+  edited and deleted straight from the tab. A month that has a salary statement
+  always takes its CPF from the statement (edit it through the statement).
+- The existing "CPF সারাংশ (PDF)" quick action on the salary tab works as before.
+- Files changed: `Page_PowerGrid.html` only. No server or sheet change; the tab
+  uses the data `getPowerGridData` already returns.
+
+### Power Grid: two tabs and Training Bill
+- The Power Grid page now has subtabs: "বেতন ও ভাতা" (the existing salary
+  statement, CPF summary and reports, unchanged) and "ছুটির হিসাব" (new tab,
+  placeholder for now; its content comes in a later step).
+- New earning line "Training Bill" (after Local Training) in the Earnings card,
+  the entry form, the details modal, PDF and Excel export. It counts in Gross
+  Salary and in Total Allowance.
+- Stored in a new `TrainingBill` column (column 39) at the end of
+  `SalaryStatements`; the header is added automatically and old rows read 0.
+- Files changed: `Page_PowerGrid.html`, `Server_PowerGrid.gs`.
+  The comments in `Server_PowerGrid.gs` now describe the new CPF rule.
+
 ### Power Grid: CPF card rule and page cleanup
 - The CPF (Provident Fund) card now follows this rule:
   Employee's Contribution to CPF = CPF Deduction − Employer's Contribution to CPF.
