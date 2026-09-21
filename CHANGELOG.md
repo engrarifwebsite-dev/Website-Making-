@@ -1,5 +1,79 @@
 # CHANGELOG
 
+## 2026-09-21
+
+### Power Grid page (Phase 8)
+- `Page_PowerGrid.html` replaces the placeholder with the approved design:
+  four summary cards (gross salary, total allowance, total deduction, net pay)
+  plus a "নতুন বেতন এন্ট্রি" button; the salary statement card with the
+  employee strip (Employee ID, name, designation, joining date, next increment
+  date) and three tables - Earnings (10 lines), Deductions (6 lines) and CPF
+  (employee and company contribution) - with totals A, B and C; the salary
+  summary (A - B = net pay, + company CPF, = total company cost); the previous
+  statements list (last 4 months, eye button opens that month); the CPF annual
+  summary with a donut (employee vs company share, year to date); quick actions
+  and an information note.
+- Month switcher (‹ ›) on the statement card; edit / delete the shown month's
+  entry; "সব বেতন স্টেটমেন্ট দেখুন" lists every saved month.
+- New entry form copies the latest month's values, so a normal month only needs
+  a quick check; one statement per month.
+- Reports: salary statement, annual summary and CPF summary as PDF (print window,
+  choose "Save as PDF"); all data as Excel (UTF-8 CSV).
+- New server file `Server_PowerGrid.gs`: `getPowerGridData`,
+  `savePowerGridStatement`, `deletePowerGridStatement`, `savePowerGridEmployee`.
+  All of them require a valid session token.
+- New tabs in Power_Grid, created automatically on first use: `SalaryStatements`
+  (one row per month, one column per statement line) and `EmployeeInfo`
+  (EmployeeID, Designation, NextIncrementDate). The joining date is kept in the
+  existing `Employment` tab and the name comes from Personal Info > Profile.
+  The older Salary / CPF / Increment tabs are not used by this page.
+
+### Budget Management page (Phase 7)
+- `Page_Budget.html` replaces the placeholder with the full dashboard:
+  five summary cards (income, expense, savings, savings goal, remaining
+  budget) with change versus last month, an income / expense / savings bar
+  chart (last 5, 6 or 12 months), an expense category donut with legend,
+  quick actions, the budget category table with usage bars, the savings goal
+  tracker and recent activities.
+- Month switcher (‹ ›) above the cards; every month reads its own tabs
+  ("<Month Year> - Income / Budget / Expense / Ledger").
+- Categories: add, edit, delete, and copy last month's budget into an empty
+  month. Deleting a category keeps its expenses; they show as "ক্যাটাগরিহীন".
+- Income and expense entries can be added and deleted; each entry also writes
+  a Ledger row (running balance restarts from 0 each month).
+- Reports: PDF (opens the print window, choose "Save as PDF") and Excel
+  (UTF-8 CSV that opens directly in Excel).
+- New server file `Server_Budget.gs`: `getBudgetDashboard`,
+  `saveBudgetCategory`, `deleteBudgetCategory`, `copyBudgetFromPreviousMonth`,
+  `setBudgetGoal`, `addBudgetTransaction`, `deleteBudgetTransaction`.
+  All of them require a valid session token.
+- New tab `SavingsGoals` (MonthLabel, GoalAmount, UpdatedAt) in
+  Budget_Management, created automatically on first use.
+- Numbers use English digits as in the approved design; set
+  `USE_BN_DIGITS = true` at the top of the page script for Bengali digits.
+
+### Family Tree (Personal Information > ফ্যামিলি ট্রি)
+- Family tree UI is in place: every branch shows a photo and name, clicking a
+  photo opens a details popup (birth/death year, age, other information) and
+  clicking again hides it, "+" adds a new branch, members can be edited and
+  deleted, spouses are shown as couples.
+- Server: `Server_FamilyTree.gs` (`saveFamilyTreeMember`,
+  `deleteFamilyTreeMember`) on top of `listFamilyMembers`, `saveFamilyMember`
+  and `deleteFamilyMember` in `Server_PersonalInfo.gs`.
+
+### Age Calculator (Personal Information > এজ ক্যালকুলেটর)
+- Card 1 "বয়স ক্যালকুলেটর": small square green cards with photo, name and a
+  continuously ticking age (years, months, days and a live hh:mm:ss clock).
+  Cards are saved in Personal_Info > AgeCards (created on first use); name and
+  photo can be edited, the date of birth is fixed once saved (delete and re-add
+  if it was wrong).
+- Card 2 "Age Calculator": two-date calculator (years/months/days, totals,
+  next birthday, weekday) with "আজ" and "আমার জন্ম তারিখ" shortcuts.
+- Both cards live inside `Page_PersonalInfo.html` (one subtab); a separate
+  `Partial_AgeCalculator` include must not be used.
+- Server: `getAgeCards`, `addAgeCard`, `updateAgeCard`, `deleteAgeCard` in
+  `Server_PersonalInfo.gs`.
+
 ## 2026-09-20
 
 ### Weather: Feels Like
@@ -31,21 +105,19 @@
 - Files are stored in Drive under Photos and Files > EducationDocuments;
   the list is tracked in the new Personal_Info > EducationDocuments tab
   (created automatically on first use).
-- Each document has a download button (served through the server with a
-  session check, so the Drive files stay private) and a delete button
-  (the Drive file goes to the trash, so it can be recovered).
+- Each document has a download button and a delete button (the Drive file
+  goes to the trash, so it can be recovered).
 - `setEducationList()` now keeps an entry's ID when the list is re-saved,
   so attached documents stay linked. Removing an entry also removes its
   documents (files go to the Drive trash); the edit modal warns about this.
-- New server functions: `getEducationDocuments`, `uploadEducationDocument`,
-  `getEducationDocumentData`, `deleteEducationDocument`.
+- Server functions: `getEducationDocumentsMap`, `uploadEducationDocument`,
+  `deleteEducationDocument`.
 - Files changed: `Server_PersonalInfo.gs`, `Page_PersonalInfo.html`
   (the new styles live inside the page file; `Stylesheet_Global.html`
   is unchanged).
 
 ### Documentation Sync
 - Synced CHANGELOG.md and TODO.md with the actual state of the codebase.
-  Both files previously stated that application development had not started.
 - PROJECT_CONTEXT.md: renamed page 4 from "Salary & CPF" to
   "Power Grid (Salary, CPF, Leave, Increment)" to match the app, sidebar
   and Power_Grid spreadsheet. No other content changed.
@@ -98,16 +170,14 @@
 - Profile edit modal (main and contact fields), stored as key/value rows.
 - Education timeline with a multi-entry edit modal.
 - Server helpers: `cleanupDuplicateProfileFields()`, `debugGetProfile()`.
-- Family Tree server functions ready: `listFamilyMembers`,
-  `saveFamilyMember`, `deleteFamilyMember`.
 
 ### Current Status
-- Completed: Home, Personal Info (Profile and Education), Auth, app shell,
+- Completed: Home, Personal Info (Profile, Education, Family Tree, Age
+  Calculator), Budget Management, Power Grid (salary and CPF), Auth, app shell,
   all spreadsheet setups.
-- In progress: Family Tree UI (server ready, UI is still a placeholder).
-- Placeholder pages: Budget, Power Grid, Tax, Zakat, Prince Hisab,
-  My Transactions, Emergency Documents, Islamic Corner, Assets, AI Hub,
-  Settings.
+- In progress: none.
+- Placeholder pages: Tax, Zakat, Prince Hisab, My Transactions,
+  Emergency Documents, Islamic Corner, Assets, AI Hub, Settings.
 
 ## 2026-09-19
 

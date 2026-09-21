@@ -1,6 +1,945 @@
 <section id="page-power-grid" class="page">
-  <div class="page-placeholder">
-    <h2>পাওয়ার গ্রিড</h2>
-    <p>এই পেজের কন্টেন্ট Phase 8-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       POWER GRID  (সব ক্লাস pg- দিয়ে শুরু, #page-power-grid-এর ভেতরে সীমাবদ্ধ)
+       ========================================================= */
+    #page-power-grid {
+      --pg-blue: #0b3fbf;
+      --pg-title: #1a3fa8;
+      --pg-green: #15803d;
+      --pg-red: #dc2626;
+      --pg-purple: #6d28d9;
+      --pg-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-power-grid * { box-sizing: border-box; }
+
+    #page-power-grid .pg-card {
+      background: #fff;
+      border: 1px solid var(--pg-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-power-grid .pg-title { font-size: 17px; font-weight: 800; color: var(--pg-title); margin: 0; display: flex; align-items: center; gap: 10px; }
+    #page-power-grid .pg-title svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-power-grid .pg-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    #page-power-grid .pg-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-power-grid .pg-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-power-grid .pg-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    #page-power-grid .pg-body { transition: opacity .15s ease; }
+    #page-power-grid .pg-body.busy { opacity: .5; pointer-events: none; }
+
+    /* ---------- উপরের সারি: ৪টি কার্ড + বাটন ---------- */
+    #page-power-grid .pg-top { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 14px; margin-bottom: 16px; align-items: stretch; }
+    #page-power-grid .pg-kpi { display: flex; align-items: center; gap: 14px; padding: 16px 18px; }
+    #page-power-grid .pg-kpi-ico { width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; }
+    #page-power-grid .pg-kpi-ico svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-power-grid .pg-ico-blue { background: #e8effd; color: #1d4ed8; }
+    #page-power-grid .pg-ico-green { background: #dcfce7; color: #15803d; }
+    #page-power-grid .pg-ico-red { background: #fee2e2; color: #dc2626; }
+    #page-power-grid .pg-ico-purple { background: #ede9fe; color: #6d28d9; }
+    #page-power-grid .pg-kpi-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    #page-power-grid .pg-kpi-value { margin-top: 2px; font-size: 24px; font-weight: 800; color: var(--navy); line-height: 1.25; white-space: nowrap; }
+    #page-power-grid .pg-link { background: none; border: 0; padding: 4px 0 0; color: var(--pg-blue); font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    #page-power-grid .pg-link:hover { text-decoration: underline; }
+    #page-power-grid .pg-add {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      border: 0; border-radius: 12px; background: var(--pg-blue); color: #fff;
+      font-family: inherit; font-size: 16px; font-weight: 700; padding: 0 26px; min-height: 60px; cursor: pointer;
+      align-self: center; white-space: nowrap;
+    }
+    #page-power-grid .pg-add:hover { background: #0a35a3; }
+
+    /* ---------- মূল লেআউট ---------- */
+    #page-power-grid .pg-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+    #page-power-grid .pg-main, #page-power-grid .pg-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+    /* মাস বদল */
+    #page-power-grid .pg-month { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--pg-line); border-radius: 10px; overflow: hidden; }
+    #page-power-grid .pg-month button { border: 0; background: #fff; padding: 7px 13px; font-size: 16px; cursor: pointer; color: var(--navy); font-family: inherit; }
+    #page-power-grid .pg-month button:hover:not(:disabled) { background: var(--accent-soft); }
+    #page-power-grid .pg-month button:disabled { opacity: .35; cursor: default; }
+    #page-power-grid .pg-month-label { padding: 0 14px; font-weight: 700; font-size: 13.5px; color: var(--navy); min-width: 140px; text-align: center; }
+
+    #page-power-grid .pg-notice { margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; background: #fff8e6; border: 1px solid #f6e3b4; color: #8a5a00; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    #page-power-grid .pg-notice button { border: 1px solid #f0d28a; background: #fff; color: #8a5a00; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    /* কর্মচারীর তথ্য */
+    #page-power-grid .pg-emp { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--pg-line); border-radius: 10px; margin-bottom: 14px; }
+    #page-power-grid .pg-emp > div { padding: 12px 16px; min-width: 0; }
+    #page-power-grid .pg-emp > div + div { border-left: 1px solid var(--pg-line); }
+    #page-power-grid .pg-emp-l { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    #page-power-grid .pg-emp-v { margin-top: 3px; font-size: 14px; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+    #page-power-grid .pg-emp-v.name { color: #1d4ed8; }
+    #page-power-grid .pg-emp-edit { position: absolute; top: -12px; right: 10px; border: 1px solid var(--pg-line); background: #fff; border-radius: 999px; padding: 3px 12px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--pg-blue); cursor: pointer; }
+    #page-power-grid .pg-emp-edit:hover { background: #eef4ff; }
+
+    /* তিনটি টেবিল */
+    #page-power-grid .pg-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    #page-power-grid .pg-col { border: 1px solid var(--pg-line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+    #page-power-grid .pg-col-h { display: flex; justify-content: space-between; align-items: center; padding: 11px 12px; font-size: 13px; font-weight: 800; }
+    #page-power-grid .pg-col-h span:last-child { font-size: 12px; font-weight: 700; }
+    #page-power-grid .pg-r { display: grid; grid-template-columns: 26px minmax(0, 1fr) 84px; align-items: center; height: 36px; border-top: 1px solid var(--pg-line); font-size: 12.5px; }
+    #page-power-grid .pg-r > span:first-child { display: grid; place-items: center; }
+    #page-power-grid .pg-n { width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+    #page-power-grid .pg-r > span:nth-child(2) { padding: 0 6px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #page-power-grid .pg-r > span:last-child { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 10px; border-left: 1px solid var(--pg-line); font-weight: 700; color: var(--navy); }
+    #page-power-grid .pg-col-f { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 12px; font-size: 13px; font-weight: 800; }
+
+    #page-power-grid .pg-earn .pg-col-h { background: #eef4ff; color: #1d4ed8; }
+    #page-power-grid .pg-earn .pg-n { background: #dbe7ff; color: #1d4ed8; }
+    #page-power-grid .pg-earn .pg-col-f { background: #e8f0ff; color: #1d4ed8; }
+    #page-power-grid .pg-ded .pg-col-h { background: #fff1f1; color: #dc2626; }
+    #page-power-grid .pg-ded .pg-n { background: #fee2e2; color: #dc2626; }
+    #page-power-grid .pg-ded .pg-col-f { background: #fee9e9; color: #dc2626; }
+    #page-power-grid .pg-cpf .pg-col-h { background: #f0fbf3; color: #15803d; }
+    #page-power-grid .pg-cpf .pg-n { background: #d6f3de; color: #15803d; }
+    #page-power-grid .pg-cpf .pg-col-f { background: #e3f6e8; color: #15803d; }
+
+    /* সারাংশ */
+    #page-power-grid .pg-sum { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; text-align: center; }
+    #page-power-grid .pg-sum-item { flex: 1 1 110px; min-width: 100px; }
+    #page-power-grid .pg-sum-l { font-size: 13px; color: var(--text); font-weight: 600; line-height: 1.35; }
+    #page-power-grid .pg-sum-v { margin-top: 6px; font-size: 22px; font-weight: 800; }
+    #page-power-grid .pg-sum-op { font-size: 22px; font-weight: 700; color: var(--text-muted); flex: 0 0 auto; }
+    #page-power-grid .c-blue { color: #1d4ed8; }
+    #page-power-grid .c-red { color: #dc2626; }
+    #page-power-grid .c-green { color: #15803d; }
+    #page-power-grid .c-purple { color: #6d28d9; }
+    #page-power-grid .c-dark { color: var(--navy); }
+
+    /* আগের স্টেটমেন্ট */
+    #page-power-grid .pg-table-wrap { overflow-x: auto; border: 1px solid var(--pg-line); border-radius: 10px; }
+    #page-power-grid table.pg-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13.5px; }
+    #page-power-grid .pg-table th { background: #f4f7fc; color: var(--text); font-weight: 700; font-size: 12.5px; padding: 11px 10px; text-align: center; border-bottom: 1px solid var(--pg-line); white-space: nowrap; }
+    #page-power-grid .pg-table td { padding: 10px; text-align: center; border-bottom: 1px solid var(--pg-line); font-weight: 600; white-space: nowrap; }
+    #page-power-grid .pg-table tr:last-child td { border-bottom: 0; }
+    #page-power-grid .pg-table td:first-child { text-align: left; }
+    #page-power-grid .pg-table tr.cur td { background: #f6f9ff; }
+    #page-power-grid .pg-iconbtn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-grid; place-items: center; color: #2563eb; }
+    #page-power-grid .pg-iconbtn:hover { background: #eaf1ff; }
+    #page-power-grid .pg-iconbtn.del { color: #dc2626; }
+    #page-power-grid .pg-iconbtn.del:hover { background: #fee9e9; }
+    #page-power-grid .pg-iconbtn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-power-grid .pg-more { display: block; margin: 14px auto 0; border: 1px solid #c7d5f5; background: #fff; color: var(--pg-blue); border-radius: 10px; padding: 9px 22px; font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    #page-power-grid .pg-more:hover { background: #f4f7fc; }
+    #page-power-grid .pg-empty { text-align: center; color: var(--text-muted); font-size: 13.5px; padding: 26px 10px; }
+
+    /* ডান কলাম */
+    #page-power-grid .pg-cpf-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; font-size: 14px; color: var(--text); }
+    #page-power-grid .pg-cpf-row b { font-weight: 700; color: var(--navy); }
+    #page-power-grid .pg-donut-wrap { display: flex; align-items: center; gap: 16px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+    #page-power-grid .pg-donut { width: 150px; height: 150px; flex-shrink: 0; }
+    #page-power-grid .pg-donut svg { width: 100%; height: 100%; }
+    #page-power-grid .pg-legend { flex: 1; min-width: 120px; }
+    #page-power-grid .pg-lg { display: grid; grid-template-columns: 12px 1fr; gap: 8px; align-items: start; font-size: 13px; padding: 5px 0; color: var(--text); }
+    #page-power-grid .pg-lg i { width: 11px; height: 11px; border-radius: 3px; margin-top: 4px; }
+    #page-power-grid .pg-lg small { display: block; color: var(--text-muted); font-size: 12.5px; margin-top: 2px; }
+
+    #page-power-grid .pg-actions { display: flex; flex-direction: column; gap: 10px; }
+    #page-power-grid .pg-act { display: flex; align-items: center; gap: 12px; border: 1px solid var(--pg-line); background: #fff; border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; text-align: left; }
+    #page-power-grid .pg-act:hover { background: #f4f7fc; }
+    #page-power-grid .pg-act svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    #page-power-grid .pg-note { background: #fff8e6; border: 1px solid #f6e3b4; border-radius: 14px; padding: 16px 18px; }
+    #page-power-grid .pg-note-ico { width: 30px; height: 30px; border-radius: 50%; background: #1a3fa8; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 15px; margin-bottom: 10px; }
+    #page-power-grid .pg-note ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--text); }
+
+    /* ---------- মোডালের ভেতরের অংশ ---------- */
+    .pg-m-sec { margin: 14px 0 6px; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; }
+    .pg-m-sec:first-child { margin-top: 0; }
+    .pg-m-sec.earn { background: #eef4ff; color: #1d4ed8; }
+    .pg-m-sec.ded { background: #fff1f1; color: #dc2626; }
+    .pg-m-sec.cpf { background: #f0fbf3; color: #15803d; }
+    .pg-m-live { position: sticky; bottom: -20px; margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: #f4f7fc; border: 1px solid var(--border); display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 700; }
+    .pg-m-note { font-size: 12px; color: var(--text-muted); margin: 6px 0 4px; }
+    .pg-m-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+    .pg-m-row:last-child { border-bottom: 0; }
+    .pg-m-row.total { font-weight: 800; border-top: 2px solid var(--border); border-bottom: 0; margin-top: 4px; }
+    .pg-m-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .pg-m-table th, .pg-m-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    .pg-m-table th:first-child, .pg-m-table td:first-child { text-align: left; }
+    .pg-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 4px 9px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .pg-m-mini.danger { color: var(--danger); }
+
+    /* ---------- রেসপনসিভ ---------- */
+    @media (max-width: 1280px) {
+      #page-power-grid .pg-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-power-grid .pg-add { grid-column: 1 / -1; min-height: 52px; }
+    }
+    @media (max-width: 1100px) {
+      #page-power-grid .pg-layout { grid-template-columns: 1fr; }
+      #page-power-grid .pg-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      #page-power-grid .pg-note { grid-column: 1 / -1; }
+    }
+    @media (max-width: 900px) {
+      #page-power-grid .pg-cols { grid-template-columns: 1fr; }
+      #page-power-grid .pg-emp { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-power-grid .pg-emp > div:nth-child(odd) { border-left: 0; }
+      #page-power-grid .pg-emp > div:nth-child(n+3) { border-top: 1px solid var(--pg-line); }
+    }
+    @media (max-width: 560px) {
+      #page-power-grid .pg-top { grid-template-columns: 1fr; }
+      #page-power-grid .pg-sum-op { display: none; }
+      #page-power-grid .pg-sum-item { flex-basis: 45%; }
+    }
+  </style>
+
+  <div class="pg-error" id="pgError"><span id="pgErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+
+  <div class="pg-body" id="pgBody">
+
+    <!-- উপরের ৪টি কার্ড ও নতুন এন্ট্রি বাটন -->
+    <div class="pg-top" id="pgTop"></div>
+
+    <div class="pg-layout">
+
+      <div class="pg-main">
+
+        <!-- সেলারি স্টেটমেন্ট -->
+        <div class="pg-card">
+          <div class="pg-head">
+            <h3 class="pg-title">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              সেলারি স্টেটমেন্ট
+            </h3>
+            <div class="pg-month">
+              <button type="button" data-act="prev-month" id="pgPrev" aria-label="আগের স্টেটমেন্ট">‹</button>
+              <div class="pg-month-label" id="pgMonthLabel">লোড হচ্ছে...</div>
+              <button type="button" data-act="next-month" id="pgNext" aria-label="পরের স্টেটমেন্ট">›</button>
+            </div>
+          </div>
+          <div id="pgNotice"></div>
+          <div class="pg-emp" id="pgEmp"></div>
+          <div class="pg-cols" id="pgCols"></div>
+        </div>
+
+        <!-- সেলারি সারাংশ -->
+        <div class="pg-card">
+          <div class="pg-head"><h3 class="pg-title">সেলারি সারাংশ</h3></div>
+          <div class="pg-sum" id="pgSummary"></div>
+        </div>
+
+        <!-- পূর্বের বেতন স্টেটমেন্টসমূহ -->
+        <div class="pg-card">
+          <div class="pg-head"><h3 class="pg-title">পূর্বের বেতন স্টেটমেন্টসমূহ</h3></div>
+          <div id="pgPrevList"></div>
+        </div>
+
+      </div>
+
+      <div class="pg-side">
+
+        <div class="pg-card">
+          <div class="pg-head"><h3 class="pg-title" id="pgCpfTitle">CPF বার্ষিক সারাংশ</h3></div>
+          <div id="pgCpf"></div>
+        </div>
+
+        <div class="pg-card">
+          <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
+          <div class="pg-actions">
+            <button type="button" class="pg-act" data-act="add">
+              <svg viewBox="0 0 24 24" style="color:#1d4ed8"><path d="M12 5v14M5 12h14"/></svg>
+              নতুন বেতন এন্ট্রি করুন
+            </button>
+            <button type="button" class="pg-act" data-act="pdf-statement">
+              <svg viewBox="0 0 24 24" style="color:#f97316"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+              বেতন স্টেটমেন্ট (PDF)
+            </button>
+            <button type="button" class="pg-act" data-act="pdf-annual">
+              <svg viewBox="0 0 24 24" style="color:#7c3aed"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+              বার্ষিক সারাংশ (PDF)
+            </button>
+            <button type="button" class="pg-act" data-act="pdf-cpf">
+              <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+              CPF সারাংশ (PDF)
+            </button>
+            <button type="button" class="pg-act" data-act="excel">
+              <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>
+              সকল ডেটা এক্সপোর্ট (Excel)
+            </button>
+          </div>
+        </div>
+
+        <div class="pg-note">
+          <div class="pg-note-ico">i</div>
+          <ul>
+            <li>বেতন এন্ট্রি করার পরে তথ্য সুরক্ষিত থাকবে।</li>
+            <li>কোনো ভুল থাকলে এন্ট্রি এডিট/আপডেট করতে পারবেন।</li>
+            <li>পুরোনো স্টেটমেন্ট মুছে না ফেললে সবসময় দেখা যাবে।</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
   </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__powerGridInit) return;
+      window.__powerGridInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+      var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+      var EARN = [
+        ['basic', 'Basic Salary'], ['educationAllowance', 'Education Allowance'], ['incrementArrear', 'Increment/Arrear'],
+        ['houseRent', 'House Rent'], ['officerMedical', "Officer's Medical Reimbursement"], ['medicalAllowance', 'Medical Allowance'],
+        ['conveyanceAllowance', 'Conveyance Allowance'], ['shiftAllowance', 'Shift Allowance'],
+        ['responsibilityAllowance', 'Responsibility Allowance'], ['specialAllowance', 'Special Allowance']
+      ];
+      var DEDUCT = [
+        ['houseRentDeduction', 'House Rent Deduction'], ['cpfDeduction', 'CPF Deduction'], ['incomeTax', 'Income Tax'],
+        ['cpfAdvance', 'CPF Advance'], ['revenueDeduction', 'Revenue Deduction'], ['othersDeduction', 'Others Deduction']
+      ];
+      var CPF = [
+        ['employeeCpf', "Employee's Contribution to CPF"], ['companyCpf', "Company's Contribution to CPF"]
+      ];
+      var ALL_FIELDS = EARN.concat(DEDUCT, CPF);
+
+      var state = { data: null, sel: '', reqId: 0, loadedAt: 0, everLoaded: false };
+
+      /* ---------- helpers ---------- */
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-power-grid'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function num(n) { return (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }); }
+      function money(n) { return '৳ ' + num(n); }
+      function cell(n) { return Number(n) ? num(n) : '-'; }
+      function monthTitle(key) {
+        var p = String(key).split('-');
+        return BN_MONTHS[Number(p[1]) - 1] + ', ' + bn(p[0]);
+      }
+      function dispShort(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+        return m ? m[3] + '/' + m[2] + '/' + m[1].slice(2) : '—';
+      }
+      function nowKey() {
+        var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit' }).formatToParts(new Date());
+        var y = '', m = '';
+        parts.forEach(function (p) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; });
+        return y + '-' + m;
+      }
+      function shiftKey(key, delta) {
+        var p = key.split('-');
+        var idx = Number(p[0]) * 12 + (Number(p[1]) - 1) + delta;
+        return Math.floor(idx / 12) + '-' + ('0' + ((idx % 12) + 1)).slice(-2);
+      }
+      function call(fnName, args, ok, fail) {
+        var runner = google.script.run
+          .withSuccessHandler(ok || function () {})
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger');
+            if (fail) fail(err);
+          });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('pgBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('pgErrorText').textContent = msg; el('pgError').classList.add('show'); }
+      function hideError() { el('pgError').classList.remove('show'); }
+
+      /* ---------- data helpers ---------- */
+      function list() { return (state.data && state.data.statements) || []; }
+      function findSt(key) {
+        var l = list();
+        for (var i = 0; i < l.length; i++) if (l[i].monthKey === key) return l[i];
+        return null;
+      }
+      function selectedSt() {
+        var s = findSt(state.sel);
+        if (!s && list().length) { s = list()[list().length - 1]; state.sel = s.monthKey; }
+        return s || null;
+      }
+      function sumOf(st, defs) {
+        var t = 0;
+        defs.forEach(function (d) { t += Number(st[d[0]]) || 0; });
+        return t;
+      }
+      function totals(st) {
+        if (!st) return { gross: 0, allow: 0, ded: 0, net: 0, cpfEmp: 0, cpfComp: 0, cpfTotal: 0, cost: 0 };
+        var gross = sumOf(st, EARN);
+        var ded = sumOf(st, DEDUCT);
+        var emp = Number(st.employeeCpf) || 0;
+        var comp = Number(st.companyCpf) || 0;
+        return {
+          gross: gross,
+          allow: gross - (Number(st.basic) || 0),
+          ded: ded,
+          net: gross - ded,
+          cpfEmp: emp,
+          cpfComp: comp,
+          cpfTotal: emp + comp,
+          cost: gross + comp
+        };
+      }
+
+      /* ---------- load ---------- */
+      function load() {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        var id = ++state.reqId;
+        hideError();
+        setBusy(true);
+
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return;
+            state.data = d;
+            state.loadedAt = Date.now();
+            state.everLoaded = true;
+            setBusy(false);
+            render();
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'বেতনের তথ্য লোড করা যায়নি।');
+          })
+          .getPowerGridData(token);
+      }
+
+      function render() {
+        if (!state.data) return;
+        var st = selectedSt();
+        var t = totals(st);
+        renderTop(st, t);
+        renderStatement(st, t);
+        renderSummary(t);
+        renderPrevList(st);
+        renderCpf(st);
+      }
+
+      /* ---------- উপরের ৪টি কার্ড ---------- */
+      var SVG = {
+        wallet: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v3"/><path d="M3 7v11a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5a2 2 0 0 1-2-1z"/><circle cx="16.5" cy="14" r="1.2"/></svg>',
+        coins: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>',
+        calc: '<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>',
+        hand: '<svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M12 5.5v3M10.8 6.4h2.2M10.8 8.4h2.4"/><path d="M3 17l4-2 4 1.5h4a1.5 1.5 0 0 1 0 3H10"/><path d="M15 17.5l4.5-2a1.5 1.5 0 0 1 1.5 2.6L14 21l-7-1.5-4 1"/></svg>'
+      };
+
+      function kpi(cls, svg, label, value, kind) {
+        return '<div class="pg-card pg-kpi"><div class="pg-kpi-ico ' + cls + '">' + svg + '</div>' +
+          '<div><div class="pg-kpi-label">' + label + '</div><div class="pg-kpi-value">' + value + '</div>' +
+          '<button type="button" class="pg-link" data-act="kpi" data-kind="' + kind + '">বিস্তারিত দেখুন →</button></div></div>';
+      }
+
+      function renderTop(st, t) {
+        el('pgTop').innerHTML =
+          kpi('pg-ico-blue', SVG.wallet, 'গ্রস সেলারি', money(t.gross), 'gross') +
+          kpi('pg-ico-green', SVG.coins, 'মোট ভাতা', money(t.allow), 'allow') +
+          kpi('pg-ico-red', SVG.calc, 'মোট কর্তন', money(t.ded), 'ded') +
+          kpi('pg-ico-purple', SVG.hand, 'হাতে প্রাপ্ত বেতন', money(t.net), 'net') +
+          '<button type="button" class="pg-add" data-act="add"><span style="font-size:26px;line-height:1">＋</span> নতুন বেতন এন্ট্রি</button>';
+      }
+
+      /* ---------- সেলারি স্টেটমেন্ট ---------- */
+      function colHtml(cls, title, defs, st, footLabel, footValue) {
+        var rows = '';
+        for (var i = 0; i < 10; i++) {
+          var d = defs[i];
+          if (d) {
+            rows += '<div class="pg-r"><span><span class="pg-n">' + (i + 1) + '</span></span><span title="' + esc(d[1]) + '">' + esc(d[1]) + '</span><span>' + cell(st ? st[d[0]] : 0) + '</span></div>';
+          } else {
+            rows += '<div class="pg-r"><span></span><span></span><span></span></div>';
+          }
+        }
+        return '<div class="pg-col ' + cls + '"><div class="pg-col-h"><span>' + title + '</span><span>পরিমাণ (৳)</span></div>' + rows +
+          '<div class="pg-col-f"><span>' + footLabel + '</span><span>' + num(footValue) + '</span></div></div>';
+      }
+
+      function renderStatement(st, t) {
+        var d = state.data;
+        var emp = d.employee || {};
+        var keys = list().map(function (s) { return s.monthKey; });
+        var idx = st ? keys.indexOf(st.monthKey) : -1;
+
+        el('pgMonthLabel').textContent = st ? monthTitle(st.monthKey) : 'কোনো এন্ট্রি নেই';
+        el('pgPrev').disabled = !(idx > 0);
+        el('pgNext').disabled = !(idx >= 0 && idx < keys.length - 1);
+
+        el('pgNotice').innerHTML = st ? '' :
+          '<div class="pg-notice"><span>এখনো কোনো বেতন এন্ট্রি করা হয়নি।</span><button type="button" data-act="add">＋ প্রথম এন্ট্রি যোগ করুন</button></div>';
+
+        el('pgEmp').innerHTML =
+          '<button type="button" class="pg-emp-edit" data-act="edit-emp">✏️ তথ্য সম্পাদনা</button>' +
+          '<div><div class="pg-emp-l">Employee ID</div><div class="pg-emp-v">' + esc(emp.employeeId || '—') + '</div></div>' +
+          '<div><div class="pg-emp-l">Name of Employee</div><div class="pg-emp-v name">' + esc(emp.name || '—') + '</div></div>' +
+          '<div><div class="pg-emp-l">Designation</div><div class="pg-emp-v">' + esc(emp.designation || '—') + '</div></div>' +
+          '<div><div class="pg-emp-l">Joining Date</div><div class="pg-emp-v">' + dispShort(emp.joiningDate) + '</div></div>' +
+          '<div><div class="pg-emp-l">Next Increment Date</div><div class="pg-emp-v">' + dispShort(emp.nextIncrementDate) + '</div></div>';
+
+        el('pgCols').innerHTML =
+          colHtml('pg-earn', 'আয়/ভাতা (Earnings)', EARN, st, 'মোট আয় (A)', t.gross) +
+          colHtml('pg-ded', 'কর্তন (Deductions)', DEDUCT, st, 'মোট কর্তন (B)', t.ded) +
+          colHtml('pg-cpf', 'CPF (Provident Fund)', CPF, st, 'মোট CPF (C = 1+2)', t.cpfTotal);
+      }
+
+      /* ---------- সারাংশ ---------- */
+      function renderSummary(t) {
+        function item(label, value, cls) {
+          return '<div class="pg-sum-item"><div class="pg-sum-l">' + label + '</div><div class="pg-sum-v ' + cls + '">' + num(value) + '</div></div>';
+        }
+        function op(s) { return '<div class="pg-sum-op">' + s + '</div>'; }
+        el('pgSummary').innerHTML =
+          item('গ্রস সেলারি<br>(A)', t.gross, 'c-blue') + op('−') +
+          item('মোট কর্তন<br>(B)', t.ded, 'c-red') + op('=') +
+          item('হাতে প্রাপ্ত বেতন<br>(A − B)', t.net, 'c-green') + op('+') +
+          item('কোম্পানির CPF অবদান<br>&nbsp;', t.cpfComp, 'c-purple') + op('=') +
+          item('মোট কোম্পানি ব্যয়<br>&nbsp;', t.cost, 'c-dark');
+      }
+
+      /* ---------- পূর্বের স্টেটমেন্ট ---------- */
+      var EYE = '<svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+      var ICON_EDIT = '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+      var ICON_DEL = '<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>';
+
+      function summaryRow(s, actions) {
+        var t = totals(s);
+        return '<tr' + (s.monthKey === state.sel ? ' class="cur"' : '') + '><td>' + monthTitle(s.monthKey) + '</td><td>' + num(t.gross) + '</td><td>' + num(t.ded) +
+          '</td><td>' + num(t.net) + '</td><td>' + num(t.cpfEmp) + '</td><td>' + num(t.cpfComp) + '</td><td>' + num(t.cpfTotal) + '</td><td>' + actions + '</td></tr>';
+      }
+      var PREV_HEAD = '<thead><tr><th style="text-align:left">মাস, বছর</th><th>গ্রস সেলারি (৳)</th><th>মোট কর্তন (৳)</th><th>হাতে প্রাপ্ত বেতন (৳)</th>' +
+        '<th>Employee CPF (৳)</th><th>Company CPF (৳)</th><th>মোট CPF (৳)</th><th>অ্যাকশন</th></tr></thead>';
+
+      function renderPrevList(st) {
+        var host = el('pgPrevList');
+        var before = list().filter(function (s) { return !st || s.monthKey < st.monthKey; }).slice(-4).reverse();
+        if (!before.length) {
+          host.innerHTML = '<div class="pg-empty">আগের কোনো বেতন স্টেটমেন্ট নেই।</div>' +
+            (list().length ? '<button type="button" class="pg-more" data-act="all">সব বেতন স্টেটমেন্ট দেখুন →</button>' : '');
+          return;
+        }
+        host.innerHTML = '<div class="pg-table-wrap"><table class="pg-table">' + PREV_HEAD + '<tbody>' +
+          before.map(function (s) {
+            return summaryRow(s, '<button type="button" class="pg-iconbtn" data-act="view" data-key="' + esc(s.monthKey) + '" title="দেখুন">' + EYE + '</button>');
+          }).join('') + '</tbody></table></div>' +
+          '<button type="button" class="pg-more" data-act="all">সব বেতন স্টেটমেন্ট দেখুন →</button>';
+      }
+
+      /* ---------- CPF বার্ষিক সারাংশ ---------- */
+      function yearStatements(year) {
+        return list().filter(function (s) { return s.monthKey.substring(0, 4) === String(year); });
+      }
+      function selectedYear() {
+        var st = selectedSt();
+        return st ? st.monthKey.substring(0, 4) : nowKey().substring(0, 4);
+      }
+
+      function renderCpf() {
+        var year = selectedYear();
+        var emp = 0, comp = 0;
+        yearStatements(year).forEach(function (s) { emp += Number(s.employeeCpf) || 0; comp += Number(s.companyCpf) || 0; });
+        var total = emp + comp;
+
+        el('pgCpfTitle').textContent = 'CPF বার্ষিক সারাংশ (' + bn(year) + ')';
+
+        var html =
+          '<div class="pg-cpf-row"><span>Employee\'s CPF (YTD)</span><b>৳ ' + num(emp) + '</b></div>' +
+          '<div class="pg-cpf-row"><span>Company\'s CPF (YTD)</span><b>৳ ' + num(comp) + '</b></div>' +
+          '<div class="pg-cpf-row"><span>মোট CPF (YTD)</span><b>৳ ' + num(total) + '</b></div>';
+
+        if (total <= 0) {
+          el('pgCpf').innerHTML = html + '<div class="pg-empty">এই বছরে CPF এন্ট্রি নেই।</div>';
+          return;
+        }
+
+        var r = 52, c = 2 * Math.PI * r;
+        var eLen = emp / total * c;
+        var svg = '<svg viewBox="0 0 140 140" role="img" aria-label="CPF অনুপাত">' +
+          '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#1d4ed8" stroke-width="22"/>' +
+          (emp > 0 ? '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#15803d" stroke-width="22" stroke-dasharray="' + eLen + ' ' + (c - eLen) + '" transform="rotate(-90 70 70)"/>' : '') +
+          '<text x="70" y="65" text-anchor="middle" font-size="10.5" fill="#475569">মোট CPF</text>' +
+          '<text x="70" y="82" text-anchor="middle" font-size="13" font-weight="800" fill="#10233F">৳ ' + num(total) + '</text></svg>';
+
+        el('pgCpf').innerHTML = html + '<div class="pg-donut-wrap"><div class="pg-donut">' + svg + '</div><div class="pg-legend">' +
+          '<div class="pg-lg"><i style="background:#15803d"></i><div>Employee\'s CPF<small>' + (emp / total * 100).toFixed(1) + '% (৳ ' + num(emp) + ')</small></div></div>' +
+          '<div class="pg-lg"><i style="background:#1d4ed8"></i><div>Company\'s CPF<small>' + (comp / total * 100).toFixed(1) + '% (৳ ' + num(comp) + ')</small></div></div>' +
+          '</div></div>';
+      }
+
+      /* =====================================================
+         মোডাল: কার্ডের বিস্তারিত
+         ===================================================== */
+      function detailRows(defs, st) {
+        return defs.map(function (d) {
+          return '<div class="pg-m-row"><span>' + esc(d[1]) + '</span><b>' + cell(st[d[0]]) + '</b></div>';
+        }).join('');
+      }
+
+      function openKpiDetail(kind) {
+        var st = selectedSt();
+        if (!st) { showToast('আগে একটি বেতন এন্ট্রি করুন।', 'warning'); return; }
+        var t = totals(st);
+        var body, title;
+        if (kind === 'gross') {
+          title = 'গ্রস সেলারি';
+          body = detailRows(EARN, st) + '<div class="pg-m-row total"><span>মোট আয় (A)</span><b>' + money(t.gross) + '</b></div>';
+        } else if (kind === 'allow') {
+          title = 'মোট ভাতা';
+          body = detailRows(EARN.slice(1), st) + '<div class="pg-m-row total"><span>মোট ভাতা (মূল বেতন বাদে)</span><b>' + money(t.allow) + '</b></div>';
+        } else if (kind === 'ded') {
+          title = 'মোট কর্তন';
+          body = detailRows(DEDUCT, st) + '<div class="pg-m-row total"><span>মোট কর্তন (B)</span><b>' + money(t.ded) + '</b></div>';
+        } else {
+          title = 'হাতে প্রাপ্ত বেতন';
+          body = '<div class="pg-m-row"><span>গ্রস সেলারি (A)</span><b>' + money(t.gross) + '</b></div>' +
+            '<div class="pg-m-row"><span>মোট কর্তন (B)</span><b>− ' + money(t.ded) + '</b></div>' +
+            '<div class="pg-m-row total"><span>হাতে প্রাপ্ত বেতন (A − B)</span><b>' + money(t.net) + '</b></div>';
+        }
+        showModal(title + ' — ' + monthTitle(st.monthKey), body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+        el('modalBody').onclick = null;
+      }
+
+      /* =====================================================
+         মোডাল: সব স্টেটমেন্ট
+         ===================================================== */
+      function openAllModal() {
+        var rows = list().slice().reverse();
+        var body = rows.length
+          ? '<div style="overflow-x:auto"><table class="pg-m-table"><thead><tr><th>মাস</th><th>গ্রস</th><th>কর্তন</th><th>নিট</th><th>মোট CPF</th><th></th></tr></thead><tbody>' +
+            rows.map(function (s) {
+              var t = totals(s);
+              return '<tr><td>' + monthTitle(s.monthKey) + '</td><td>' + num(t.gross) + '</td><td>' + num(t.ded) + '</td><td>' + num(t.net) + '</td><td>' + num(t.cpfTotal) + '</td>' +
+                '<td><button type="button" class="pg-m-mini" data-m-view="' + esc(s.monthKey) + '">দেখুন</button> ' +
+                '<button type="button" class="pg-m-mini" data-m-edit="' + esc(s.monthKey) + '">সম্পাদনা</button> ' +
+                '<button type="button" class="pg-m-mini danger" data-m-del="' + esc(s.monthKey) + '">মুছুন</button></td></tr>';
+            }).join('') + '</tbody></table></div>'
+          : '<div class="pg-empty">কোনো বেতন স্টেটমেন্ট নেই।</div>';
+
+        showModal('সব বেতন স্টেটমেন্ট', body, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ নতুন বেতন এন্ট্রি', className: 'btn-primary', onClick: function () { openEntryModal(''); } }
+        ]);
+        setModalWide(true);
+
+        el('modalBody').onclick = function (e) {
+          var v = e.target.closest('[data-m-view]');
+          if (v) { state.sel = v.getAttribute('data-m-view'); hideModal(); render(); scrollTop(); return; }
+          var ed = e.target.closest('[data-m-edit]');
+          if (ed) { openEntryModal(ed.getAttribute('data-m-edit')); return; }
+          var dl = e.target.closest('[data-m-del]');
+          if (dl) confirmDeleteStatement(dl.getAttribute('data-m-del'));
+        };
+      }
+
+      function scrollTop() {
+        var top = el('pgTop');
+        if (top && top.scrollIntoView) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function confirmDeleteStatement(key) {
+        confirmDialog(esc(monthTitle(key)) + ' মাসের বেতন স্টেটমেন্টটি মুছে ফেলবেন?', function () {
+          call('deletePowerGridStatement', [getToken(), key], function () {
+            showToast('স্টেটমেন্ট মুছে ফেলা হয়েছে।', 'success');
+            if (state.sel === key) state.sel = '';
+            load();
+          });
+        });
+      }
+
+      /* =====================================================
+         মোডাল: বেতন এন্ট্রি (নতুন / সম্পাদনা)
+         ===================================================== */
+      function setModalWide(on) {
+        var box = document.querySelector('#modalOverlay .modal-box');
+        if (box) box.style.width = on ? '700px' : '';
+      }
+
+      // মোডাল বন্ধ হলে প্রস্থ আগের অবস্থায় ফেরানো
+      (function watchModal() {
+        var overlay = document.getElementById('modalOverlay');
+        if (!overlay || !window.MutationObserver) return;
+        new MutationObserver(function () {
+          if (!overlay.classList.contains('open')) setModalWide(false);
+        }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+      })();
+
+      function fieldInputs(defs) {
+        return defs.map(function (d) {
+          return '<div class="form-row"><label>' + esc(d[1]) + '</label><input type="number" min="0" step="any" class="form-input" id="pgf_' + d[0] + '"></div>';
+        }).join('');
+      }
+
+      function nextMonthKey() {
+        var l = list();
+        return l.length ? shiftKey(l[l.length - 1].monthKey, 1) : nowKey();
+      }
+
+      function openEntryModal(editKey) {
+        var edit = editKey ? findSt(editKey) : null;
+        var latest = list().length ? list()[list().length - 1] : null;
+        var base = edit || latest || {};
+        var monthVal = edit ? edit.monthKey : nextMonthKey();
+
+        var body =
+          '<div class="form-row"><label>মাস *</label><input type="month" class="form-input" id="pgfMonth" value="' + esc(monthVal) + '"' + (edit ? ' disabled' : '') + '></div>' +
+          (edit ? '' : '<div class="pg-m-note">' + (latest ? 'সর্বশেষ স্টেটমেন্টের মান বসানো আছে — প্রয়োজনে বদলান।' : 'ফাঁকা ঘর ০ ধরা হবে।') + '</div>') +
+          '<div class="pg-m-sec earn">আয়/ভাতা (Earnings)</div><div class="form-grid">' + fieldInputs(EARN) + '</div>' +
+          '<div class="pg-m-sec ded">কর্তন (Deductions)</div><div class="form-grid">' + fieldInputs(DEDUCT) + '</div>' +
+          '<div class="pg-m-sec cpf">CPF (Provident Fund)</div><div class="form-grid">' + fieldInputs(CPF) + '</div>' +
+          '<div class="form-row" style="margin-top:12px"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="pgfNotes" rows="2"></textarea></div>' +
+          '<div class="pg-m-live" id="pgfLive"></div>';
+
+        showModal(edit ? 'বেতন এন্ট্রি সম্পাদনা — ' + monthTitle(edit.monthKey) : 'নতুন বেতন এন্ট্রি', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitEntry(edit); } }
+        ]);
+        setModalWide(true);
+        el('modalBody').onclick = null;
+
+        ALL_FIELDS.forEach(function (d) {
+          var v = base[d[0]];
+          el('pgf_' + d[0]).value = (v === undefined || v === null || Number(v) === 0) ? '' : v;
+        });
+        el('pgfNotes').value = edit ? (edit.notes || '') : '';
+
+        // কর্মচারীর CPF সাধারণত CPF কর্তনের সমান — যতক্ষণ আলাদা করে না বদলানো হয়, এটি নিজে থেকে মিলে যাবে
+        var linked = (Number(base.employeeCpf) || 0) === (Number(base.cpfDeduction) || 0);
+        el('pgf_cpfDeduction').addEventListener('input', function () {
+          if (linked) el('pgf_employeeCpf').value = this.value;
+        });
+        el('pgf_employeeCpf').addEventListener('input', function () {
+          linked = (Number(this.value) || 0) === (Number(el('pgf_cpfDeduction').value) || 0);
+        });
+
+        el('modalBody').addEventListener('input', updateLive);
+        updateLive();
+      }
+
+      function formValues() {
+        var st = {};
+        ALL_FIELDS.forEach(function (d) { st[d[0]] = el('pgf_' + d[0]).value; });
+        return st;
+      }
+
+      function updateLive() {
+        var host = el('pgfLive');
+        if (!host) return;
+        var t = totals(formValues());
+        host.innerHTML = '<span class="c-blue">গ্রস: ' + money(t.gross) + '</span><span class="c-red">কর্তন: ' + money(t.ded) +
+          '</span><span class="c-green">নিট: ' + money(t.net) + '</span><span class="c-purple">মোট CPF: ' + money(t.cpfTotal) + '</span>';
+      }
+
+      function submitEntry(edit) {
+        var monthKey = edit ? edit.monthKey : el('pgfMonth').value;
+        if (!/^\d{4}-\d{2}$/.test(monthKey)) { showToast('সঠিক মাস নির্বাচন করুন।', 'warning'); return; }
+
+        var st = formValues();
+        st.monthKey = monthKey;
+        st.notes = el('pgfNotes').value;
+
+        var hasAny = ALL_FIELDS.some(function (d) { return Number(st[d[0]]) > 0; });
+        if (!hasAny) { showToast('অন্তত একটি পরিমাণ লিখুন।', 'warning'); return; }
+
+        function send() {
+          call('savePowerGridStatement', [getToken(), st], function (key) {
+            hideModal();
+            showToast('বেতন এন্ট্রি সংরক্ষণ হয়েছে।', 'success');
+            state.sel = key || monthKey;
+            load();
+          });
+        }
+
+        if (!edit && findSt(monthKey)) {
+          confirmDialog(esc(monthTitle(monthKey)) + ' মাসের এন্ট্রি আগে থেকেই আছে। নতুন তথ্য দিয়ে বদলে দেবেন?', send);
+        } else {
+          send();
+        }
+      }
+
+      /* =====================================================
+         মোডাল: কর্মচারীর তথ্য
+         ===================================================== */
+      function openEmpModal() {
+        var e = (state.data && state.data.employee) || {};
+        var body =
+          '<div class="form-row"><label>Employee ID</label><input type="text" class="form-input" id="pgeId" value="' + esc(e.employeeId) + '"></div>' +
+          '<div class="form-row"><label>Designation</label><input type="text" class="form-input" id="pgeDesig" value="' + esc(e.designation) + '"></div>' +
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>Joining Date</label><input type="date" class="form-input" id="pgeJoin" value="' + esc(e.joiningDate) + '"></div>' +
+            '<div class="form-row"><label>Next Increment Date</label><input type="date" class="form-input" id="pgeInc" value="' + esc(e.nextIncrementDate) + '"></div>' +
+          '</div>' +
+          '<div class="pg-m-note">নাম ব্যক্তিগত তথ্য পেজের প্রোফাইল (English নাম) থেকে আসে।</div>';
+
+        showModal('কর্মচারীর তথ্য সম্পাদনা', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+              call('savePowerGridEmployee', [getToken(), {
+                employeeId: el('pgeId').value, designation: el('pgeDesig').value,
+                joiningDate: el('pgeJoin').value, nextIncrementDate: el('pgeInc').value
+              }], function () {
+                hideModal();
+                showToast('কর্মচারীর তথ্য সংরক্ষণ হয়েছে।', 'success');
+                load();
+              });
+          } }
+        ]);
+        el('modalBody').onclick = null;
+      }
+
+      /* =====================================================
+         রিপোর্ট: PDF (প্রিন্ট → Save as PDF) ও Excel (CSV)
+         ===================================================== */
+      function printHtml(title, inner) {
+        var w = window.open('', '_blank');
+        if (!w) { showToast('পপআপ আটকে গেছে — ব্রাউজারে পপআপ অনুমতি দিন।', 'warning'); return; }
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
+          '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">' +
+          '<style>body{font-family:"Noto Sans Bengali",Arial,sans-serif;color:#10233F;padding:28px;font-size:13px}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}' +
+          '.sub{color:#5b6778;margin-bottom:12px}.emp{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.emp div{border:1px solid #d7dde8;border-radius:8px;padding:8px 12px;min-width:140px}.emp b{display:block;margin-top:2px}' +
+          'table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #d7dde8;padding:7px 9px;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f1f5fb}tfoot td{font-weight:700;background:#f8fafc}' +
+          '.cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}.sum{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.sum div{border:1px solid #d7dde8;border-radius:8px;padding:10px 14px;min-width:150px}.sum b{display:block;font-size:16px;margin-top:3px}</style></head><body>' +
+          inner + '</body></html>');
+        w.document.close();
+        w.focus();
+        setTimeout(function () { w.print(); }, 900);
+        showToast('প্রিন্ট উইন্ডোতে "Save as PDF" নির্বাচন করুন।', 'default');
+      }
+
+      function empBlock() {
+        var e = (state.data && state.data.employee) || {};
+        return '<div class="emp"><div>Employee ID<b>' + esc(e.employeeId || '—') + '</b></div><div>Name<b>' + esc(e.name || '—') + '</b></div>' +
+          '<div>Designation<b>' + esc(e.designation || '—') + '</b></div><div>Joining Date<b>' + dispShort(e.joiningDate) + '</b></div>' +
+          '<div>Next Increment Date<b>' + dispShort(e.nextIncrementDate) + '</b></div></div>';
+      }
+
+      function reportTable(title, defs, st, footLabel, footValue) {
+        return '<div><table><thead><tr><th>' + title + '</th><th>৳</th></tr></thead><tbody>' +
+          defs.map(function (d) { return '<tr><td>' + esc(d[1]) + '</td><td>' + cell(st[d[0]]) + '</td></tr>'; }).join('') +
+          '</tbody><tfoot><tr><td>' + footLabel + '</td><td>' + num(footValue) + '</td></tr></tfoot></table></div>';
+      }
+
+      function exportStatementPdf() {
+        var st = selectedSt();
+        if (!st) { showToast('আগে একটি বেতন এন্ট্রি করুন।', 'warning'); return; }
+        var t = totals(st);
+        printHtml('বেতন স্টেটমেন্ট — ' + monthTitle(st.monthKey),
+          '<h1>বেতন স্টেটমেন্ট — ' + esc(monthTitle(st.monthKey)) + '</h1>' + empBlock() +
+          '<div class="cols">' + reportTable('আয়/ভাতা (Earnings)', EARN, st, 'মোট আয় (A)', t.gross) +
+          reportTable('কর্তন (Deductions)', DEDUCT, st, 'মোট কর্তন (B)', t.ded) +
+          reportTable('CPF (Provident Fund)', CPF, st, 'মোট CPF (C)', t.cpfTotal) + '</div>' +
+          '<div class="sum"><div>গ্রস সেলারি (A)<b>' + money(t.gross) + '</b></div><div>মোট কর্তন (B)<b>' + money(t.ded) + '</b></div>' +
+          '<div>হাতে প্রাপ্ত বেতন (A − B)<b>' + money(t.net) + '</b></div><div>কোম্পানির CPF অবদান<b>' + money(t.cpfComp) + '</b></div>' +
+          '<div>মোট কোম্পানি ব্যয়<b>' + money(t.cost) + '</b></div></div>' +
+          (st.notes ? '<div class="sub">নোট: ' + esc(st.notes) + '</div>' : ''));
+      }
+
+      function exportAnnualPdf() {
+        var year = selectedYear();
+        var rows = yearStatements(year);
+        if (!rows.length) { showToast('এই বছরে কোনো বেতন এন্ট্রি নেই।', 'warning'); return; }
+        var g = 0, d = 0, n = 0, e = 0, c = 0;
+        var trs = rows.map(function (s) {
+          var t = totals(s);
+          g += t.gross; d += t.ded; n += t.net; e += t.cpfEmp; c += t.cpfComp;
+          return '<tr><td>' + monthTitle(s.monthKey) + '</td><td>' + num(t.gross) + '</td><td>' + num(t.ded) + '</td><td>' + num(t.net) + '</td><td>' + num(t.cpfEmp) + '</td><td>' + num(t.cpfComp) + '</td></tr>';
+        }).join('');
+        printHtml('বার্ষিক বেতন সারাংশ — ' + year,
+          '<h1>বার্ষিক বেতন সারাংশ — ' + esc(bn(year)) + '</h1>' + empBlock() +
+          '<table><thead><tr><th>মাস</th><th>গ্রস সেলারি</th><th>মোট কর্তন</th><th>হাতে প্রাপ্ত</th><th>Employee CPF</th><th>Company CPF</th></tr></thead><tbody>' + trs +
+          '</tbody><tfoot><tr><td>মোট</td><td>' + num(g) + '</td><td>' + num(d) + '</td><td>' + num(n) + '</td><td>' + num(e) + '</td><td>' + num(c) + '</td></tr></tfoot></table>');
+      }
+
+      function exportCpfPdf() {
+        var year = selectedYear();
+        var rows = yearStatements(year);
+        if (!rows.length) { showToast('এই বছরে কোনো CPF এন্ট্রি নেই।', 'warning'); return; }
+        var e = 0, c = 0, run = 0;
+        var trs = rows.map(function (s) {
+          var t = totals(s);
+          e += t.cpfEmp; c += t.cpfComp; run += t.cpfTotal;
+          return '<tr><td>' + monthTitle(s.monthKey) + '</td><td>' + num(t.cpfEmp) + '</td><td>' + num(t.cpfComp) + '</td><td>' + num(t.cpfTotal) + '</td><td>' + num(run) + '</td></tr>';
+        }).join('');
+        printHtml('CPF সারাংশ — ' + year,
+          '<h1>CPF সারাংশ — ' + esc(bn(year)) + '</h1>' + empBlock() +
+          '<table><thead><tr><th>মাস</th><th>Employee CPF</th><th>Company CPF</th><th>মোট CPF</th><th>ক্রমযোজিত মোট</th></tr></thead><tbody>' + trs +
+          '</tbody><tfoot><tr><td>মোট (YTD)</td><td>' + num(e) + '</td><td>' + num(c) + '</td><td>' + num(e + c) + '</td><td></td></tr></tfoot></table>');
+      }
+
+      function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+
+      function exportExcel() {
+        var l = list();
+        if (!l.length) { showToast('এক্সপোর্ট করার মতো কোনো এন্ট্রি নেই।', 'warning'); return; }
+        var head = ['Month'].concat(ALL_FIELDS.map(function (d) { return d[1]; }), ['Gross (A)', 'Total Deduction (B)', 'Net Pay', 'Total CPF', 'Company Cost', 'Notes']);
+        var lines = [head.map(csvCell).join(',')];
+        l.forEach(function (s) {
+          var t = totals(s);
+          var row = [csvCell(s.monthKey)];
+          ALL_FIELDS.forEach(function (d) { row.push(Number(s[d[0]]) || 0); });
+          row.push(t.gross, t.ded, t.net, t.cpfTotal, t.cost, csvCell(s.notes));
+          lines.push(row.join(','));
+        });
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'power-grid-salary.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
+      }
+
+      /* =====================================================
+         ইভেন্ট
+         ===================================================== */
+      function stepMonth(dir) {
+        var keys = list().map(function (s) { return s.monthKey; });
+        var i = keys.indexOf(state.sel);
+        var j = i + dir;
+        if (i < 0 || j < 0 || j >= keys.length) return;
+        state.sel = keys[j];
+        render();
+      }
+
+      root().addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b || b.disabled) return;
+        var act = b.getAttribute('data-act');
+
+        if (act === 'retry') load();
+        else if (act === 'add') openEntryModal('');
+        else if (act === 'edit-emp') openEmpModal();
+        else if (act === 'prev-month') stepMonth(-1);
+        else if (act === 'next-month') stepMonth(1);
+        else if (act === 'kpi') openKpiDetail(b.getAttribute('data-kind'));
+        else if (act === 'all') openAllModal();
+        else if (act === 'view') { state.sel = b.getAttribute('data-key'); render(); scrollTop(); }
+        else if (act === 'pdf-statement') exportStatementPdf();
+        else if (act === 'pdf-annual') exportAnnualPdf();
+        else if (act === 'pdf-cpf') exportCpfPdf();
+        else if (act === 'excel') exportExcel();
+      });
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      maybeLoad();
+    })();
+  </script>
+
 </section>

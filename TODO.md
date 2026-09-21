@@ -12,15 +12,17 @@
 - [x] Personal Information: Profile (with independent photo)
 - [x] Personal Information: Education timeline
 - [x] Personal Information: Education documents (upload, download, delete per qualification)
+- [x] Personal Information: Family Tree UI (photo + name branches, details popup, add branch/spouse, edit, delete)
+- [x] Personal Information: Age Calculator (green age cards with photo/name and live ticking age; two-date calculator)
 - [x] Global footer: live date, time and weather bar (replaced the hadith rotation)
+- [x] Budget Management: dashboard, categories, goal, income/expense entries, PDF/Excel export
+- [x] Power Grid: salary statements, CPF annual summary, PDF/Excel export (Phase 8, first part)
 
 ## In Progress
-- [ ] Personal Information: Family Tree UI
-  (server functions are done; the subtab in Page_PersonalInfo.html is still a placeholder)
+- (none)
 
 ## Pending (by phase)
-- [ ] Budget Management (Phase 7)
-- [ ] Power Grid: Salary, CPF, Leave, Increment (Phase 8)
+- [ ] Power Grid: Leave, CPF Loan and Increment sections (Phase 8, remaining part)
 - [ ] Tax (Phase 9)
 - [ ] Zakat & Fitra (Phase 10)
 - [ ] Prince Account (Phase 11)
@@ -36,8 +38,17 @@
 - [ ] Show `getMonthlyHolidays()` data on the Home page; the server function exists but nothing calls it.
 - [ ] Apply the `HijriAdjustment` setting on the Home page; it is seeded in Settings but not used yet.
 - [ ] Sidebar footer still says "Version 1.0 · Phase 3"; update it.
-- [ ] `Page_FamilyTree.html` is an old placeholder and is not included in Index.html; remove it once Family Tree lives inside Personal Info.
-- [ ] Add the `EducationDocuments` tab to `Setup_PersonalInfo.gs` (columns: DocID, EducationID, DocType, FileName, FileID, MimeType, SizeBytes, UploadedAt). It is currently created automatically on first use.
+- [ ] The Family Tree UI file is listed as `Page_FamilyTree.html` but `Index.html` includes `Partial_FamilyTree`; make sure the file name in Apps Script matches the include.
+- [ ] Age Calculator: the date of birth of a saved card cannot be edited (by design); the hidden file input created for each add/edit modal is never removed (minor).
+- [ ] Add the `EducationDocuments`, `AgeCards` and `FamilyMembers` (with ParentMemberID, SpouseMemberID) tabs to `Setup_PersonalInfo.gs`. `EducationDocuments` and `AgeCards` are created automatically on first use.
+- [ ] Do not add a separate `Partial_AgeCalculator` include: the calculator already lives inside `Page_PersonalInfo.html` and a second one creates a duplicate tab.
 - [ ] `Stylesheet_Global.html` still has the old `.app-footer*` rules (unused now); delete them when convenient.
 - [ ] Decide whether `Server_Footer.gs` (`getFooterHadiths`) is still needed or should move to the Islamic Corner page (Phase 13).
 - [ ] Suspicious-login detection in `logLoginActivity_` (planned for Phase 17).
+- [ ] Budget: link entries to Banks (BankID) and update bank balances.
+- [ ] Budget: sync Salary (Power Grid) into monthly Income using GlobalSyncID (Phase 17).
+- [ ] Budget: carry the Ledger running balance across months.
+- [ ] Add the SavingsGoals tab to `Setup_Budget.gs` (currently created on first use).
+- [ ] Power Grid: sync the net salary into the Budget monthly Income using GlobalSyncID (Phase 17).
+- [ ] Power Grid: add the `SalaryStatements` and `EmployeeInfo` tabs to `Setup_PowerGrid.gs` (currently created on first use).
+- [ ] Power Grid: "মোট ভাতা" is calculated as total earnings minus basic salary; confirm this is the intended definition.
