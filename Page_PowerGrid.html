@@ -166,6 +166,9 @@
     .pg-m-table th:first-child, .pg-m-table td:first-child { text-align: left; }
     .pg-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 4px 9px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
     .pg-m-mini.danger { color: var(--danger); }
+    .pg-m-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #e8effd; color: #1d4ed8; }
+    .pg-m-tag.hist { background: #e3f6e8; color: #15803d; }
+    .pg-m-tag.dim { background: #f1f5f9; color: #64748b; }
 
     /* ---------- রেসপনসিভ ---------- */
     @media (max-width: 1280px) {
@@ -243,10 +246,6 @@
         <div class="pg-card">
           <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
           <div class="pg-actions">
-            <button type="button" class="pg-act" data-act="add">
-              <svg viewBox="0 0 24 24" style="color:#1d4ed8"><path d="M12 5v14M5 12h14"/></svg>
-              নতুন বেতন এন্ট্রি করুন
-            </button>
             <button type="button" class="pg-act" data-act="pdf-statement">
               <svg viewBox="0 0 24 24" style="color:#f97316"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
               বেতন স্টেটমেন্ট (PDF)
@@ -296,16 +295,21 @@
         ['conveyanceAllowance', 'Conveyance Allowance'], ['shiftAllowance', 'Shift Allowance'],
         ['responsibilityAllowance', 'Responsibility Allowance'], ['specialAllowance', 'Special Allowance'],
         ['employerCpfEarning', "Employer's Contribution to CPF"], ['residentElectricity', 'Resident Electricity Allowance'],
-        ['chargeAllowance', 'Charge Allowance']
+        ['chargeAllowance', 'Charge Allowance'],
+        ['tiffinBill', 'Tiffin Bill'], ['taDa', 'T.A / D.A'], ['honorarium', 'Honorarium'],
+        ['incentiveBonus', 'Incentive Bonus'], ['wppwfmProfit', 'WPPWFM Profit'], ['festivalBonus', 'Festival Bonus'],
+        ['leaveEncashment', 'Leave Encashment'], ['banglaNoboborsha', 'Bangla Noboborsha'], ['localTraining', 'Local Training']
       ];
       var DEDUCT = [
         ['houseRentDeduction', 'House Rent Deduction'], ['cpfDeduction', 'CPF Deduction'], ['incomeTax', 'Income Tax'],
-        ['cpfAdvance', 'CPF Advance'], ['revenueDeduction', 'Revenue Deduction'], ['othersDeduction', 'Others Deduction']
+        ['cpfAdvance', 'CPF Advance'], ['revenueDeduction', 'Revenue Deduction'], ['othersDeduction', 'Others Deduction'],
+        ['donation', 'Donation'], ['taxWppwfm', 'Tax on WPPWFM']
       ];
+      // CPF অংশ আলাদা ইনপুট নয় — কর্তনের "CPF Deduction" ও আয়ের "Employer's Contribution to CPF" থেকে আসে
       var CPF = [
-        ['employeeCpf', "Employee's Contribution to CPF"], ['companyCpf', "Company's Contribution to CPF"]
+        ['cpfDeduction', "Employee's Contribution to CPF"], ['employerCpfEarning', "Company's Contribution to CPF"]
       ];
-      var ALL_FIELDS = EARN.concat(DEDUCT, CPF);
+      var ALL_FIELDS = EARN.concat(DEDUCT);
 
       var state = { data: null, sel: '', reqId: 0, loadedAt: 0, everLoaded: false };
 
@@ -372,11 +376,11 @@
         return t;
       }
       function totals(st) {
-        if (!st) return { gross: 0, allow: 0, ded: 0, net: 0, cpfEmp: 0, cpfComp: 0, cpfTotal: 0, cost: 0 };
+        if (!st) return { gross: 0, allow: 0, ded: 0, net: 0, cpfEmp: 0, cpfComp: 0, cpfTotal: 0 };
         var gross = sumOf(st, EARN);
         var ded = sumOf(st, DEDUCT);
-        var emp = Number(st.employeeCpf) || 0;
-        var comp = Number(st.companyCpf) || 0;
+        var emp = Number(st.cpfDeduction) || 0;        // Employee's contribution = CPF Deduction
+        var comp = Number(st.employerCpfEarning) || 0; // Company's contribution = Employer's Contribution to CPF
         return {
           gross: gross,
           allow: gross - (Number(st.basic) || 0),
@@ -384,13 +388,12 @@
           net: gross - ded,
           cpfEmp: emp,
           cpfComp: comp,
-          cpfTotal: emp + comp,
-          cost: gross + comp
+          cpfTotal: emp + comp
         };
       }
 
       /* ---------- load ---------- */
-      function load() {
+      function load(cb) {
         var token = getToken();
         if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
 
@@ -406,6 +409,7 @@
             state.everLoaded = true;
             setBusy(false);
             render();
+            if (typeof cb === 'function') cb();
           })
           .withFailureHandler(function (err) {
             if (id !== state.reqId) return;
@@ -500,9 +504,7 @@
         el('pgSummary').innerHTML =
           item('গ্রস সেলারি<br>(A)', t.gross, 'c-blue') + op('−') +
           item('মোট কর্তন<br>(B)', t.ded, 'c-red') + op('=') +
-          item('হাতে প্রাপ্ত বেতন<br>(A − B)', t.net, 'c-green') + op('+') +
-          item('কোম্পানির CPF অবদান<br>&nbsp;', t.cpfComp, 'c-purple') + op('=') +
-          item('মোট কোম্পানি ব্যয়<br>&nbsp;', t.cost, 'c-dark');
+          item('হাতে প্রাপ্ত বেতন<br>(A − B)', t.net, 'c-green');
       }
 
       /* ---------- পূর্বের স্টেটমেন্ট ---------- */
@@ -533,7 +535,7 @@
           '<button type="button" class="pg-more" data-act="all">সব বেতন স্টেটমেন্ট দেখুন →</button>';
       }
 
-      /* ---------- CPF বার্ষিক সারাংশ ---------- */
+      /* ---------- CPF (স্টেটমেন্ট + পূর্বের এন্ট্রি) ---------- */
       function yearStatements(year) {
         return list().filter(function (s) { return s.monthKey.substring(0, 4) === String(year); });
       }
@@ -542,10 +544,27 @@
         return st ? st.monthKey.substring(0, 4) : nowKey().substring(0, 4);
       }
 
+      /** প্রতি মাসে একটি রেকর্ড: স্টেটমেন্ট থাকলে সেখান থেকে, না থাকলে CPF ইতিহাস থেকে (পুরনো মাস আগে)। */
+      function cpfRecords() {
+        var map = {};
+        ((state.data && state.data.cpfHistory) || []).forEach(function (h) {
+          map[h.monthKey] = { monthKey: h.monthKey, emp: Number(h.employeeCpf) || 0, comp: Number(h.companyCpf) || 0, source: 'history', id: h.id, notes: h.notes };
+        });
+        list().forEach(function (s) {
+          var t = totals(s);
+          map[s.monthKey] = { monthKey: s.monthKey, emp: t.cpfEmp, comp: t.cpfComp, source: 'statement' };
+        });
+        return Object.keys(map).sort().map(function (k) { return map[k]; });
+      }
+      function cpfYearRecords(year) {
+        return cpfRecords().filter(function (r) { return r.monthKey.substring(0, 4) === String(year); });
+      }
+
       function renderCpf() {
         var year = selectedYear();
-        var emp = 0, comp = 0;
-        yearStatements(year).forEach(function (s) { emp += Number(s.employeeCpf) || 0; comp += Number(s.companyCpf) || 0; });
+        var emp = 0, comp = 0, allTotal = 0;
+        cpfYearRecords(year).forEach(function (r) { emp += r.emp; comp += r.comp; });
+        cpfRecords().forEach(function (r) { allTotal += r.emp + r.comp; });
         var total = emp + comp;
 
         el('pgCpfTitle').textContent = 'CPF বার্ষিক সারাংশ (' + bn(year) + ')';
@@ -553,10 +572,13 @@
         var html =
           '<div class="pg-cpf-row"><span>Employee\'s CPF (YTD)</span><b>৳ ' + num(emp) + '</b></div>' +
           '<div class="pg-cpf-row"><span>Company\'s CPF (YTD)</span><b>৳ ' + num(comp) + '</b></div>' +
-          '<div class="pg-cpf-row"><span>মোট CPF (YTD)</span><b>৳ ' + num(total) + '</b></div>';
+          '<div class="pg-cpf-row"><span>মোট CPF (YTD)</span><b>৳ ' + num(total) + '</b></div>' +
+          '<div class="pg-cpf-row"><span>সর্বমোট জমা (সব বছর)</span><b>৳ ' + num(allTotal) + '</b></div>';
+
+        var manage = '<button type="button" class="pg-more" data-act="cpf-list">পূর্বের CPF এন্ট্রি দেখুন ও সম্পাদনা →</button>';
 
         if (total <= 0) {
-          el('pgCpf').innerHTML = html + '<div class="pg-empty">এই বছরে CPF এন্ট্রি নেই।</div>';
+          el('pgCpf').innerHTML = html + '<div class="pg-empty">এই বছরে CPF এন্ট্রি নেই।</div>' + manage;
           return;
         }
 
@@ -571,7 +593,7 @@
         el('pgCpf').innerHTML = html + '<div class="pg-donut-wrap"><div class="pg-donut">' + svg + '</div><div class="pg-legend">' +
           '<div class="pg-lg"><i style="background:#15803d"></i><div>Employee\'s CPF<small>' + (emp / total * 100).toFixed(1) + '% (৳ ' + num(emp) + ')</small></div></div>' +
           '<div class="pg-lg"><i style="background:#1d4ed8"></i><div>Company\'s CPF<small>' + (comp / total * 100).toFixed(1) + '% (৳ ' + num(comp) + ')</small></div></div>' +
-          '</div></div>';
+          '</div></div>' + manage;
       }
 
       /* =====================================================
@@ -693,7 +715,7 @@
           (edit ? '' : '<div class="pg-m-note">' + (latest ? 'সর্বশেষ স্টেটমেন্টের মান বসানো আছে — প্রয়োজনে বদলান।' : 'ফাঁকা ঘর ০ ধরা হবে।') + '</div>') +
           '<div class="pg-m-sec earn">আয়/ভাতা (Earnings)</div><div class="form-grid">' + fieldInputs(EARN) + '</div>' +
           '<div class="pg-m-sec ded">কর্তন (Deductions)</div><div class="form-grid">' + fieldInputs(DEDUCT) + '</div>' +
-          '<div class="pg-m-sec cpf">CPF (Provident Fund)</div><div class="form-grid">' + fieldInputs(CPF) + '</div>' +
+          '<div class="pg-m-note">CPF অংশ নিজে থেকে আসে: Employee = CPF Deduction, Company = Employer\'s Contribution to CPF।</div>' +
           '<div class="form-row" style="margin-top:12px"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="pgfNotes" rows="2"></textarea></div>' +
           '<div class="pg-m-live" id="pgfLive"></div>';
 
@@ -709,15 +731,6 @@
           el('pgf_' + d[0]).value = (v === undefined || v === null || Number(v) === 0) ? '' : v;
         });
         el('pgfNotes').value = edit ? (edit.notes || '') : '';
-
-        // কর্মচারীর CPF সাধারণত CPF কর্তনের সমান — যতক্ষণ আলাদা করে না বদলানো হয়, এটি নিজে থেকে মিলে যাবে
-        var linked = (Number(base.employeeCpf) || 0) === (Number(base.cpfDeduction) || 0);
-        el('pgf_cpfDeduction').addEventListener('input', function () {
-          if (linked) el('pgf_employeeCpf').value = this.value;
-        });
-        el('pgf_employeeCpf').addEventListener('input', function () {
-          linked = (Number(this.value) || 0) === (Number(el('pgf_cpfDeduction').value) || 0);
-        });
 
         el('modalBody').addEventListener('input', updateLive);
         updateLive();
@@ -762,6 +775,104 @@
         } else {
           send();
         }
+      }
+
+      /* =====================================================
+         মোডাল: CPF এন্ট্রি তালিকা ও সম্পাদনা (পূর্বের কন্ট্রিবিউশন)
+         ===================================================== */
+      function openCpfListModal() {
+        var recs = cpfRecords().slice().reverse();
+        var shadowed = ((state.data && state.data.cpfHistory) || []).filter(function (h) { return !!findSt(h.monthKey); });
+        var totE = 0, totC = 0;
+
+        var rows = recs.map(function (r) {
+          totE += r.emp; totC += r.comp;
+          var actions = r.source === 'statement'
+            ? '<button type="button" class="pg-m-mini" data-c-st="' + esc(r.monthKey) + '">সম্পাদনা</button>'
+            : '<button type="button" class="pg-m-mini" data-c-edit="' + esc(r.id) + '">সম্পাদনা</button> ' +
+              '<button type="button" class="pg-m-mini danger" data-c-del="' + esc(r.id) + '">মুছুন</button>';
+          var tag = r.source === 'statement' ? '<span class="pg-m-tag">বেতন স্টেটমেন্ট</span>' : '<span class="pg-m-tag hist">পূর্বের এন্ট্রি</span>';
+          return '<tr><td>' + monthTitle(r.monthKey) + '</td><td>' + num(r.emp) + '</td><td>' + num(r.comp) + '</td><td>' + num(r.emp + r.comp) + '</td><td>' + tag + '</td><td>' + actions + '</td></tr>';
+        }).join('');
+
+        shadowed.forEach(function (h) {
+          rows += '<tr style="opacity:.55"><td>' + monthTitle(h.monthKey) + '</td><td>' + num(h.employeeCpf) + '</td><td>' + num(h.companyCpf) + '</td><td>' + num((Number(h.employeeCpf) || 0) + (Number(h.companyCpf) || 0)) + '</td>' +
+            '<td><span class="pg-m-tag dim">গণনায় নেই (স্টেটমেন্ট আছে)</span></td><td><button type="button" class="pg-m-mini danger" data-c-del="' + esc(h.id) + '">মুছুন</button></td></tr>';
+        });
+
+        var body = (rows
+          ? '<div style="overflow-x:auto"><table class="pg-m-table"><thead><tr><th>মাস</th><th>Employee</th><th>Company</th><th>মোট</th><th>উৎস</th><th></th></tr></thead><tbody>' + rows +
+            '</tbody><tfoot><tr><td><b>সর্বমোট</b></td><td><b>' + num(totE) + '</b></td><td><b>' + num(totC) + '</b></td><td><b>' + num(totE + totC) + '</b></td><td></td><td></td></tr></tfoot></table></div>'
+          : '<div class="pg-empty">এখনো কোনো CPF এন্ট্রি নেই।</div>') +
+          '<div class="pg-m-note">যে মাসের বেতন স্টেটমেন্ট আছে, তার CPF সেখান থেকেই আসে (Employee = CPF Deduction, Company = Employer\'s Contribution to CPF)। স্টেটমেন্ট নেই এমন পুরনো মাসের CPF এখানে "নতুন CPF এন্ট্রি" দিয়ে যোগ করুন।</div>';
+
+        showModal('CPF এন্ট্রিসমূহ', body, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ নতুন CPF এন্ট্রি', className: 'btn-primary', onClick: function () { openCpfEntryModal(''); } }
+        ]);
+        setModalWide(true);
+
+        el('modalBody').onclick = function (e) {
+          var st = e.target.closest('[data-c-st]');
+          if (st) { openEntryModal(st.getAttribute('data-c-st')); return; }
+          var ed = e.target.closest('[data-c-edit]');
+          if (ed) { openCpfEntryModal(ed.getAttribute('data-c-edit')); return; }
+          var dl = e.target.closest('[data-c-del]');
+          if (dl) confirmDeleteCpf(dl.getAttribute('data-c-del'));
+        };
+      }
+
+      function findCpfEntry(id) {
+        var l = (state.data && state.data.cpfHistory) || [];
+        for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+        return null;
+      }
+
+      function confirmDeleteCpf(id) {
+        var h = findCpfEntry(id);
+        if (!h) return;
+        confirmDialog(esc(monthTitle(h.monthKey)) + ' মাসের CPF এন্ট্রিটি মুছে ফেলবেন?', function () {
+          call('deletePowerGridCpfEntry', [getToken(), id], function () {
+            showToast('CPF এন্ট্রি মুছে ফেলা হয়েছে।', 'success');
+            load(openCpfListModal);
+          });
+        });
+      }
+
+      function openCpfEntryModal(id) {
+        var edit = id ? findCpfEntry(id) : null;
+        var monthVal = edit ? edit.monthKey : '';
+        var body =
+          '<div class="form-row"><label>মাস *</label><input type="month" class="form-input" id="pgcMonth" value="' + esc(monthVal) + '"' + (edit ? ' disabled' : '') + '></div>' +
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>Employee\'s Contribution to CPF</label><input type="number" min="0" step="any" class="form-input" id="pgcEmp" value="' + esc(edit && edit.employeeCpf ? edit.employeeCpf : '') + '"></div>' +
+            '<div class="form-row"><label>Company\'s Contribution to CPF</label><input type="number" min="0" step="any" class="form-input" id="pgcComp" value="' + esc(edit && edit.companyCpf ? edit.companyCpf : '') + '"></div>' +
+          '</div>' +
+          '<div class="form-row"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="pgcNotes" rows="2">' + esc(edit ? edit.notes : '') + '</textarea></div>' +
+          '<div class="pg-m-note">এটি শুধু সেই মাসের জন্য, যার বেতন স্টেটমেন্ট এখানে নেই।</div>';
+
+        showModal(edit ? 'CPF এন্ট্রি সম্পাদনা — ' + monthTitle(edit.monthKey) : 'নতুন CPF এন্ট্রি', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: openCpfListModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitCpfEntry(edit); } }
+        ]);
+        setModalWide(false);
+        el('modalBody').onclick = null;
+      }
+
+      function submitCpfEntry(edit) {
+        var monthKey = edit ? edit.monthKey : el('pgcMonth').value;
+        if (!/^\d{4}-\d{2}$/.test(monthKey)) { showToast('সঠিক মাস নির্বাচন করুন।', 'warning'); return; }
+        var emp = Number(el('pgcEmp').value) || 0;
+        var comp = Number(el('pgcComp').value) || 0;
+        if (emp + comp <= 0) { showToast('অন্তত একটি CPF পরিমাণ লিখুন।', 'warning'); return; }
+        if (!edit && findSt(monthKey)) { showToast('এই মাসের বেতন স্টেটমেন্ট আছে — CPF সেখান থেকেই আসে।', 'warning'); return; }
+
+        call('savePowerGridCpfEntry', [getToken(), {
+          id: edit ? edit.id : '', monthKey: monthKey, employeeCpf: emp, companyCpf: comp, notes: el('pgcNotes').value
+        }], function () {
+          showToast('CPF এন্ট্রি সংরক্ষণ হয়েছে।', 'success');
+          load(openCpfListModal);
+        });
       }
 
       /* =====================================================
@@ -836,8 +947,7 @@
           reportTable('কর্তন (Deductions)', DEDUCT, st, 'মোট কর্তন (B)', t.ded) +
           reportTable('CPF (Provident Fund)', CPF, st, 'মোট CPF (C)', t.cpfTotal) + '</div>' +
           '<div class="sum"><div>গ্রস সেলারি (A)<b>' + money(t.gross) + '</b></div><div>মোট কর্তন (B)<b>' + money(t.ded) + '</b></div>' +
-          '<div>হাতে প্রাপ্ত বেতন (A − B)<b>' + money(t.net) + '</b></div><div>কোম্পানির CPF অবদান<b>' + money(t.cpfComp) + '</b></div>' +
-          '<div>মোট কোম্পানি ব্যয়<b>' + money(t.cost) + '</b></div></div>' +
+          '<div>হাতে প্রাপ্ত বেতন (A − B)<b>' + money(t.net) + '</b></div></div>' +
           (st.notes ? '<div class="sub">নোট: ' + esc(st.notes) + '</div>' : ''));
       }
 
@@ -859,13 +969,12 @@
 
       function exportCpfPdf() {
         var year = selectedYear();
-        var rows = yearStatements(year);
+        var rows = cpfYearRecords(year);
         if (!rows.length) { showToast('এই বছরে কোনো CPF এন্ট্রি নেই।', 'warning'); return; }
         var e = 0, c = 0, run = 0;
-        var trs = rows.map(function (s) {
-          var t = totals(s);
-          e += t.cpfEmp; c += t.cpfComp; run += t.cpfTotal;
-          return '<tr><td>' + monthTitle(s.monthKey) + '</td><td>' + num(t.cpfEmp) + '</td><td>' + num(t.cpfComp) + '</td><td>' + num(t.cpfTotal) + '</td><td>' + num(run) + '</td></tr>';
+        var trs = rows.map(function (r) {
+          e += r.emp; c += r.comp; run += r.emp + r.comp;
+          return '<tr><td>' + monthTitle(r.monthKey) + '</td><td>' + num(r.emp) + '</td><td>' + num(r.comp) + '</td><td>' + num(r.emp + r.comp) + '</td><td>' + num(run) + '</td></tr>';
         }).join('');
         printHtml('CPF সারাংশ — ' + year,
           '<h1>CPF সারাংশ — ' + esc(bn(year)) + '</h1>' + empBlock() +
@@ -878,14 +987,19 @@
       function exportExcel() {
         var l = list();
         if (!l.length) { showToast('এক্সপোর্ট করার মতো কোনো এন্ট্রি নেই।', 'warning'); return; }
-        var head = ['Month'].concat(ALL_FIELDS.map(function (d) { return d[1]; }), ['Gross (A)', 'Total Deduction (B)', 'Net Pay', 'Total CPF', 'Company Cost', 'Notes']);
+        var head = ['Month'].concat(ALL_FIELDS.map(function (d) { return d[1]; }), ['Gross (A)', 'Total Deduction (B)', 'Net Pay', 'Total CPF', 'Notes']);
         var lines = [head.map(csvCell).join(',')];
         l.forEach(function (s) {
           var t = totals(s);
           var row = [csvCell(s.monthKey)];
           ALL_FIELDS.forEach(function (d) { row.push(Number(s[d[0]]) || 0); });
-          row.push(t.gross, t.ded, t.net, t.cpfTotal, t.cost, csvCell(s.notes));
+          row.push(t.gross, t.ded, t.net, t.cpfTotal, csvCell(s.notes));
           lines.push(row.join(','));
+        });
+        lines.push('');
+        lines.push(['CPF Month', "Employee's CPF", "Company's CPF", 'Total CPF', 'Source'].map(csvCell).join(','));
+        cpfRecords().forEach(function (r) {
+          lines.push([csvCell(r.monthKey), r.emp, r.comp, r.emp + r.comp, csvCell(r.source === 'statement' ? 'Salary statement' : 'Earlier entry')].join(','));
         });
         var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
         var url = URL.createObjectURL(blob);
@@ -927,6 +1041,7 @@
         else if (act === 'pdf-annual') exportAnnualPdf();
         else if (act === 'pdf-cpf') exportCpfPdf();
         else if (act === 'excel') exportExcel();
+        else if (act === 'cpf-list') openCpfListModal();
       });
 
       /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */

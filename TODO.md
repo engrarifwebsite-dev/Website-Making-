@@ -16,7 +16,7 @@
 - [x] Personal Information: Age Calculator (green age cards with photo/name and live ticking age; two-date calculator)
 - [x] Global footer: live date, time and weather bar (replaced the hadith rotation)
 - [x] Budget Management: dashboard, categories, goal, income/expense entries, PDF/Excel export
-- [x] Power Grid: salary statements, CPF annual summary, PDF/Excel export (Phase 8, first part)
+- [x] Power Grid: salary statements, CPF annual summary and earlier CPF entries, PDF/Excel export (Phase 8, first part)
 
 ## In Progress
 - (none)
@@ -50,5 +50,5 @@
 - [ ] Budget: carry the Ledger running balance across months.
 - [ ] Add the SavingsGoals tab to `Setup_Budget.gs` (currently created on first use).
 - [ ] Power Grid: sync the net salary into the Budget monthly Income using GlobalSyncID (Phase 17).
-- [ ] Power Grid: add the `SalaryStatements` and `EmployeeInfo` tabs to `Setup_PowerGrid.gs` (currently created on first use).
+- [ ] Power Grid: add the `SalaryStatements`, `EmployeeInfo` and `CPFHistory` tabs to `Setup_PowerGrid.gs` (currently created on first use).
 - [ ] Power Grid: "মোট ভাতা" is calculated as total earnings minus basic salary; confirm this is the intended definition.

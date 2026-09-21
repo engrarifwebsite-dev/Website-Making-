@@ -2,8 +2,10 @@
  * Server_PowerGrid.gs
  * Server support for the পাওয়ার গ্রিড page (Page_PowerGrid.html).
  *
- * Tabs used in the Power_Grid spreadsheet (both are created automatically):
- *   "SalaryStatements" : one row per month (see PG_STATEMENT_HEADERS)
+ * Tabs used in the Power_Grid spreadsheet (all are created automatically):
+ *   "SalaryStatements" : one row per month (see PG_STATEMENT_HEADERS + PG_EXTRA_*)
+ *   "CPFHistory"       : EntryID, MonthKey, EmployeeCPF, CompanyCPF, Notes, CreatedAt, UpdatedAt
+ *                        (earlier CPF contributions for months that have no salary statement)
  *   "EmployeeInfo"     : Key, Value, UpdatedAt  (EmployeeID, Designation, NextIncrementDate)
  * The joining date is read from / written to the existing "Employment" tab
  * (JoiningDate, ResignationDate), and the employee's name comes from
@@ -32,12 +34,28 @@ var PG_FIELDS = [
 ];
 
 /**
- * Later additions to the Earnings list. They live in columns 25-27, AFTER
- * UpdatedAt, so rows saved before they existed keep their layout (old rows
- * simply read 0 for these). Headers are added automatically to an existing sheet.
+ * Later additions. They live in columns 25 onward, AFTER UpdatedAt, so rows
+ * saved before they existed keep their layout (old rows simply read 0 for
+ * these). Headers are added automatically to an existing sheet.
+ *   Earnings   : employerCpfEarning ... localTraining  (columns 25-36)
+ *   Deductions : donation, taxWppwfm                   (columns 37-38)
+ * "employerCpfEarning" is also the company's CPF contribution, and
+ * "cpfDeduction" is the employee's CPF contribution (the page derives the
+ * CPF section from these two). The old EmployeeCPF / CompanyCPF columns
+ * (19-20) are no longer used by the page.
  */
-var PG_EXTRA_FIELDS = ['employerCpfEarning', 'residentElectricity', 'chargeAllowance'];
-var PG_EXTRA_HEADERS = ['EmployerCPFEarning', 'ResidentElectricityAllowance', 'ChargeAllowance'];
+var PG_EXTRA_FIELDS = [
+  'employerCpfEarning', 'residentElectricity', 'chargeAllowance',
+  'tiffinBill', 'taDa', 'honorarium', 'incentiveBonus', 'wppwfmProfit',
+  'festivalBonus', 'leaveEncashment', 'banglaNoboborsha', 'localTraining',
+  'donation', 'taxWppwfm'
+];
+var PG_EXTRA_HEADERS = [
+  'EmployerCPFEarning', 'ResidentElectricityAllowance', 'ChargeAllowance',
+  'TiffinBill', 'TA_DA', 'Honorarium', 'IncentiveBonus', 'WPPWFMProfit',
+  'FestivalBonus', 'LeaveEncashment', 'BanglaNoboborsha', 'LocalTraining',
+  'Donation', 'TaxOnWPPWFM'
+];
 var PG_EXTRA_COL = 25;
 
 var PG_STATEMENT_HEADERS = [
@@ -204,7 +222,7 @@ function getPowerGridData(token) {
 
   statements.sort(function (a, b) { return a.monthKey < b.monthKey ? -1 : (a.monthKey > b.monthKey ? 1 : 0); });
 
-  return { employee: pgGetEmployee_(), statements: statements };
+  return { employee: pgGetEmployee_(), statements: statements, cpfHistory: pgReadCpfHistory_() };
 }
 
 /**
@@ -262,6 +280,106 @@ function deletePowerGridStatement(token, monthKey) {
   var data = sheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if (pgMonthKey_(data[i][1]) === String(monthKey)) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+/* ============================================================
+ * CPF history — earlier contributions without a salary statement
+ * (months that DO have a statement take their CPF from it)
+ * ============================================================ */
+
+function pgCpfHistorySheet_() {
+  return ensureSheetWithHeaders(pgSs_(), 'CPFHistory', [
+    'EntryID', 'MonthKey', 'EmployeeCPF', 'CompanyCPF', 'Notes', 'CreatedAt', 'UpdatedAt'
+  ]);
+}
+
+/** Every history entry, oldest month first. */
+function pgReadCpfHistory_() {
+  var data = pgCpfHistorySheet_().getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var key = pgMonthKey_(row[1]);
+    if (!row[0] || !key) continue;
+    out.push({
+      id: String(row[0]),
+      monthKey: key,
+      employeeCpf: pgNum_(row[2]),
+      companyCpf: pgNum_(row[3]),
+      notes: String(row[4] || '')
+    });
+  }
+  out.sort(function (a, b) { return a.monthKey < b.monthKey ? -1 : (a.monthKey > b.monthKey ? 1 : 0); });
+  return out;
+}
+
+/**
+ * entry = { id (blank for new), monthKey 'yyyy-MM', employeeCpf, companyCpf, notes }
+ * Refuses a month that already has a salary statement (its CPF comes from the
+ * statement) and a month that already has another history entry.
+ * Returns { monthKey }.
+ */
+function savePowerGridCpfEntry(token, entry) {
+  pgAuth_(token);
+  entry = entry || {};
+
+  var monthKey = String(entry.monthKey || '').trim();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthKey)) throw new Error('সঠিক মাস নির্বাচন করুন।');
+
+  var emp = pgNum_(entry.employeeCpf);
+  var comp = pgNum_(entry.companyCpf);
+  if (emp < 0 || comp < 0) throw new Error('পরিমাণ ঋণাত্মক হতে পারে না।');
+  if (emp + comp <= 0) throw new Error('অন্তত একটি CPF পরিমাণ লিখুন।');
+  var notes = String(entry.notes || '').trim().substring(0, 500);
+
+  var st = pgStatementSheet_().getDataRange().getValues();
+  for (var s = 1; s < st.length; s++) {
+    if (st[s][0] && pgMonthKey_(st[s][1]) === monthKey) {
+      throw new Error('এই মাসের বেতন স্টেটমেন্ট আছে — CPF সেখান থেকেই আসে। বেতন স্টেটমেন্ট সম্পাদনা করুন।');
+    }
+  }
+
+  var sheet = pgCpfHistorySheet_();
+  var data = sheet.getDataRange().getValues();
+  var id = entry.id ? String(entry.id) : '';
+  var foundRow = -1;
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue;
+    var rowId = String(data[i][0]);
+    if (id && rowId === id) foundRow = i + 1;
+    if (pgMonthKey_(data[i][1]) === monthKey && rowId !== id) {
+      throw new Error('এই মাসের CPF এন্ট্রি আগে থেকেই আছে। সেটি সম্পাদনা করুন।');
+    }
+  }
+
+  var now = new Date();
+  if (id) {
+    if (foundRow < 0) throw new Error('CPF এন্ট্রি পাওয়া যায়নি।');
+    sheet.getRange(foundRow, 2).setNumberFormat('@');
+    sheet.getRange(foundRow, 2, 1, 4).setValues([[monthKey, emp, comp, notes]]);
+    sheet.getRange(foundRow, 7).setValue(now);
+    return { monthKey: monthKey };
+  }
+
+  id = generateUniqueId('CPF');
+  var row = sheet.getLastRow() + 1;
+  sheet.getRange(row, 2).setNumberFormat('@'); // keep "2026-07" as text, not a date
+  sheet.getRange(row, 1, 1, 7).setValues([[id, monthKey, emp, comp, notes, now, now]]);
+  return { monthKey: monthKey };
+}
+
+function deletePowerGridCpfEntry(token, entryId) {
+  pgAuth_(token);
+
+  var sheet = pgCpfHistorySheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(entryId)) {
       sheet.deleteRow(i + 1);
       return true;
     }

@@ -7,30 +7,46 @@
   four summary cards (gross salary, total allowance, total deduction, net pay)
   plus a "নতুন বেতন এন্ট্রি" button; the salary statement card with the
   employee strip (Employee ID, name, designation, joining date, next increment
-  date) and three tables - Earnings (13 lines), Deductions (6 lines) and CPF
+  date) and three tables - Earnings (22 lines), Deductions (8 lines) and CPF
   (employee and company contribution) - with totals A, B and C; the salary
-  summary (A - B = net pay, + company CPF, = total company cost); the previous
-  statements list (last 4 months, eye button opens that month); the CPF annual
-  summary with a donut (employee vs company share, year to date); quick actions
-  and an information note.
+  summary (gross salary - total deduction = net pay); the previous statements
+  list (last 4 months, eye button opens that month); the CPF annual summary
+  with a donut (employee vs company share, year to date); quick actions (the
+  "new entry" button is only at the top) and an information note.
+- Earnings: Basic Salary, Education Allowance, Increment/Arrear, House Rent,
+  Officer's Medical Reimbursement, Medical Allowance, Conveyance Allowance,
+  Shift Allowance, Responsibility Allowance, Special Allowance, Employer's
+  Contribution to CPF, Resident Electricity Allowance, Charge Allowance,
+  Tiffin Bill, T.A / D.A, Honorarium, Incentive Bonus, WPPWFM Profit, Festival
+  Bonus, Leave Encashment, Bangla Noboborsha, Local Training.
+- Deductions: House Rent Deduction, CPF Deduction, Income Tax, CPF Advance,
+  Revenue Deduction, Others Deduction, Donation, Tax on WPPWFM.
+- CPF section is derived, not typed: Employee's contribution = CPF Deduction,
+  Company's contribution = Employer's Contribution to CPF.
+- Earlier CPF contributions (months without a salary statement) can be added,
+  edited and deleted from the CPF card ("পূর্বের CPF এন্ট্রি দেখুন ও সম্পাদনা").
+  A month that has a salary statement always takes its CPF from the statement.
+  The card also shows the all-years total.
 - Month switcher (‹ ›) on the statement card; edit / delete the shown month's
   entry; "সব বেতন স্টেটমেন্ট দেখুন" lists every saved month.
 - New entry form copies the latest month's values, so a normal month only needs
   a quick check; one statement per month.
 - Reports: salary statement, annual summary and CPF summary as PDF (print window,
-  choose "Save as PDF"); all data as Excel (UTF-8 CSV).
-- Earnings gained three lines: "Employer's Contribution to CPF",
-  "Resident Electricity Allowance" and "Charge Allowance". They are stored in
-  three new columns (25-27) at the end of `SalaryStatements`, so existing rows
-  stay valid (they read 0); the headers are added to the sheet automatically.
+  choose "Save as PDF"); all data (statements + CPF records) as Excel (UTF-8 CSV).
 - New server file `Server_PowerGrid.gs`: `getPowerGridData`,
-  `savePowerGridStatement`, `deletePowerGridStatement`, `savePowerGridEmployee`.
+  `savePowerGridStatement`, `deletePowerGridStatement`, `savePowerGridEmployee`,
+  `savePowerGridCpfEntry`, `deletePowerGridCpfEntry`.
   All of them require a valid session token.
 - New tabs in Power_Grid, created automatically on first use: `SalaryStatements`
-  (one row per month, one column per statement line) and `EmployeeInfo`
-  (EmployeeID, Designation, NextIncrementDate). The joining date is kept in the
-  existing `Employment` tab and the name comes from Personal Info > Profile.
-  The older Salary / CPF / Increment tabs are not used by this page.
+  (one row per month, one column per statement line), `EmployeeInfo`
+  (EmployeeID, Designation, NextIncrementDate) and `CPFHistory` (EntryID,
+  MonthKey, EmployeeCPF, CompanyCPF, Notes, CreatedAt, UpdatedAt). Lines added
+  after the first version are stored in columns 25-38 at the end of
+  `SalaryStatements`, so existing rows stay valid (they read 0); the headers are
+  added to the sheet automatically. The old EmployeeCPF / CompanyCPF columns
+  (19-20) are no longer used. The joining date is kept in the existing
+  `Employment` tab and the name comes from Personal Info > Profile. The older
+  Salary / CPF / Increment tabs are not used by this page.
 
 ### Budget Management page (Phase 7)
 - `Page_Budget.html` replaces the placeholder with the full dashboard:
