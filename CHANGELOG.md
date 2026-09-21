@@ -7,7 +7,7 @@
   four summary cards (gross salary, total allowance, total deduction, net pay)
   plus a "নতুন বেতন এন্ট্রি" button; the salary statement card with the
   employee strip (Employee ID, name, designation, joining date, next increment
-  date) and three tables - Earnings (10 lines), Deductions (6 lines) and CPF
+  date) and three tables - Earnings (13 lines), Deductions (6 lines) and CPF
   (employee and company contribution) - with totals A, B and C; the salary
   summary (A - B = net pay, + company CPF, = total company cost); the previous
   statements list (last 4 months, eye button opens that month); the CPF annual
@@ -19,6 +19,10 @@
   a quick check; one statement per month.
 - Reports: salary statement, annual summary and CPF summary as PDF (print window,
   choose "Save as PDF"); all data as Excel (UTF-8 CSV).
+- Earnings gained three lines: "Employer's Contribution to CPF",
+  "Resident Electricity Allowance" and "Charge Allowance". They are stored in
+  three new columns (25-27) at the end of `SalaryStatements`, so existing rows
+  stay valid (they read 0); the headers are added to the sheet automatically.
 - New server file `Server_PowerGrid.gs`: `getPowerGridData`,
   `savePowerGridStatement`, `deletePowerGridStatement`, `savePowerGridEmployee`.
   All of them require a valid session token.

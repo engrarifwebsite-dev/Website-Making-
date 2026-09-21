@@ -294,7 +294,9 @@
         ['basic', 'Basic Salary'], ['educationAllowance', 'Education Allowance'], ['incrementArrear', 'Increment/Arrear'],
         ['houseRent', 'House Rent'], ['officerMedical', "Officer's Medical Reimbursement"], ['medicalAllowance', 'Medical Allowance'],
         ['conveyanceAllowance', 'Conveyance Allowance'], ['shiftAllowance', 'Shift Allowance'],
-        ['responsibilityAllowance', 'Responsibility Allowance'], ['specialAllowance', 'Special Allowance']
+        ['responsibilityAllowance', 'Responsibility Allowance'], ['specialAllowance', 'Special Allowance'],
+        ['employerCpfEarning', "Employer's Contribution to CPF"], ['residentElectricity', 'Resident Electricity Allowance'],
+        ['chargeAllowance', 'Charge Allowance']
       ];
       var DEDUCT = [
         ['houseRentDeduction', 'House Rent Deduction'], ['cpfDeduction', 'CPF Deduction'], ['incomeTax', 'Income Tax'],
@@ -450,7 +452,7 @@
       /* ---------- সেলারি স্টেটমেন্ট ---------- */
       function colHtml(cls, title, defs, st, footLabel, footValue) {
         var rows = '';
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < Math.max(10, EARN.length); i++) {
           var d = defs[i];
           if (d) {
             rows += '<div class="pg-r"><span><span class="pg-n">' + (i + 1) + '</span></span><span title="' + esc(d[1]) + '">' + esc(d[1]) + '</span><span>' + cell(st ? st[d[0]] : 0) + '</span></div>';

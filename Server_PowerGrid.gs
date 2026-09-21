@@ -11,7 +11,7 @@
  *
  * The older "Salary" / "CPF" / "Increment" tabs from Setup_PowerGrid.gs are
  * NOT touched. SalaryStatements has one column per line of the approved salary
- * statement design (10 earnings, 6 deductions, employee + company CPF).
+ * statement design (earnings, deductions, employee + company CPF).
  *
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs (generateUniqueId),
  * Utils_Sheets.gs (ensureSheetWithHeaders), Server_PersonalInfo.gs (getProfile).
@@ -30,6 +30,15 @@ var PG_FIELDS = [
   // CPF
   'employeeCpf', 'companyCpf'
 ];
+
+/**
+ * Later additions to the Earnings list. They live in columns 25-27, AFTER
+ * UpdatedAt, so rows saved before they existed keep their layout (old rows
+ * simply read 0 for these). Headers are added automatically to an existing sheet.
+ */
+var PG_EXTRA_FIELDS = ['employerCpfEarning', 'residentElectricity', 'chargeAllowance'];
+var PG_EXTRA_HEADERS = ['EmployerCPFEarning', 'ResidentElectricityAllowance', 'ChargeAllowance'];
+var PG_EXTRA_COL = 25;
 
 var PG_STATEMENT_HEADERS = [
   'StatementID', 'MonthKey',
@@ -75,7 +84,14 @@ function pgMonthKey_(v) {
 }
 
 function pgStatementSheet_() {
-  return ensureSheetWithHeaders(pgSs_(), 'SalaryStatements', PG_STATEMENT_HEADERS);
+  var sheet = ensureSheetWithHeaders(pgSs_(), 'SalaryStatements', PG_STATEMENT_HEADERS);
+  var head = sheet.getRange(1, PG_EXTRA_COL, 1, PG_EXTRA_HEADERS.length).getValues()[0];
+  for (var h = 0; h < PG_EXTRA_HEADERS.length; h++) {
+    if (!head[h]) {
+      sheet.getRange(1, PG_EXTRA_COL + h).setValue(PG_EXTRA_HEADERS[h]).setFontWeight('bold');
+    }
+  }
+  return sheet;
 }
 
 function pgInfoSheet_() {
@@ -179,6 +195,9 @@ function getPowerGridData(token) {
     for (var f = 0; f < PG_FIELDS.length; f++) {
       st[PG_FIELDS[f]] = pgNum_(row[2 + f]);
     }
+    for (var x = 0; x < PG_EXTRA_FIELDS.length; x++) {
+      st[PG_EXTRA_FIELDS[x]] = pgNum_(row[PG_EXTRA_COL - 1 + x]);
+    }
     st.notes = String(row[20] || '');
     statements.push(st);
   }
@@ -206,6 +225,12 @@ function savePowerGridStatement(token, st) {
     if (n < 0) throw new Error('পরিমাণ ঋণাত্মক হতে পারে না।');
     values.push(n);
   }
+  var extraValues = [];
+  for (var x = 0; x < PG_EXTRA_FIELDS.length; x++) {
+    var e = pgNum_(st[PG_EXTRA_FIELDS[x]]);
+    if (e < 0) throw new Error('পরিমাণ ঋণাত্মক হতে পারে না।');
+    extraValues.push(e);
+  }
   var notes = String(st.notes || '').trim().substring(0, 500);
 
   var sheet = pgStatementSheet_();
@@ -217,6 +242,7 @@ function savePowerGridStatement(token, st) {
       // update: keep StatementID, MonthKey, GlobalSyncID and CreatedAt as they are
       sheet.getRange(i + 1, 3, 1, PG_FIELDS.length + 1).setValues([values.concat([notes])]);
       sheet.getRange(i + 1, 24).setValue(now);
+      sheet.getRange(i + 1, PG_EXTRA_COL, 1, PG_EXTRA_FIELDS.length).setValues([extraValues]);
       return monthKey;
     }
   }
@@ -224,8 +250,8 @@ function savePowerGridStatement(token, st) {
   var id = generateUniqueId('SAL');
   var newRow = sheet.getLastRow() + 1;
   sheet.getRange(newRow, 2).setNumberFormat('@'); // keep "2026-07" as text, not a date
-  sheet.getRange(newRow, 1, 1, PG_STATEMENT_HEADERS.length)
-    .setValues([[id, monthKey].concat(values, [notes, '', now, now])]);
+  var record = [id, monthKey].concat(values, [notes, '', now, now], extraValues);
+  sheet.getRange(newRow, 1, 1, record.length).setValues([record]);
   return monthKey;
 }
 
