@@ -146,10 +146,6 @@
     #page-power-grid .pg-act:hover { background: #f4f7fc; }
     #page-power-grid .pg-act svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 
-    #page-power-grid .pg-note { background: #fff8e6; border: 1px solid #f6e3b4; border-radius: 14px; padding: 16px 18px; }
-    #page-power-grid .pg-note-ico { width: 30px; height: 30px; border-radius: 50%; background: #1a3fa8; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 15px; margin-bottom: 10px; }
-    #page-power-grid .pg-note ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--text); }
-
     /* ---------- মোডালের ভেতরের অংশ ---------- */
     .pg-m-sec { margin: 14px 0 6px; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; }
     .pg-m-sec:first-child { margin-top: 0; }
@@ -178,7 +174,6 @@
     @media (max-width: 1100px) {
       #page-power-grid .pg-layout { grid-template-columns: 1fr; }
       #page-power-grid .pg-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-      #page-power-grid .pg-note { grid-column: 1 / -1; }
     }
     @media (max-width: 900px) {
       #page-power-grid .pg-cols { grid-template-columns: 1fr; }
@@ -265,15 +260,6 @@
           </div>
         </div>
 
-        <div class="pg-note">
-          <div class="pg-note-ico">i</div>
-          <ul>
-            <li>বেতন এন্ট্রি করার পরে তথ্য সুরক্ষিত থাকবে।</li>
-            <li>কোনো ভুল থাকলে এন্ট্রি এডিট/আপডেট করতে পারবেন।</li>
-            <li>পুরোনো স্টেটমেন্ট মুছে না ফেললে সবসময় দেখা যাবে।</li>
-          </ul>
-        </div>
-
       </div>
     </div>
   </div>
@@ -305,11 +291,16 @@
         ['cpfAdvance', 'CPF Advance'], ['revenueDeduction', 'Revenue Deduction'], ['othersDeduction', 'Others Deduction'],
         ['donation', 'Donation'], ['taxWppwfm', 'Tax on WPPWFM']
       ];
-      // CPF অংশ আলাদা ইনপুট নয় — কর্তনের "CPF Deduction" ও আয়ের "Employer's Contribution to CPF" থেকে আসে
+      // CPF অংশ আলাদা ইনপুট নয় — হিসাব হয়:
+      //   Employee's Contribution = CPF Deduction − Employer's Contribution to CPF
+      //   Company's Contribution  = Employer's Contribution to CPF
+      //   মোট CPF (C = 1+2)       = CPF Deduction
+      // (cpfEmp / cpfComp দুটি totals() থেকে আসা হিসাবকৃত মান)
       var CPF = [
-        ['cpfDeduction', "Employee's Contribution to CPF"], ['employerCpfEarning', "Company's Contribution to CPF"]
+        ['cpfEmp', "Employee's Contribution to CPF"], ['cpfComp', "Company's Contribution to CPF"]
       ];
       var ALL_FIELDS = EARN.concat(DEDUCT);
+      var CPF_RULE_NOTE = "Employee = CPF Deduction − Employer's Contribution to CPF; Company = Employer's Contribution to CPF; মোট CPF = CPF Deduction।";
 
       var state = { data: null, sel: '', reqId: 0, loadedAt: 0, everLoaded: false };
 
@@ -379,8 +370,9 @@
         if (!st) return { gross: 0, allow: 0, ded: 0, net: 0, cpfEmp: 0, cpfComp: 0, cpfTotal: 0 };
         var gross = sumOf(st, EARN);
         var ded = sumOf(st, DEDUCT);
-        var emp = Number(st.cpfDeduction) || 0;        // Employee's contribution = CPF Deduction
-        var comp = Number(st.employerCpfEarning) || 0; // Company's contribution = Employer's Contribution to CPF
+        var cpfDed = Number(st.cpfDeduction) || 0;       // CPF Deduction = মোট CPF (Employee + Company)
+        var comp = Number(st.employerCpfEarning) || 0;   // Company's contribution = Employer's Contribution to CPF
+        var emp = Math.round((cpfDed - comp) * 100) / 100; // Employee's contribution = CPF Deduction − Employer's Contribution
         return {
           gross: gross,
           allow: gross - (Number(st.basic) || 0),
@@ -391,6 +383,8 @@
           cpfTotal: emp + comp
         };
       }
+      /** CPF সারির মানগুলো (হিসাবকৃত) — colHtml/reportTable এ st-এর মতো ব্যবহারের জন্য */
+      function cpfView(t) { return { cpfEmp: t.cpfEmp, cpfComp: t.cpfComp }; }
 
       /* ---------- load ---------- */
       function load(cb) {
@@ -492,7 +486,7 @@
         el('pgCols').innerHTML =
           colHtml('pg-earn', 'আয়/ভাতা (Earnings)', EARN, st, 'মোট আয় (A)', t.gross) +
           colHtml('pg-ded', 'কর্তন (Deductions)', DEDUCT, st, 'মোট কর্তন (B)', t.ded) +
-          colHtml('pg-cpf', 'CPF (Provident Fund)', CPF, st, 'মোট CPF (C = 1+2)', t.cpfTotal);
+          colHtml('pg-cpf', 'CPF (Provident Fund)', CPF, st ? cpfView(t) : null, 'মোট CPF (C = 1+2)', t.cpfTotal);
       }
 
       /* ---------- সারাংশ ---------- */
@@ -583,7 +577,7 @@
         }
 
         var r = 52, c = 2 * Math.PI * r;
-        var eLen = emp / total * c;
+        var eLen = Math.max(0, emp) / total * c;
         var svg = '<svg viewBox="0 0 140 140" role="img" aria-label="CPF অনুপাত">' +
           '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#1d4ed8" stroke-width="22"/>' +
           (emp > 0 ? '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#15803d" stroke-width="22" stroke-dasharray="' + eLen + ' ' + (c - eLen) + '" transform="rotate(-90 70 70)"/>' : '') +
@@ -715,7 +709,7 @@
           (edit ? '' : '<div class="pg-m-note">' + (latest ? 'সর্বশেষ স্টেটমেন্টের মান বসানো আছে — প্রয়োজনে বদলান।' : 'ফাঁকা ঘর ০ ধরা হবে।') + '</div>') +
           '<div class="pg-m-sec earn">আয়/ভাতা (Earnings)</div><div class="form-grid">' + fieldInputs(EARN) + '</div>' +
           '<div class="pg-m-sec ded">কর্তন (Deductions)</div><div class="form-grid">' + fieldInputs(DEDUCT) + '</div>' +
-          '<div class="pg-m-note">CPF অংশ নিজে থেকে আসে: Employee = CPF Deduction, Company = Employer\'s Contribution to CPF।</div>' +
+          '<div class="pg-m-note">CPF অংশ নিজে থেকে আসে: ' + esc(CPF_RULE_NOTE) + '</div>' +
           '<div class="form-row" style="margin-top:12px"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="pgfNotes" rows="2"></textarea></div>' +
           '<div class="pg-m-live" id="pgfLive"></div>';
 
@@ -747,7 +741,9 @@
         if (!host) return;
         var t = totals(formValues());
         host.innerHTML = '<span class="c-blue">গ্রস: ' + money(t.gross) + '</span><span class="c-red">কর্তন: ' + money(t.ded) +
-          '</span><span class="c-green">নিট: ' + money(t.net) + '</span><span class="c-purple">মোট CPF: ' + money(t.cpfTotal) + '</span>';
+          '</span><span class="c-green">নিট: ' + money(t.net) + '</span><span class="c-purple">মোট CPF: ' + money(t.cpfTotal) + '</span>' +
+          '<span class="c-dark">Employee CPF: ' + money(t.cpfEmp) + '</span>' +
+          (t.cpfEmp < 0 ? '<span class="c-red">⚠️ CPF Deduction, Employer\'s Contribution-এর চেয়ে কম</span>' : '');
       }
 
       function submitEntry(edit) {
@@ -760,6 +756,12 @@
 
         var hasAny = ALL_FIELDS.some(function (d) { return Number(st[d[0]]) > 0; });
         if (!hasAny) { showToast('অন্তত একটি পরিমাণ লিখুন।', 'warning'); return; }
+
+        // Employee's CPF = CPF Deduction − Employer's Contribution; ঋণাত্মক হলে তথ্যে ভুল আছে
+        if (totals(st).cpfEmp < 0) {
+          showToast("CPF Deduction, Employer's Contribution to CPF-এর চেয়ে কম হতে পারে না।", 'warning');
+          return;
+        }
 
         function send() {
           call('savePowerGridStatement', [getToken(), st], function (key) {
@@ -804,7 +806,7 @@
           ? '<div style="overflow-x:auto"><table class="pg-m-table"><thead><tr><th>মাস</th><th>Employee</th><th>Company</th><th>মোট</th><th>উৎস</th><th></th></tr></thead><tbody>' + rows +
             '</tbody><tfoot><tr><td><b>সর্বমোট</b></td><td><b>' + num(totE) + '</b></td><td><b>' + num(totC) + '</b></td><td><b>' + num(totE + totC) + '</b></td><td></td><td></td></tr></tfoot></table></div>'
           : '<div class="pg-empty">এখনো কোনো CPF এন্ট্রি নেই।</div>') +
-          '<div class="pg-m-note">যে মাসের বেতন স্টেটমেন্ট আছে, তার CPF সেখান থেকেই আসে (Employee = CPF Deduction, Company = Employer\'s Contribution to CPF)। স্টেটমেন্ট নেই এমন পুরনো মাসের CPF এখানে "নতুন CPF এন্ট্রি" দিয়ে যোগ করুন।</div>';
+          '<div class="pg-m-note">যে মাসের বেতন স্টেটমেন্ট আছে, তার CPF সেখান থেকেই আসে (' + esc(CPF_RULE_NOTE) + ') স্টেটমেন্ট নেই এমন পুরনো মাসের CPF এখানে "নতুন CPF এন্ট্রি" দিয়ে যোগ করুন।</div>';
 
         showModal('CPF এন্ট্রিসমূহ', body, [
           { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
@@ -945,7 +947,7 @@
           '<h1>বেতন স্টেটমেন্ট — ' + esc(monthTitle(st.monthKey)) + '</h1>' + empBlock() +
           '<div class="cols">' + reportTable('আয়/ভাতা (Earnings)', EARN, st, 'মোট আয় (A)', t.gross) +
           reportTable('কর্তন (Deductions)', DEDUCT, st, 'মোট কর্তন (B)', t.ded) +
-          reportTable('CPF (Provident Fund)', CPF, st, 'মোট CPF (C)', t.cpfTotal) + '</div>' +
+          reportTable('CPF (Provident Fund)', CPF, cpfView(t), 'মোট CPF (C)', t.cpfTotal) + '</div>' +
           '<div class="sum"><div>গ্রস সেলারি (A)<b>' + money(t.gross) + '</b></div><div>মোট কর্তন (B)<b>' + money(t.ded) + '</b></div>' +
           '<div>হাতে প্রাপ্ত বেতন (A − B)<b>' + money(t.net) + '</b></div></div>' +
           (st.notes ? '<div class="sub">নোট: ' + esc(st.notes) + '</div>' : ''));

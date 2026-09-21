@@ -2,6 +2,22 @@
 
 ## 2026-09-21
 
+### Power Grid: CPF card rule and page cleanup
+- The CPF (Provident Fund) card now follows this rule:
+  Employee's Contribution to CPF = CPF Deduction − Employer's Contribution to CPF.
+  Company's Contribution to CPF = Employer's Contribution to CPF, so the total
+  CPF (C = 1 + 2) equals the CPF Deduction. The same numbers are used in the
+  previous statements table, the CPF annual summary (YTD, donut, all-years
+  total), the CPF list and the PDF/Excel reports.
+- A salary entry whose CPF Deduction is smaller than the Employer's Contribution
+  is refused (the employee share would be negative); the entry form shows the
+  live Employee CPF and a warning.
+- Statements saved before this change keep their stored values; open them once
+  and check that the CPF Deduction includes the employer's share.
+- The information note card ("i" icon) at the end of the right column was
+  removed, together with its styles.
+- Files changed: `Page_PowerGrid.html` only. No server or sheet change.
+
 ### Power Grid page (Phase 8)
 - `Page_PowerGrid.html` replaces the placeholder with the approved design:
   four summary cards (gross salary, total allowance, total deduction, net pay)
@@ -11,8 +27,8 @@
   (employee and company contribution) - with totals A, B and C; the salary
   summary (gross salary - total deduction = net pay); the previous statements
   list (last 4 months, eye button opens that month); the CPF annual summary
-  with a donut (employee vs company share, year to date); quick actions (the
-  "new entry" button is only at the top) and an information note.
+  with a donut (employee vs company share, year to date); and quick actions
+  (the "new entry" button is only at the top).
 - Earnings: Basic Salary, Education Allowance, Increment/Arrear, House Rent,
   Officer's Medical Reimbursement, Medical Allowance, Conveyance Allowance,
   Shift Allowance, Responsibility Allowance, Special Allowance, Employer's
@@ -21,8 +37,7 @@
   Bonus, Leave Encashment, Bangla Noboborsha, Local Training.
 - Deductions: House Rent Deduction, CPF Deduction, Income Tax, CPF Advance,
   Revenue Deduction, Others Deduction, Donation, Tax on WPPWFM.
-- CPF section is derived, not typed: Employee's contribution = CPF Deduction,
-  Company's contribution = Employer's Contribution to CPF.
+- CPF section is derived, not typed (see the CPF rule above).
 - Earlier CPF contributions (months without a salary statement) can be added,
   edited and deleted from the CPF card ("পূর্বের CPF এন্ট্রি দেখুন ও সম্পাদনা").
   A month that has a salary statement always takes its CPF from the statement.
