@@ -1,6 +1,6 @@
 /**
  * Server_PowerGrid.gs
- * Server support for the পাওয়ার গ্রিড page (Page_PowerGrid.html).
+ * Server support for the পাওয়ার গ্রিড page (Page_PowerGrid.html), বেতন ও ভাতা tab.
  *
  * Tabs used in the Power_Grid spreadsheet (all are created automatically):
  *   "SalaryStatements" : one row per month (see PG_STATEMENT_HEADERS + PG_EXTRA_*)
@@ -39,22 +39,25 @@ var PG_FIELDS = [
  * these). Headers are added automatically to an existing sheet.
  *   Earnings   : employerCpfEarning ... localTraining  (columns 25-36)
  *   Deductions : donation, taxWppwfm                   (columns 37-38)
+ *   Earnings   : trainingBill                          (column 39)
  * "employerCpfEarning" is also the company's CPF contribution, and
- * "cpfDeduction" is the employee's CPF contribution (the page derives the
- * CPF section from these two). The old EmployeeCPF / CompanyCPF columns
- * (19-20) are no longer used by the page.
+ * "cpfDeduction" is the total CPF (employee + company). The page derives the
+ * CPF section from these two: Employee's = CPF Deduction − Employer's
+ * Contribution; Company's = Employer's Contribution. The old EmployeeCPF /
+ * CompanyCPF columns (19-20) are no longer used by the page.
+ * New fields must always be appended at the END of these two lists.
  */
 var PG_EXTRA_FIELDS = [
   'employerCpfEarning', 'residentElectricity', 'chargeAllowance',
   'tiffinBill', 'taDa', 'honorarium', 'incentiveBonus', 'wppwfmProfit',
   'festivalBonus', 'leaveEncashment', 'banglaNoboborsha', 'localTraining',
-  'donation', 'taxWppwfm'
+  'donation', 'taxWppwfm', 'trainingBill'
 ];
 var PG_EXTRA_HEADERS = [
   'EmployerCPFEarning', 'ResidentElectricityAllowance', 'ChargeAllowance',
   'TiffinBill', 'TA_DA', 'Honorarium', 'IncentiveBonus', 'WPPWFMProfit',
   'FestivalBonus', 'LeaveEncashment', 'BanglaNoboborsha', 'LocalTraining',
-  'Donation', 'TaxOnWPPWFM'
+  'Donation', 'TaxOnWPPWFM', 'TrainingBill'
 ];
 var PG_EXTRA_COL = 25;
 

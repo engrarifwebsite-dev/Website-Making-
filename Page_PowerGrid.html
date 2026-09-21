@@ -188,79 +188,98 @@
     }
   </style>
 
-  <div class="pg-error" id="pgError"><span id="pgErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+  <!-- সাবট্যাব: বাটন ও প্যানেল পরিবর্তন JS_App.html-এর জেনেরিক হ্যান্ডলার করে -->
+  <div class="subtabs">
+    <button type="button" class="subtab-btn active" data-subtab="pg-salary">বেতন ও ভাতা</button>
+    <button type="button" class="subtab-btn" data-subtab="pg-leave">ছুটির হিসাব</button>
+  </div>
 
-  <div class="pg-body" id="pgBody">
+  <!-- ট্যাব ১: বেতন ও ভাতা -->
+  <div class="subtab-panel active" id="subtab-pg-salary">
 
-    <!-- উপরের ৪টি কার্ড ও নতুন এন্ট্রি বাটন -->
-    <div class="pg-top" id="pgTop"></div>
+    <div class="pg-error" id="pgError"><span id="pgErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
 
-    <div class="pg-layout">
+    <div class="pg-body" id="pgBody">
 
-      <div class="pg-main">
+      <!-- উপরের ৪টি কার্ড ও নতুন এন্ট্রি বাটন -->
+      <div class="pg-top" id="pgTop"></div>
 
-        <!-- সেলারি স্টেটমেন্ট -->
-        <div class="pg-card">
-          <div class="pg-head">
-            <h3 class="pg-title">
-              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              সেলারি স্টেটমেন্ট
-            </h3>
-            <div class="pg-month">
-              <button type="button" data-act="prev-month" id="pgPrev" aria-label="আগের স্টেটমেন্ট">‹</button>
-              <div class="pg-month-label" id="pgMonthLabel">লোড হচ্ছে...</div>
-              <button type="button" data-act="next-month" id="pgNext" aria-label="পরের স্টেটমেন্ট">›</button>
+      <div class="pg-layout">
+
+        <div class="pg-main">
+
+          <!-- সেলারি স্টেটমেন্ট -->
+          <div class="pg-card">
+            <div class="pg-head">
+              <h3 class="pg-title">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                সেলারি স্টেটমেন্ট
+              </h3>
+              <div class="pg-month">
+                <button type="button" data-act="prev-month" id="pgPrev" aria-label="আগের স্টেটমেন্ট">‹</button>
+                <div class="pg-month-label" id="pgMonthLabel">লোড হচ্ছে...</div>
+                <button type="button" data-act="next-month" id="pgNext" aria-label="পরের স্টেটমেন্ট">›</button>
+              </div>
+            </div>
+            <div id="pgNotice"></div>
+            <div class="pg-emp" id="pgEmp"></div>
+            <div class="pg-cols" id="pgCols"></div>
+          </div>
+
+          <!-- সেলারি সারাংশ -->
+          <div class="pg-card">
+            <div class="pg-head"><h3 class="pg-title">সেলারি সারাংশ</h3></div>
+            <div class="pg-sum" id="pgSummary"></div>
+          </div>
+
+          <!-- পূর্বের বেতন স্টেটমেন্টসমূহ -->
+          <div class="pg-card">
+            <div class="pg-head"><h3 class="pg-title">পূর্বের বেতন স্টেটমেন্টসমূহ</h3></div>
+            <div id="pgPrevList"></div>
+          </div>
+
+        </div>
+
+        <div class="pg-side">
+
+          <div class="pg-card">
+            <div class="pg-head"><h3 class="pg-title" id="pgCpfTitle">CPF বার্ষিক সারাংশ</h3></div>
+            <div id="pgCpf"></div>
+          </div>
+
+          <div class="pg-card">
+            <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
+            <div class="pg-actions">
+              <button type="button" class="pg-act" data-act="pdf-statement">
+                <svg viewBox="0 0 24 24" style="color:#f97316"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+                বেতন স্টেটমেন্ট (PDF)
+              </button>
+              <button type="button" class="pg-act" data-act="pdf-annual">
+                <svg viewBox="0 0 24 24" style="color:#7c3aed"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+                বার্ষিক সারাংশ (PDF)
+              </button>
+              <button type="button" class="pg-act" data-act="pdf-cpf">
+                <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+                CPF সারাংশ (PDF)
+              </button>
+              <button type="button" class="pg-act" data-act="excel">
+                <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>
+                সকল ডেটা এক্সপোর্ট (Excel)
+              </button>
             </div>
           </div>
-          <div id="pgNotice"></div>
-          <div class="pg-emp" id="pgEmp"></div>
-          <div class="pg-cols" id="pgCols"></div>
-        </div>
 
-        <!-- সেলারি সারাংশ -->
-        <div class="pg-card">
-          <div class="pg-head"><h3 class="pg-title">সেলারি সারাংশ</h3></div>
-          <div class="pg-sum" id="pgSummary"></div>
         </div>
-
-        <!-- পূর্বের বেতন স্টেটমেন্টসমূহ -->
-        <div class="pg-card">
-          <div class="pg-head"><h3 class="pg-title">পূর্বের বেতন স্টেটমেন্টসমূহ</h3></div>
-          <div id="pgPrevList"></div>
-        </div>
-
       </div>
+    </div>
 
-      <div class="pg-side">
+  </div>
 
-        <div class="pg-card">
-          <div class="pg-head"><h3 class="pg-title" id="pgCpfTitle">CPF বার্ষিক সারাংশ</h3></div>
-          <div id="pgCpf"></div>
-        </div>
-
-        <div class="pg-card">
-          <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
-          <div class="pg-actions">
-            <button type="button" class="pg-act" data-act="pdf-statement">
-              <svg viewBox="0 0 24 24" style="color:#f97316"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
-              বেতন স্টেটমেন্ট (PDF)
-            </button>
-            <button type="button" class="pg-act" data-act="pdf-annual">
-              <svg viewBox="0 0 24 24" style="color:#7c3aed"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
-              বার্ষিক সারাংশ (PDF)
-            </button>
-            <button type="button" class="pg-act" data-act="pdf-cpf">
-              <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
-              CPF সারাংশ (PDF)
-            </button>
-            <button type="button" class="pg-act" data-act="excel">
-              <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>
-              সকল ডেটা এক্সপোর্ট (Excel)
-            </button>
-          </div>
-        </div>
-
-      </div>
+  <!-- ট্যাব ২: ছুটির হিসাব -->
+  <div class="subtab-panel" id="subtab-pg-leave">
+    <div class="page-placeholder">
+      <h2>ছুটির হিসাব</h2>
+      <p>এই ট্যাবের কন্টেন্ট পরবর্তী ধাপে যুক্ত হবে।</p>
     </div>
   </div>
 
@@ -284,7 +303,8 @@
         ['chargeAllowance', 'Charge Allowance'],
         ['tiffinBill', 'Tiffin Bill'], ['taDa', 'T.A / D.A'], ['honorarium', 'Honorarium'],
         ['incentiveBonus', 'Incentive Bonus'], ['wppwfmProfit', 'WPPWFM Profit'], ['festivalBonus', 'Festival Bonus'],
-        ['leaveEncashment', 'Leave Encashment'], ['banglaNoboborsha', 'Bangla Noboborsha'], ['localTraining', 'Local Training']
+        ['leaveEncashment', 'Leave Encashment'], ['banglaNoboborsha', 'Bangla Noboborsha'], ['localTraining', 'Local Training'],
+        ['trainingBill', 'Training Bill']
       ];
       var DEDUCT = [
         ['houseRentDeduction', 'House Rent Deduction'], ['cpfDeduction', 'CPF Deduction'], ['incomeTax', 'Income Tax'],
