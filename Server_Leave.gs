@@ -3,47 +3,52 @@
  * Server support for the পাওয়ার গ্রিড page (Page_PowerGrid.html), tab "ছুটির হিসাব".
  *
  * ------------------------------------------------------------------
- * NOTE (2026-09-22): Fixed three bugs reported against the live
- * "ছুটির হিসাব" tab —
- *   1. "মোট অর্জিত ছুটি" (প্রতি ১১ দিনে ১ দিন) always showed 0.
- *   2. "ভোগ/নগদায়নকৃত" never updated (always 0).
- *   3. Selecting "নগদায়ন" (Encashed) in the এন্ট্রি সম্পাদনা modal and
- *      saving silently failed.
+ * NOTE (2026-09-22, Session 12): ১৮০ দিনের সীমা + কাছাকাছি-সীমা এলার্ট +
+ * সরলীকৃত এন্ট্রি-ভিত্তিক স্থিতি সূত্র যোগ করা হয়েছে।
  *
- * Root cause: the deployed Server_Leave.gs did not match the field names
- * and Type values the current Page_PowerGrid.html frontend actually
- * sends/expects. The frontend reads d.joiningDate, d.accrualDays,
- * d.daysServed, d.totalEarned, d.totalUsed, d.totalEncashed, d.balance
- * from getLeaveData(), and calls saveLeaveEntry() with type 'Taken' or
- * 'Encashed' — the old file returned different key names (totalTaken
- * instead of totalUsed, no daysServed/accrualDays/totalEarned at all) and
- * only accepted type 'Earned'/'Taken', so every "Encashed" save was
- * rejected and the accrual/usage numbers came back as undefined (→ 0 in
- * the UI). This file's contract now matches the frontend exactly.
+ *   1. "বর্তমান স্থিতি" (usable/available balance) কখনো ১৮০ দিনের বেশি
+ *      দেখানো হবে না (LEAVE_MAX_BALANCE)। এর বেশি অর্জিত হলে বাড়তি অংশ
+ *      "forfeitedDays" হিসেবে আলাদা রিপোর্ট হয় (জমা রাখা যাবে না, কিন্তু
+ *      হারিয়ে যাওয়ার তথ্য হিসেবে দেখানো যায়)।
+ *      "মোট অর্জিত ছুটি" (totalEarned) কার্ডটি অপরিবর্তিত — এটি এখনো
+ *      প্রকৃত সঞ্চিত (সীমাহীন) সংখ্যা দেখায়, শুধু "বর্তমান স্থিতি"
+ *      (usable balance) ১৮০-তে বাঁধা।
+ *   2. বর্তমান স্থিতি ১৭০ দিন বা তার বেশি (কিন্তু ১৮০-এর নিচে) হলে
+ *      nearCap = true পাঠানো হয়, ১৮০ ছুঁয়ে ফেললে capReached = true।
+ *      ফ্রন্টএন্ড এই দুটি ফ্ল্যাগ দিয়ে সতর্কতা ব্যানার দেখাতে পারে।
+ *   3. প্রতিটি এন্ট্রির "স্থিতি (দিন)" কলাম এখন ব্যবহারকারীর নির্ধারিত
+ *      সরল সূত্র মেনে চলে:
+ *          স্থিতি (দিন) = বর্তমান স্থিতি (capped) − সেই এন্ট্রির দিন সংখ্যা
+ *      (আগের accrued-as-of-date ভিত্তিক জটিল হিসাব বাদ দেওয়া হয়েছে)।
+ *
+ * getLeaveData() এর রিটার্ন কন্ট্র্যাক্ট (আগের ফিল্ডগুলো অপরিবর্তিত রাখা
+ * হয়েছে, নতুন ফিল্ড শুধু যোগ করা হয়েছে — পুরনো ফ্রন্টএন্ড কোড ভাঙবে না):
+ *   joiningDate, accrualDays, daysServed, totalEarned, totalUsed,
+ *   totalEncashed, balance, entries[]
+ *   + নতুন: rawBalance, maxBalance, alertThreshold, forfeitedDays,
+ *           nearCap, capReached
  * ------------------------------------------------------------------
  *
- * Leave tab uses the "Leave" sheet in Power_Grid:
+ * Leave তাব "Leave" শিট ব্যবহার করে (Power_Grid spreadsheet):
  *   EntryID, Date, Type, Days, Balance, Notes
  *
- * There is no manual "Earned" entry — earned leave accrues AUTOMATICALLY
- * from the Joining Date already stored in "বেতন ও ভাতা" (Employment sheet,
- * the same value pgGetEmployee_() already returns): 1 day of earned leave
- * for every LEAVE_ACCRUAL_DAYS days of service since joining (floor
- * division). Editing the Joining Date in the "✏️ তথ্য সম্পাদনা" modal is
- * picked up immediately the next time this tab loads — no separate sync.
+ * অর্জিত ছুটি ম্যানুয়াল এন্ট্রি নয় — "বেতন ও ভাতা"-তে সংরক্ষিত Joining
+ * Date থেকে স্বয়ংক্রিয়ভাবে হিসাব হয় (pgGetEmployee_() পুনরায় ব্যবহার
+ * করে): প্রতি LEAVE_ACCRUAL_DAYS দিনের চাকরির মেয়াদে ১ দিন।
  *
- * Type is 'Taken' (ছুটি ভোগ) or 'Encashed' (নগদায়ন) — both subtract from
- * the earned balance. A save is refused if it would record more
- * Taken+Encashed days than have actually accrued as of today.
+ * Type শুধু 'Taken' (ছুটি ভোগ) বা 'Encashed' (নগদায়ন) — দুটোই অর্জিত
+ * স্থিতি থেকে বিয়োগ হয়।
  *
- * Reuses pgSs_(), pgAuth_(), pgNum_(), pgDateStr_(), pgGetEmployee_() and
- * PG_TZ from Server_PowerGrid.gs (same Apps Script project, so these are
- * already in scope here).
+ * pgSs_(), pgAuth_(), pgNum_(), pgDateStr_(), pgGetEmployee_() এবং PG_TZ
+ * Server_PowerGrid.gs থেকে পুনরায় ব্যবহৃত হয় (একই Apps Script প্রজেক্টে
+ * থাকায় এগুলো এমনিতেই scope-এ আছে)।
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs (generateUniqueId),
  * Utils_Sheets.gs (ensureSheetWithHeaders), Server_PowerGrid.gs.
  */
 
-var LEAVE_ACCRUAL_DAYS = 11; // চাকরির প্রতি ১১ দিনে ১ দিন অর্জিত ছুটি
+var LEAVE_ACCRUAL_DAYS = 11;   // চাকরির প্রতি ১১ দিনে ১ দিন অর্জিত ছুটি
+var LEAVE_MAX_BALANCE = 180;   // বর্তমান স্থিতি (usable balance) সর্বোচ্চ এই পরিমাণ
+var LEAVE_ALERT_THRESHOLD = 170; // এই বা এর বেশি (কিন্তু সীমার নিচে) হলে "কাছাকাছি সীমা" সতর্কতা
 var LEAVE_HEADERS = ['EntryID', 'Date', 'Type', 'Days', 'Balance', 'Notes'];
 
 function leaveSheet_() {
@@ -64,7 +69,7 @@ function leaveServiceDays_(joiningDateStr, asOfDateStr) {
   return days > 0 ? days : 0;
 }
 
-/** প্রতি LEAVE_ACCRUAL_DAYS দিনে ১ দিন — নির্দিষ্ট তারিখ পর্যন্ত মোট অর্জিত ছুটি (পূর্ণ দিন)। */
+/** প্রতি LEAVE_ACCRUAL_DAYS দিনে ১ দিন — নির্দিষ্ট তারিখ পর্যন্ত মোট অর্জিত ছুটি (পূর্ণ দিন, সীমাহীন)। */
 function leaveAccruedAsOf_(joiningDateStr, asOfDateStr) {
   if (!joiningDateStr) return 0;
   return Math.floor(leaveServiceDays_(joiningDateStr, asOfDateStr) / LEAVE_ACCRUAL_DAYS);
@@ -103,10 +108,66 @@ function leaveReadEntries_() {
 }
 
 /**
- * প্রতিটি এন্ট্রির পরের "Balance" (accrued-as-of-that-date − used-so-far)
- * পুনরায় হিসাব করে শিটে লিখে রাখে — শুধু কাঁচা শিটে দেখার সুবিধার জন্য;
- * getLeaveData() সবসময় লাইভ হিসাব করেই পাঠায়, তাই UI এই কলামের ওপর
- * নির্ভর করে না।
+ * সব হিসাব এক জায়গায়:
+ *   - totalEarned      : মোট অর্জিত (raw, সীমাহীন — যোগদানের তারিখ থেকে হিসাব)
+ *   - totalUsed / totalEncashed : মোট ভোগ / নগদায়ন
+ *   - rawBalance       : totalEarned − totalUsed − totalEncashed (সীমাহীন)
+ *   - balance          : rawBalance কে ১৮০ দিনে বাঁধা (এটাই "বর্তমান স্থিতি")
+ *   - forfeitedDays    : rawBalance যদি ১৮০ ছাড়িয়ে যায়, সেই বাড়তি অংশ
+ *   - nearCap/capReached : সতর্কতা ফ্ল্যাগ
+ *   - entries[].balance : ব্যবহারকারীর সূত্র — বর্তমান (capped) স্থিতি − সেই এন্ট্রির দিন সংখ্যা
+ */
+function leaveComputeSummary_(joining, asOfDate) {
+  var daysServed = leaveServiceDays_(joining, asOfDate);
+  var totalEarned = leaveAccruedAsOf_(joining, asOfDate);
+
+  var rawEntries = leaveReadEntries_();
+  var totalUsed = 0, totalEncashed = 0;
+  rawEntries.forEach(function (e) {
+    if (e.type === 'Taken') totalUsed += e.days; else totalEncashed += e.days;
+  });
+  totalUsed = Math.round(totalUsed * 100) / 100;
+  totalEncashed = Math.round(totalEncashed * 100) / 100;
+
+  var rawBalance = Math.round((totalEarned - totalUsed - totalEncashed) * 100) / 100;
+  var balance = Math.min(rawBalance, LEAVE_MAX_BALANCE);
+  if (balance < 0) balance = 0; // সুরক্ষামূলক — validation আগেই ঋণাত্মক হওয়া আটকায়
+  var forfeitedDays = Math.round(Math.max(0, rawBalance - LEAVE_MAX_BALANCE) * 100) / 100;
+  var nearCap = balance >= LEAVE_ALERT_THRESHOLD && balance < LEAVE_MAX_BALANCE;
+  var capReached = balance >= LEAVE_MAX_BALANCE;
+
+  var rows = rawEntries.map(function (e) {
+    return {
+      id: e.id,
+      date: e.date,
+      type: e.type,
+      days: e.days,
+      notes: e.notes,
+      // ব্যবহারকারীর নির্ধারিত সূত্র: স্থিতি (দিন) = বর্তমান স্থিতি − দিন সংখ্যা
+      balance: Math.round((balance - e.days) * 100) / 100
+    };
+  });
+
+  return {
+    daysServed: daysServed,
+    totalEarned: totalEarned,
+    totalUsed: totalUsed,
+    totalEncashed: totalEncashed,
+    rawBalance: rawBalance,
+    balance: balance,
+    maxBalance: LEAVE_MAX_BALANCE,
+    alertThreshold: LEAVE_ALERT_THRESHOLD,
+    forfeitedDays: forfeitedDays,
+    nearCap: nearCap,
+    capReached: capReached,
+    entries: rows
+  };
+}
+
+/**
+ * Leave শিটের Balance কলামে (কলাম ৫) নতুন সূত্র অনুযায়ী মান লিখে রাখে —
+ * শুধু কাঁচা শিটে দেখার সুবিধার জন্য; getLeaveData() সবসময় লাইভ হিসাব
+ * করেই পাঠায়, তাই UI এই কলামের ওপর নির্ভর করে না।
  */
 function leaveRecalcBalances_() {
   var sheet = leaveSheet_();
@@ -115,41 +176,25 @@ function leaveRecalcBalances_() {
 
   var emp = pgGetEmployee_();
   var joining = emp.joiningDate || '';
-  var data = sheet.getRange(2, 1, lastRow - 1, LEAVE_HEADERS.length).getValues();
+  var today = Utilities.formatDate(new Date(), PG_TZ, 'yyyy-MM-dd');
+  var summary = leaveComputeSummary_(joining, today);
 
-  var order = [];
-  for (var i = 0; i < data.length; i++) {
-    if (!data[i][0]) continue;
-    var type = String(data[i][2] || '');
-    if (type !== 'Taken' && type !== 'Encashed') continue;
-    order.push({ idx: i, id: String(data[i][0]), date: pgDateStr_(data[i][1]), days: pgNum_(data[i][3]) });
-  }
-  order.sort(function (a, b) {
-    if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-    return a.id < b.id ? -1 : 1;
-  });
-
-  var used = 0;
   var balanceById = {};
-  order.forEach(function (o) {
-    used += o.days;
-    var accrued = leaveAccruedAsOf_(joining, o.date);
-    balanceById[o.id] = Math.round((accrued - used) * 100) / 100;
-  });
+  summary.entries.forEach(function (r) { balanceById[r.id] = r.balance; });
 
-  var out = [];
-  for (var j = 0; j < data.length; j++) {
-    var idj = data[j][0] ? String(data[j][0]) : '';
-    out.push([idj && balanceById.hasOwnProperty(idj) ? balanceById[idj] : (pgNum_(data[j][4]) || 0)]);
-  }
+  var data = sheet.getRange(2, 1, lastRow - 1, LEAVE_HEADERS.length).getValues();
+  var out = data.map(function (row) {
+    var id = row[0] ? String(row[0]) : '';
+    return [id && balanceById.hasOwnProperty(id) ? balanceById[id] : (pgNum_(row[4]) || 0)];
+  });
   sheet.getRange(2, 5, out.length, 1).setValues(out);
 }
 
 /**
- * Everything the ছুটির হিসাব tab needs in one call. Field names match
- * Page_PowerGrid.html exactly:
- *   joiningDate, accrualDays, daysServed, totalEarned, totalUsed,
- *   totalEncashed, balance, entries[{id,date,type,days,balance,notes}]
+ * Everything the ছুটির হিসাব tab needs in one call. পুরনো ফিল্ডগুলো
+ * (joiningDate, accrualDays, daysServed, totalEarned, totalUsed,
+ * totalEncashed, balance, entries) অপরিবর্তিত — শুধু নতুন ফিল্ড যোগ:
+ * rawBalance, maxBalance, alertThreshold, forfeitedDays, nearCap, capReached.
  */
 function getLeaveData(token) {
   pgAuth_(token);
@@ -157,44 +202,29 @@ function getLeaveData(token) {
   var emp = pgGetEmployee_();
   var joining = emp.joiningDate || '';
   var today = Utilities.formatDate(new Date(), PG_TZ, 'yyyy-MM-dd');
-
-  var daysServed = leaveServiceDays_(joining, today);
-  var totalEarned = leaveAccruedAsOf_(joining, today);
-
-  var rawEntries = leaveReadEntries_();
-  var totalUsed = 0, totalEncashed = 0, used = 0;
-
-  var rows = rawEntries.map(function (e) {
-    used += e.days;
-    if (e.type === 'Taken') totalUsed += e.days; else totalEncashed += e.days;
-    var accruedAtDate = leaveAccruedAsOf_(joining, e.date);
-    return {
-      id: e.id,
-      date: e.date,
-      type: e.type,
-      days: e.days,
-      notes: e.notes,
-      balance: Math.round((accruedAtDate - used) * 100) / 100
-    };
-  });
-
-  var balance = Math.round((totalEarned - totalUsed - totalEncashed) * 100) / 100;
+  var summary = leaveComputeSummary_(joining, today);
 
   return {
     joiningDate: joining,
     accrualDays: LEAVE_ACCRUAL_DAYS,
-    daysServed: daysServed,
-    totalEarned: totalEarned,
-    totalUsed: Math.round(totalUsed * 100) / 100,
-    totalEncashed: Math.round(totalEncashed * 100) / 100,
-    balance: balance,
-    entries: rows
+    daysServed: summary.daysServed,
+    totalEarned: summary.totalEarned,
+    totalUsed: summary.totalUsed,
+    totalEncashed: summary.totalEncashed,
+    balance: summary.balance,
+    rawBalance: summary.rawBalance,
+    maxBalance: summary.maxBalance,
+    alertThreshold: summary.alertThreshold,
+    forfeitedDays: summary.forfeitedDays,
+    nearCap: summary.nearCap,
+    capReached: summary.capReached,
+    entries: summary.entries
   };
 }
 
 /**
  * entry = { id (blank for new), date 'yyyy-MM-dd', type 'Taken'|'Encashed', days, notes }
- * বর্তমান অর্জিত ছুটির (আজ পর্যন্ত) চেয়ে বেশি ভোগ/নগদায়ন করা যাবে না।
+ * বর্তমান (১৮০ দিনে বাঁধা) স্থিতির চেয়ে বেশি ভোগ/নগদায়ন করা যাবে না।
  * Returns the refreshed getLeaveData() payload so the page can re-render
  * in one round trip.
  */
@@ -219,14 +249,20 @@ function saveLeaveEntry(token, entry) {
   if (!joining) throw new Error('আগে "বেতন ও ভাতা" ট্যাবে যোগদানের তারিখ সংরক্ষণ করুন।');
 
   var today = Utilities.formatDate(new Date(), PG_TZ, 'yyyy-MM-dd');
-  var totalAccrued = leaveAccruedAsOf_(joining, today);
+  var totalEarned = leaveAccruedAsOf_(joining, today);
 
-  var usedExcludingThis = 0;
-  leaveReadEntries_().forEach(function (e) { if (e.id !== id) usedExcludingThis += e.days; });
+  var usedExcludingThis = 0, encashedExcludingThis = 0;
+  leaveReadEntries_().forEach(function (e) {
+    if (e.id === id) return;
+    if (e.type === 'Taken') usedExcludingThis += e.days; else encashedExcludingThis += e.days;
+  });
 
-  var available = Math.round((totalAccrued - usedExcludingThis) * 100) / 100;
+  var rawAvailable = totalEarned - usedExcludingThis - encashedExcludingThis;
+  var available = Math.round(Math.min(rawAvailable, LEAVE_MAX_BALANCE) * 100) / 100;
+  if (available < 0) available = 0;
+
   if (days > available + 1e-9) {
-    throw new Error('পর্যাপ্ত অর্জিত ছুটি নেই। বর্তমান স্থিতি: ' + available + ' দিন।');
+    throw new Error('পর্যাপ্ত অর্জিত ছুটি নেই। বর্তমান স্থিতি: ' + available + ' দিন (সর্বোচ্চ সীমা ' + LEAVE_MAX_BALANCE + ' দিন)।');
   }
 
   var sheet = leaveSheet_();
@@ -239,7 +275,7 @@ function saveLeaveEntry(token, entry) {
     if (found < 0) throw new Error('এন্ট্রি পাওয়া যায়নি।');
     sheet.getRange(found, 2).setNumberFormat('@');
     sheet.getRange(found, 2, 1, 3).setValues([[date, type, days]]); // Date, Type, Days
-    sheet.getRange(found, 6).setValue(notes); // Notes (Balance, col 5, is recalculated below)
+    sheet.getRange(found, 6).setValue(notes); // Notes (Balance, col 5, recalculated below)
   } else {
     id = generateUniqueId('LEV');
     var row = sheet.getLastRow() + 1;
