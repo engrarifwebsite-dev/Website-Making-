@@ -1,5 +1,45 @@
 # CHANGELOG
 
+2026-09-22 (Session 11)
+Power Grid: "ছুটির হিসাব" — accrual, usage totals ও নগদায়ন সেভ না হওয়ার বাগ ফিক্স
+তিনটি রিপোর্ট করা বাগ ফিক্স করা হয়েছে:
+"মোট অর্জিত ছুটি" (প্রতি ১১ দিনে ১ দিন) সবসময় ০ দেখাচ্ছিল।
+"ভোগ/নগদায়নকৃত" কখনো আপডেট হচ্ছিল না (সবসময় ০)।
+এন্ট্রি সম্পাদনায় "নগদায়ন" সিলেক্ট করে সংরক্ষণ করলে কাজ করত না।
+মূল কারণ: deploy করা Server_Leave.gs-এর রিটার্ন করা ফিল্ডের নাম এবং গ্রহণযোগ্য Type মান, Page_PowerGrid.html-এর "ছুটির হিসাব" ট্যাব যা প্রত্যাশা করে তার সাথে মিলছিল না। ফ্রন্টএন্ড d.joiningDate, d.accrualDays, d.daysServed, d.totalEarned, d.totalUsed, d.totalEncashed, d.balance পড়ে এবং saveLeaveEntry()-কে type: 'Taken' বা type: 'Encashed' পাঠায়; কিন্তু ব্যাকএন্ড ভিন্ন নাম (যেমন totalTaken, totalAccrued) ব্যবহার করত এবং 'Encashed' টাইপ রিজেক্ট করত ("ছুটির ধরন নির্বাচন করুন।" এরর)।
+সমাধান: Server_Leave.gs সম্পূর্ণভাবে rewrite করা হয়েছে, ফ্রন্টএন্ডের ঠিক এই কন্ট্র্যাক্ট মেনে —
+getLeaveData(token) → { joiningDate, accrualDays, daysServed, totalEarned, totalUsed, totalEncashed, balance, entries[] }।
+অর্জিত ছুটি এখন সম্পূর্ণ স্বয়ংক্রিয় — "বেতন ও ভাতা"-তে সংরক্ষিত Joining Date থেকে (pgGetEmployee_() পুনরায় ব্যবহার করে) প্রতি ১১ (LEAVE_ACCRUAL_DAYS) দিনের চাকরির মেয়াদে ১ দিন হিসাবে যোগ হয়।
+Type এখন শুধু 'Taken' (ভোগ) বা 'Encashed' (নগদায়ন) — কোনো ম্যানুয়াল 'Earned' এন্ট্রি আর সমর্থিত নয়; পুরনো কোনো 'Earned' সারি থাকলে তা read-এর সময় নীরবে উপেক্ষা করা হয় (এরর দেয় না)।
+সংরক্ষণের আগে যাচাই করা হয় যেন মোট (ভোগ + নগদায়ন) আজ পর্যন্ত অর্জিত ছুটির চেয়ে বেশি না হয়।
+Leave শিটের কলাম কাঠামো অপরিবর্তিত: EntryID, Date, Type, Days, Balance, Notes (৬ কলাম)। শিটে যদি আগে থেকে ৭ম কলাম (যেমন EncashmentAmount) থেকে থাকে, সেটি স্পর্শ করা হয় না, শুধু ব্যবহার করা হয় না — কোনো ডেটা মুছে যাবে না।
+Files changed: Server_Leave.gs (সম্পূর্ণ rewrite)। Page_PowerGrid.html অপরিবর্তিত — এটি আগে থেকেই সঠিক ফিল্ড-নাম/টাইপ প্রত্যাশা করছিল।
+টেস্ট করা প্রয়োজন (deploy-এর পর):
+Power Grid → বেতন ও ভাতা → Joining Date ঠিকমতো সেট আছে কিনা যাচাই।
+ছুটির হিসাব ট্যাবে গিয়ে "চাকরির মেয়াদ" ও "মোট অর্জিত ছুটি" এখন সঠিক সংখ্যা দেখাচ্ছে কিনা (০ নয়)।
+নতুন এন্ট্রি → "নগদায়ন" সিলেক্ট করে সংরক্ষণ করলে এখন সেভ হচ্ছে কিনা।
+এন্ট্রি সংরক্ষণের পর "ভোগ/নগদায়নকৃত" ও "বর্তমান স্থিতি" কার্ড আপডেট হচ্ছে কিনা।
+অর্জিত ছুটির চেয়ে বেশি দিন এন্ট্রি দিলে এখন যথাযথ এরর মেসেজ আসছে কিনা।
+Project content
+website making
+Created by you
+engrarifwebsite-dev/Website-Making-
+
+main
+
+GITHUB
+
+Content
+1790077638441_Page_PowerGrid.html
+
+HTML
+
+1790077657968_Server_Leave.gs
+
+159 lines
+
+GS
+
 ## 2026-09-22 (Session 10)
 
 ### Power Grid: "ছুটির হিসাব" — automatic leave accrual, taken vs encashment
