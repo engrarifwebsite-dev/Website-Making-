@@ -106,15 +106,6 @@ function pgMonthKey_(v) {
 
 function pgStatementSheet_() {
   var sheet = ensureSheetWithHeaders(pgSs_(), 'SalaryStatements', PG_STATEMENT_HEADERS);
-
-  // make sure the sheet has room for every extra column (a new column at the right) —
-  // without this, getRange() below throws once the sheet has fewer columns than
-  // PG_EXTRA_COL + PG_EXTRA_HEADERS.length, which silently breaks every load/save.
-  var needCols = PG_EXTRA_COL + PG_EXTRA_HEADERS.length - 1;
-  if (sheet.getMaxColumns() < needCols) {
-    sheet.insertColumnsAfter(sheet.getMaxColumns(), needCols - sheet.getMaxColumns());
-  }
-
   var head = sheet.getRange(1, PG_EXTRA_COL, 1, PG_EXTRA_HEADERS.length).getValues()[0];
   for (var h = 0; h < PG_EXTRA_HEADERS.length; h++) {
     if (!head[h]) {
@@ -162,7 +153,10 @@ function pgGetEmployee_() {
 
   var joining = '';
   var empSheet = ss.getSheetByName('Employment');
-  if (empSheet && empSheet.getLastRow() > 1) {
+  if (empSheet) {
+    // Read the cell directly — no getLastRow() gate. pgDateStr_() already
+    // returns '' safely for an empty cell, so the old ">1" guard only added
+    // a way for a legitimately-saved Joining Date to be skipped.
     joining = pgDateStr_(empSheet.getRange(2, 1).getValue());
   }
 
@@ -198,7 +192,15 @@ function savePowerGridEmployee(token, info) {
 
   var emp = ensureSheetWithHeaders(pgSs_(), 'Employment', ['JoiningDate', 'ResignationDate']);
   var cell = emp.getRange(2, 1);
-  if (joining) cell.setValue(Utilities.parseDate(joining, PG_TZ, 'yyyy-MM-dd'));
+  // Stored as plain text ('yyyy-MM-dd'), the same way NextIncrementDate is
+  // stored above via pgSetInfo_(). Previously this was written as a real
+  // Date object with no explicit cell format — Sheets could silently
+  // reformat/locale-convert that cell, after which pgDateStr_()'s string
+  // fallback could no longer recognize it on read-back, making a saved
+  // Joining Date appear to "not save" once the page reloaded. Forcing
+  // plain text removes that ambiguity entirely.
+  cell.setNumberFormat('@');
+  if (joining) cell.setValue(joining);
   else cell.clearContent();
 
   return true;

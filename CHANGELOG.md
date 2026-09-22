@@ -2,32 +2,67 @@
 
 ## 2026-09-22
 
-### Power Grid: two tabs and Training Bill
-- The Power Grid page now has subtabs: "বেতন ও ভাতা" (the existing salary
-  statement, CPF summary and reports, unchanged) and "ছুটির হিসাব" (new tab).
-- "ছুটির হিসাব" tracks earned/taken leave as a simple running-balance ledger,
-  reusing the `Leave` tab Setup_PowerGrid.gs already creates (EntryID, Date,
-  Type, Days, Balance, Notes). Entries can be "অর্জিত" (Earned — adds to the
-  balance) or "ভোগ" (Taken — subtracts). The Balance column is recalculated
-  in date order on every add/edit/delete, the same way `Server_Budget.gs`
-  recalculates its Ledger.
-- New tab UI: three summary cards (total earned, total taken, current
-  balance) plus a "নতুন এন্ট্রি" button; an entries table (date, type, days,
-  balance, notes, edit/delete); PDF (print → Save as PDF) and Excel (CSV)
-  export. The tab's data loads the first time it is opened, not before.
-- New earning line "Training Bill" (after Local Training) in the Earnings
-  card, the entry form, the details modal, PDF and Excel export. It counts
-  in Gross Salary and in Total Allowance.
-- Stored in a new `TrainingBill` column (column 39) at the end of
-  `SalaryStatements`; the header is added automatically and old rows read 0.
-- New server file `Server_Leave.gs`: `getLeaveData`, `saveLeaveEntry`,
-  `deleteLeaveEntry`. Reuses `pgSs_`, `pgAuth_`, `pgNum_`, `pgDateStr_` from
-  `Server_PowerGrid.gs` (same Apps Script project).
-- Files changed: `Page_PowerGrid.html`, `Server_PowerGrid.gs` (Training
-  Bill field + CPF-rule comments corrected to match the 2026-09-21 change).
-  New file: `Server_Leave.gs`.
+### Power Grid: Joining Date not saving (bug fix)
+- Fixed: in বেতন ও ভাতা → সেলারি স্টেটমেন্ট card → "✏️ তথ্য সম্পাদনা", changing
+  the Joining Date appeared not to save (it read back blank after a reload).
+- Root cause: `savePowerGridEmployee()` stored Joining Date as a real `Date`
+  object in the `Employment` tab with no explicit cell format. Every other
+  date-like field in the same flow (NextIncrementDate) is deliberately
+  stored as plain text specifically to avoid Google Sheets silently
+  reformatting a Date-typed cell in a way the app's string-based date
+  parser (`pgDateStr_()`) could no longer recognize on read-back.
+- Fix: Joining Date is now stored as plain text (`setNumberFormat('@')` +
+  the `'yyyy-MM-dd'` string) exactly like NextIncrementDate, instead of a
+  `Date` object. Also removed an unnecessary `getLastRow() > 1` guard before
+  reading the cell back in `pgGetEmployee_()`.
+- If a Joining Date was already lost under the old code, no manual sheet
+  repair is needed — re-entering and saving it once through the same edit
+  modal stores it correctly from then on.
+- Files changed: `Server_PowerGrid.gs` only. No HTML or sheet-schema change.
+
+### Project memory files populated
+- `SESSION_STATE.md`, `TASK_PROGRESS.md` and `NEXT_STEPS.md` were empty
+  placeholders; they are now filled in following the format defined in
+  `CLAUDE.md`, including a full captured spec for the still-unbuilt
+  "ছুটির হিসাব" (Leave) tab so a future session can implement it without
+  the rules needing to be re-explained.
 
 ## 2026-09-21
+
+### Power Grid: CPF হিসাব tab and card rename
+- The CPF card in the right column of "বেতন ও ভাতা" is renamed from
+  "CPF বার্ষিক সারাংশ" to "CPF হিসাব". The year moved out of the title into a
+  small chip beside it, and a new "সম্পূর্ণ CPF হিসাব দেখুন →" button opens the
+  new tab.
+- New subtab "CPF হিসাব" (between "বেতন ও ভাতা" and "ছুটির হিসাব"):
+  - four cards (total CPF of all years, Employee's CPF, Company's CPF, total of
+    the chosen year) and a "নতুন CPF এন্ট্রি" button;
+  - monthly list for a chosen year (‹ › to change year), always showing all 12
+    months with Employee, Company, total, running cumulative total (all years)
+    and the source. A month with no record shows "＋ এন্ট্রি যোগ";
+  - Employee's vs Company's monthly bar chart for that year;
+  - year-by-year summary table (click a row to jump to that year);
+  - Employee/Company ratio donut for the chosen year;
+  - quick actions: this year's CPF summary (PDF), CPF list (Excel/CSV),
+    earlier CPF entries list.
+- Earlier CPF contributions (months without a salary statement) can be added,
+  edited and deleted straight from the tab. A month that has a salary statement
+  always takes its CPF from the statement (edit it through the statement).
+- The existing "CPF সারাংশ (PDF)" quick action on the salary tab works as before.
+- Files changed: `Page_PowerGrid.html` only. No server or sheet change; the tab
+  uses the data `getPowerGridData` already returns.
+
+### Power Grid: two tabs and Training Bill
+- The Power Grid page now has subtabs: "বেতন ও ভাতা" (the existing salary
+  statement, CPF summary and reports, unchanged) and "ছুটির হিসাব" (new tab,
+  placeholder for now; its content comes in a later step).
+- New earning line "Training Bill" (after Local Training) in the Earnings card,
+  the entry form, the details modal, PDF and Excel export. It counts in Gross
+  Salary and in Total Allowance.
+- Stored in a new `TrainingBill` column (column 39) at the end of
+  `SalaryStatements`; the header is added automatically and old rows read 0.
+- Files changed: `Page_PowerGrid.html`, `Server_PowerGrid.gs`.
+  The comments in `Server_PowerGrid.gs` now describe the new CPF rule.
 
 ### Power Grid: CPF card rule and page cleanup
 - The CPF (Provident Fund) card now follows this rule:
