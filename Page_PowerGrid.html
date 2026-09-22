@@ -43,10 +43,8 @@
     #page-power-grid .pg-ico-green { background: #dcfce7; color: #15803d; }
     #page-power-grid .pg-ico-red { background: #fee2e2; color: #dc2626; }
     #page-power-grid .pg-ico-purple { background: #ede9fe; color: #6d28d9; }
-    #page-power-grid .pg-ico-amber { background: #fef3c7; color: #d97706; }
     #page-power-grid .pg-kpi-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
     #page-power-grid .pg-kpi-value { margin-top: 2px; font-size: 24px; font-weight: 800; color: var(--navy); line-height: 1.25; white-space: nowrap; }
-    #page-power-grid .pg-kpi-sub { margin-top: 2px; font-size: 12.5px; color: var(--text-muted); }
     #page-power-grid .pg-link { background: none; border: 0; padding: 4px 0 0; color: var(--pg-blue); font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
     #page-power-grid .pg-link:hover { text-decoration: underline; }
     #page-power-grid .pg-add {
@@ -123,11 +121,6 @@
     #page-power-grid .pg-table tr:last-child td { border-bottom: 0; }
     #page-power-grid .pg-table td:first-child { text-align: left; }
     #page-power-grid .pg-table tr.cur td { background: #f6f9ff; }
-    #page-power-grid .pg-table tfoot td { background: #f4f7fc; font-weight: 800; border-top: 1px solid var(--pg-line); border-bottom: 0; }
-    #page-power-grid .pg-table tr.pg-miss td { color: var(--text-muted); font-weight: 500; }
-    #page-power-grid .pg-table tr.pg-year-row { cursor: pointer; }
-    #page-power-grid .pg-table tr.pg-year-row:hover td { background: #f6f9ff; }
-    #page-power-grid .pg-table tr.pg-year-row.cur td { background: #eaf1ff; }
     #page-power-grid .pg-iconbtn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-grid; place-items: center; color: #2563eb; }
     #page-power-grid .pg-iconbtn:hover { background: #eaf1ff; }
     #page-power-grid .pg-iconbtn.del { color: #dc2626; }
@@ -152,25 +145,6 @@
     #page-power-grid .pg-act { display: flex; align-items: center; gap: 12px; border: 1px solid var(--pg-line); background: #fff; border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; text-align: left; }
     #page-power-grid .pg-act:hover { background: #f4f7fc; }
     #page-power-grid .pg-act svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-
-    /* ---------- CPF হিসাব ট্যাব ---------- */
-    #page-power-grid .pg-chip { display: inline-block; padding: 3px 12px; border-radius: 999px; background: #e8effd; color: #1d4ed8; font-size: 12.5px; font-weight: 700; }
-    #page-power-grid .pg-tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
-    #page-power-grid .pg-tag.st { background: #e8effd; color: #1d4ed8; }
-    #page-power-grid .pg-tag.hist { background: #e3f6e8; color: #15803d; }
-    #page-power-grid .pg-tag.taken { background: #fef3c7; color: #b45309; }
-    #page-power-grid .pg-tag.encash { background: #ede9fe; color: #6d28d9; }
-    #page-power-grid .pg-src { display: inline-flex; align-items: center; gap: 6px; }
-    #page-power-grid .pg-tag-btn { border: 1px dashed #c7d5f5; background: #fff; color: var(--pg-blue); border-radius: 8px; padding: 4px 10px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
-    #page-power-grid .pg-tag-btn:hover { background: #f4f7fc; }
-    #page-power-grid .pg-chart { margin-bottom: 14px; }
-    #page-power-grid .pg-chart svg { width: 100%; height: auto; display: block; }
-    #page-power-grid .pg-chart-legend { display: flex; justify-content: center; gap: 18px; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    #page-power-grid .pg-chart-legend i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
-
-    /* ---------- ছুটির হিসাব ট্যাব ---------- */
-    #page-power-grid .pg-leave-track { height: 8px; background: #e6eaf0; border-radius: 99px; overflow: hidden; margin-top: 8px; }
-    #page-power-grid .pg-leave-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f59e0b, #dc2626); }
 
     /* ---------- মোডালের ভেতরের অংশ ---------- */
     .pg-m-sec { margin: 14px 0 6px; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; }
@@ -217,7 +191,6 @@
   <!-- সাবট্যাব: বাটন ও প্যানেল পরিবর্তন JS_App.html-এর জেনেরিক হ্যান্ডলার করে -->
   <div class="subtabs">
     <button type="button" class="subtab-btn active" data-subtab="pg-salary">বেতন ও ভাতা</button>
-    <button type="button" class="subtab-btn" data-subtab="pg-cpf">CPF হিসাব</button>
     <button type="button" class="subtab-btn" data-subtab="pg-leave">ছুটির হিসাব</button>
   </div>
 
@@ -270,6 +243,11 @@
         <div class="pg-side">
 
           <div class="pg-card">
+            <div class="pg-head"><h3 class="pg-title" id="pgCpfTitle">CPF বার্ষিক সারাংশ</h3></div>
+            <div id="pgCpf"></div>
+          </div>
+
+          <div class="pg-card">
             <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
             <div class="pg-actions">
               <button type="button" class="pg-act" data-act="pdf-statement">
@@ -297,75 +275,7 @@
 
   </div>
 
-  <!-- ট্যাব ২: CPF হিসাব -->
-  <div class="subtab-panel" id="subtab-pg-cpf">
-
-    <div class="pg-body" id="pgCpfBody">
-
-      <!-- উপরের ৪টি কার্ড ও নতুন CPF এন্ট্রি বাটন -->
-      <div class="pg-top" id="pgCpfTop"></div>
-
-      <div class="pg-layout">
-
-        <div class="pg-main">
-
-          <!-- মাসিক CPF তালিকা (নির্বাচিত বছর) -->
-          <div class="pg-card">
-            <div class="pg-head">
-              <h3 class="pg-title">মাসিক CPF তালিকা</h3>
-              <div class="pg-month">
-                <button type="button" data-act="cpf-prev-year" id="pgCpfPrev" aria-label="আগের বছর">‹</button>
-                <div class="pg-month-label" id="pgCpfYearLabel">--</div>
-                <button type="button" data-act="cpf-next-year" id="pgCpfNext" aria-label="পরের বছর">›</button>
-              </div>
-            </div>
-            <div class="pg-chart" id="pgCpfChart"></div>
-            <div id="pgCpfMonthly"><div class="pg-empty">লোড হচ্ছে...</div></div>
-          </div>
-
-          <!-- বছরভিত্তিক সারাংশ -->
-          <div class="pg-card">
-            <div class="pg-head"><h3 class="pg-title">বছরভিত্তিক CPF সারাংশ</h3></div>
-            <div id="pgCpfYears"></div>
-          </div>
-
-        </div>
-
-        <div class="pg-side">
-
-          <div class="pg-card">
-            <div class="pg-head">
-              <h3 class="pg-title">CPF অনুপাত</h3>
-              <span class="pg-chip" id="pgCpfSideYear"></span>
-            </div>
-            <div id="pgCpfSide"></div>
-          </div>
-
-          <div class="pg-card">
-            <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
-            <div class="pg-actions">
-              <button type="button" class="pg-act" data-act="cpf-pdf-year">
-                <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
-                এই বছরের CPF সারাংশ (PDF)
-              </button>
-              <button type="button" class="pg-act" data-act="cpf-excel">
-                <svg viewBox="0 0 24 24" style="color:#16a34a"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>
-                CPF তালিকা এক্সপোর্ট (Excel)
-              </button>
-              <button type="button" class="pg-act" data-act="cpf-list">
-                <svg viewBox="0 0 24 24" style="color:#2563eb"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                পূর্বের CPF এন্ট্রি (তালিকা)
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ট্যাব ৩: ছুটির হিসাব -->
+  <!-- ট্যাব ২: ছুটির হিসাব -->
   <div class="subtab-panel" id="subtab-pg-leave">
 
     <div class="pg-error" id="pgLeaveError"><span id="pgLeaveErrorText"></span><button type="button" data-act="leave-retry">আবার চেষ্টা করুন</button></div>
@@ -373,8 +283,6 @@
     <div class="pg-body" id="pgLeaveBody">
 
       <div class="pg-top" id="pgLeaveTop"></div>
-
-      <div id="pgLeaveNotice"></div>
 
       <div class="pg-layout">
 
@@ -388,16 +296,6 @@
         </div>
 
         <div class="pg-side">
-
-          <div class="pg-card">
-            <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">স্থিতির সারাংশ</h3></div>
-            <div id="pgLeaveSummary"></div>
-          </div>
-
-          <div class="pg-card">
-            <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">নিয়ম</h3></div>
-            <div class="pg-m-note" style="margin:0" id="pgLeaveRuleNote">প্রতি ১১ দিনের চাকরির মেয়াদে ১ দিন অর্জিত ছুটি যোগ হয়। অর্জিত ছুটি ভোগ বা নগদায়ন — দুইভাবেই ব্যবহার করা যায়; দুটোই স্থিতি থেকে বিয়োগ হয়।</div>
-          </div>
 
           <div class="pg-card">
             <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
@@ -429,7 +327,6 @@
       var TOKEN_KEY = 'personalAppSessionToken';
       var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
       var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-      var BN_MONTHS_SHORT = ['জানু','ফেব্রু','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টে','অক্টো','নভে','ডিসে'];
 
       var EARN = [
         ['basic', 'Basic Salary'], ['educationAllowance', 'Education Allowance'], ['incrementArrear', 'Increment/Arrear'],
@@ -459,8 +356,8 @@
       var ALL_FIELDS = EARN.concat(DEDUCT);
       var CPF_RULE_NOTE = "Employee = CPF Deduction − Employer's Contribution to CPF; Company = Employer's Contribution to CPF; মোট CPF = CPF Deduction।";
 
-      var state = { data: null, sel: '', cpfYear: '', reqId: 0, loadedAt: 0, everLoaded: false };
-      var leaveState = { data: null, loadedAt: 0, everLoaded: false };
+      var state = { data: null, sel: '', reqId: 0, loadedAt: 0, everLoaded: false };
+      var leaveState = { data: null, reqId: 0, loadedAt: 0, everLoaded: false };
 
       /* ---------- helpers ---------- */
       function el(id) { return document.getElementById(id); }
@@ -503,18 +400,8 @@
           });
         runner[fnName].apply(runner, args);
       }
-      function setBusy(b) {
-        el('pgBody').classList.toggle('busy', !!b);
-        el('pgCpfBody').classList.toggle('busy', !!b);
-      }
-      function showError(msg) {
-        el('pgErrorText').textContent = msg;
-        el('pgError').classList.add('show');
-        if (!state.data) {
-          el('pgCpfMonthly').innerHTML = '<div class="pg-empty">' + esc(msg) +
-            ' <button type="button" class="pg-tag-btn" data-act="retry">আবার চেষ্টা করুন</button></div>';
-        }
-      }
+      function setBusy(b) { el('pgBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('pgErrorText').textContent = msg; el('pgError').classList.add('show'); }
       function hideError() { el('pgError').classList.remove('show'); }
 
       /* ---------- data helpers ---------- */
@@ -589,7 +476,7 @@
         renderStatement(st, t);
         renderSummary(t);
         renderPrevList(st);
-        renderCpfTab();
+        renderCpf(st);
       }
 
       /* ---------- উপরের ৪টি কার্ড ---------- */
@@ -597,10 +484,7 @@
         wallet: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v3"/><path d="M3 7v11a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5a2 2 0 0 1-2-1z"/><circle cx="16.5" cy="14" r="1.2"/></svg>',
         coins: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>',
         calc: '<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>',
-        hand: '<svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M12 5.5v3M10.8 6.4h2.2M10.8 8.4h2.4"/><path d="M3 17l4-2 4 1.5h4a1.5 1.5 0 0 1 0 3H10"/><path d="M15 17.5l4.5-2a1.5 1.5 0 0 1 1.5 2.6L14 21l-7-1.5-4 1"/></svg>',
-        person: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>',
-        building: '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M10 21v-4h4v4"/></svg>',
-        calendar: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
+        hand: '<svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M12 5.5v3M10.8 6.4h2.2M10.8 8.4h2.4"/><path d="M3 17l4-2 4 1.5h4a1.5 1.5 0 0 1 0 3H10"/><path d="M15 17.5l4.5-2a1.5 1.5 0 0 1 1.5 2.6L14 21l-7-1.5-4 1"/></svg>'
       };
 
       function kpi(cls, svg, label, value, kind) {
@@ -725,10 +609,27 @@
         return cpfRecords().filter(function (r) { return r.monthKey.substring(0, 4) === String(year); });
       }
 
-      /** ডোনাট + লেজেন্ড (Employee বনাম Company); মোট ০ হলে ফাঁকা স্ট্রিং। */
-      function donutHtml(emp, comp) {
+      function renderCpf() {
+        var year = selectedYear();
+        var emp = 0, comp = 0, allTotal = 0;
+        cpfYearRecords(year).forEach(function (r) { emp += r.emp; comp += r.comp; });
+        cpfRecords().forEach(function (r) { allTotal += r.emp + r.comp; });
         var total = emp + comp;
-        if (total <= 0) return '';
+
+        el('pgCpfTitle').textContent = 'CPF বার্ষিক সারাংশ (' + bn(year) + ')';
+
+        var html =
+          '<div class="pg-cpf-row"><span>Employee\'s CPF (YTD)</span><b>৳ ' + num(emp) + '</b></div>' +
+          '<div class="pg-cpf-row"><span>Company\'s CPF (YTD)</span><b>৳ ' + num(comp) + '</b></div>' +
+          '<div class="pg-cpf-row"><span>মোট CPF (YTD)</span><b>৳ ' + num(total) + '</b></div>' +
+          '<div class="pg-cpf-row"><span>সর্বমোট জমা (সব বছর)</span><b>৳ ' + num(allTotal) + '</b></div>';
+
+        var manage = '<button type="button" class="pg-more" data-act="cpf-list">পূর্বের CPF এন্ট্রি দেখুন ও সম্পাদনা →</button>';
+
+        if (total <= 0) {
+          el('pgCpf').innerHTML = html + '<div class="pg-empty">এই বছরে CPF এন্ট্রি নেই।</div>' + manage;
+          return;
+        }
 
         var r = 52, c = 2 * Math.PI * r;
         var eLen = Math.max(0, emp) / total * c;
@@ -738,424 +639,10 @@
           '<text x="70" y="65" text-anchor="middle" font-size="10.5" fill="#475569">মোট CPF</text>' +
           '<text x="70" y="82" text-anchor="middle" font-size="13" font-weight="800" fill="#10233F">৳ ' + num(total) + '</text></svg>';
 
-        return '<div class="pg-donut-wrap"><div class="pg-donut">' + svg + '</div><div class="pg-legend">' +
+        el('pgCpf').innerHTML = html + '<div class="pg-donut-wrap"><div class="pg-donut">' + svg + '</div><div class="pg-legend">' +
           '<div class="pg-lg"><i style="background:#15803d"></i><div>Employee\'s CPF<small>' + (emp / total * 100).toFixed(1) + '% (৳ ' + num(emp) + ')</small></div></div>' +
           '<div class="pg-lg"><i style="background:#1d4ed8"></i><div>Company\'s CPF<small>' + (comp / total * 100).toFixed(1) + '% (৳ ' + num(comp) + ')</small></div></div>' +
-          '</div></div>';
-      }
-
-      /* =====================================================
-         ট্যাব: CPF হিসাব
-         ===================================================== */
-      function cpfYearList() {
-        var seen = {}, out = [];
-        cpfRecords().forEach(function (r) {
-          var y = r.monthKey.substring(0, 4);
-          if (!seen[y]) { seen[y] = true; out.push(y); }
-        });
-        var cur = nowKey().substring(0, 4);
-        if (!seen[cur]) out.push(cur);
-        out.sort();
-        return out;
-      }
-
-      /** ক্রমযোজিত মোট (সব বছর মিলিয়ে) — মাসের কী → সেই মাস পর্যন্ত মোট CPF */
-      function cpfCumulative() {
-        var run = 0, map = {};
-        cpfRecords().forEach(function (r) { run += r.emp + r.comp; map[r.monthKey] = run; });
-        return map;
-      }
-
-      function niceMax(v) {
-        if (v <= 0) return 1000;
-        var p = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
-        var f = v / p;
-        var nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
-        return nf * p;
-      }
-
-      function cpfChartHtml(year, byKey) {
-        var vals = [], maxVal = 0, m;
-        for (m = 1; m <= 12; m++) {
-          var r = byKey[year + '-' + ('0' + m).slice(-2)];
-          var e = r ? r.emp : 0, c = r ? r.comp : 0;
-          vals.push([e, c]);
-          maxVal = Math.max(maxVal, e, c);
-        }
-        if (maxVal <= 0) return '<div class="pg-empty">এই বছরে চার্ট দেখানোর মতো CPF এন্ট্রি নেই।</div>';
-
-        var max = niceMax(maxVal);
-        var W = 560, H = 250, L = 64, R = 8, T = 10, B = 30;
-        var pw = W - L - R, ph = H - T - B;
-        var gw = pw / 12;
-        var bw = Math.min(16, gw * 0.32);
-        var gap = 3;
-        var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="মাসভিত্তিক CPF চার্ট">';
-
-        for (var g = 0; g <= 4; g++) {
-          var y = T + ph - (ph * g / 4);
-          svg += '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y + '" stroke="#e5e9f0" stroke-width="1"/>';
-          svg += '<text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="#64748b">' + num(max * g / 4) + '</text>';
-        }
-
-        vals.forEach(function (v, i) {
-          var gx = L + gw * i + gw / 2;
-          var startX = gx - (bw * 2 + gap) / 2;
-          [[v[0], '#15803d', "Employee's CPF"], [v[1], '#1d4ed8', "Company's CPF"]].forEach(function (s, k) {
-            var h = ph * s[0] / max;
-            svg += '<rect x="' + (startX + k * (bw + gap)) + '" y="' + (T + ph - h) + '" width="' + bw + '" height="' + h + '" rx="2" fill="' + s[1] + '"><title>' +
-              esc(BN_MONTHS[i] + ' — ' + s[2] + ': ' + money(s[0])) + '</title></rect>';
-          });
-          svg += '<text x="' + gx + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="#334155">' + BN_MONTHS_SHORT[i] + '</text>';
-        });
-
-        return '<div class="pg-chart-legend"><span><i style="background:#15803d"></i>Employee\'s CPF</span><span><i style="background:#1d4ed8"></i>Company\'s CPF</span></div>' + svg + '</svg>';
-      }
-
-      function cpfKpi(cls, svg, label, value, sub) {
-        return '<div class="pg-card pg-kpi"><div class="pg-kpi-ico ' + cls + '">' + svg + '</div>' +
-          '<div><div class="pg-kpi-label">' + label + '</div><div class="pg-kpi-value">' + value + '</div>' +
-          '<div class="pg-kpi-sub">' + sub + '</div></div></div>';
-      }
-
-      function cpfSourceCell(r, key) {
-        if (r.source === 'statement') {
-          return '<span class="pg-src"><span class="pg-tag st">বেতন স্টেটমেন্ট</span>' +
-            '<button type="button" class="pg-iconbtn" data-act="cpf-open-st" data-key="' + esc(key) + '" title="বেতন স্টেটমেন্ট সম্পাদনা">' + ICON_EDIT + '</button></span>';
-        }
-        return '<span class="pg-src"><span class="pg-tag hist">পূর্বের এন্ট্রি</span>' +
-          '<button type="button" class="pg-iconbtn" data-act="cpf-edit" data-id="' + esc(r.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
-          '<button type="button" class="pg-iconbtn del" data-act="cpf-del" data-id="' + esc(r.id) + '" title="মুছুন">' + ICON_DEL + '</button></span>';
-      }
-
-      function renderCpfTab() {
-        if (!state.data) return;
-
-        var years = cpfYearList();
-        if (!state.cpfYear || years.indexOf(state.cpfYear) < 0) {
-          var sy = selectedYear();
-          state.cpfYear = years.indexOf(sy) >= 0 ? sy : years[years.length - 1];
-        }
-        var year = state.cpfYear;
-        var yIdx = years.indexOf(year);
-
-        var recs = cpfRecords();
-        var cum = cpfCumulative();
-        var byKey = {};
-        recs.forEach(function (r) { byKey[r.monthKey] = r; });
-
-        var allEmp = 0, allComp = 0;
-        recs.forEach(function (r) { allEmp += r.emp; allComp += r.comp; });
-        var yEmp = 0, yComp = 0, yCount = 0;
-        cpfYearRecords(year).forEach(function (r) { yEmp += r.emp; yComp += r.comp; yCount++; });
-
-        /* উপরের কার্ড */
-        el('pgCpfTop').innerHTML =
-          cpfKpi('pg-ico-purple', SVG.coins, 'সর্বমোট CPF জমা', money(allEmp + allComp), bn(recs.length) + ' মাসের এন্ট্রি (সব বছর)') +
-          cpfKpi('pg-ico-green', SVG.person, "Employee's CPF (সব বছর)", money(allEmp), 'কর্মচারীর অংশ') +
-          cpfKpi('pg-ico-blue', SVG.building, "Company's CPF (সব বছর)", money(allComp), 'প্রতিষ্ঠানের অংশ') +
-          cpfKpi('pg-ico-amber', SVG.calendar, bn(year) + ' সালের CPF', money(yEmp + yComp), bn(yCount) + ' মাসের এন্ট্রি') +
-          '<button type="button" class="pg-add" data-act="cpf-add"><span style="font-size:26px;line-height:1">＋</span> নতুন CPF এন্ট্রি</button>';
-
-        /* বছর বদল */
-        el('pgCpfYearLabel').textContent = bn(year);
-        el('pgCpfPrev').disabled = !(yIdx > 0);
-        el('pgCpfNext').disabled = !(yIdx >= 0 && yIdx < years.length - 1);
-
-        /* চার্ট */
-        el('pgCpfChart').innerHTML = cpfChartHtml(year, byKey);
-
-        /* মাসিক তালিকা — ১২টি মাসই দেখানো হয়, এন্ট্রি না থাকলে "যোগ করুন" বাটন */
-        var rows = '', m;
-        for (m = 1; m <= 12; m++) {
-          var key = year + '-' + ('0' + m).slice(-2);
-          var r = byKey[key];
-          if (r) {
-            rows += '<tr><td>' + BN_MONTHS[m - 1] + '</td><td>' + num(r.emp) + '</td><td>' + num(r.comp) + '</td><td>' + num(r.emp + r.comp) +
-              '</td><td>' + num(cum[key]) + '</td><td>' + cpfSourceCell(r, key) + '</td></tr>';
-          } else {
-            rows += '<tr class="pg-miss"><td>' + BN_MONTHS[m - 1] + '</td><td>-</td><td>-</td><td>-</td><td>-</td>' +
-              '<td><button type="button" class="pg-tag-btn" data-act="cpf-add-month" data-key="' + key + '">＋ এন্ট্রি যোগ</button></td></tr>';
-          }
-        }
-        el('pgCpfMonthly').innerHTML = '<div class="pg-table-wrap"><table class="pg-table"><thead><tr>' +
-          '<th style="text-align:left">মাস</th><th>Employee CPF (৳)</th><th>Company CPF (৳)</th><th>মোট CPF (৳)</th><th>ক্রমযোজিত মোট (৳)</th><th>উৎস / অ্যাকশন</th></tr></thead><tbody>' +
-          rows + '</tbody><tfoot><tr><td>' + bn(year) + ' সালের মোট</td><td>' + num(yEmp) + '</td><td>' + num(yComp) + '</td><td>' + num(yEmp + yComp) + '</td><td></td><td></td></tr></tfoot></table></div>';
-
-        /* বছরভিত্তিক সারাংশ */
-        var agg = {};
-        recs.forEach(function (r) {
-          var y = r.monthKey.substring(0, 4);
-          var a = agg[y] || (agg[y] = { emp: 0, comp: 0, count: 0, lastKey: '' });
-          a.emp += r.emp; a.comp += r.comp; a.count++; a.lastKey = r.monthKey;
-        });
-        var yearKeys = Object.keys(agg).sort().reverse();
-        if (!yearKeys.length) {
-          el('pgCpfYears').innerHTML = '<div class="pg-empty">এখনো কোনো CPF এন্ট্রি নেই। উপরের "নতুন CPF এন্ট্রি" বাটন বা বেতন এন্ট্রি দিয়ে শুরু করুন।</div>';
-        } else {
-          var yrows = yearKeys.map(function (y) {
-            var a = agg[y];
-            return '<tr class="pg-year-row' + (y === year ? ' cur' : '') + '" data-act="cpf-year" data-year="' + y + '"><td>' + bn(y) + '</td><td>' + bn(a.count) + '</td><td>' +
-              num(a.emp) + '</td><td>' + num(a.comp) + '</td><td>' + num(a.emp + a.comp) + '</td><td>' + num(cum[a.lastKey]) + '</td></tr>';
-          }).join('');
-          el('pgCpfYears').innerHTML = '<div class="pg-table-wrap"><table class="pg-table"><thead><tr>' +
-            '<th style="text-align:left">বছর</th><th>এন্ট্রি (মাস)</th><th>Employee CPF (৳)</th><th>Company CPF (৳)</th><th>মোট CPF (৳)</th><th>বছর শেষে ক্রমযোজিত (৳)</th></tr></thead><tbody>' +
-            yrows + '</tbody><tfoot><tr><td>সর্বমোট</td><td>' + bn(recs.length) + '</td><td>' + num(allEmp) + '</td><td>' + num(allComp) + '</td><td>' + num(allEmp + allComp) + '</td><td></td></tr></tfoot></table></div>' +
-            '<div class="pg-m-note" style="margin-top:8px">কোনো বছরের সারিতে ক্লিক করলে ওপরের মাসিক তালিকা সেই বছরে চলে যাবে।</div>';
-        }
-
-        /* ডান কলাম: নির্বাচিত বছরের অনুপাত */
-        el('pgCpfSideYear').textContent = bn(year);
-        var side =
-          '<div class="pg-cpf-row"><span>Employee\'s CPF</span><b>৳ ' + num(yEmp) + '</b></div>' +
-          '<div class="pg-cpf-row"><span>Company\'s CPF</span><b>৳ ' + num(yComp) + '</b></div>' +
-          '<div class="pg-cpf-row"><span>মোট CPF</span><b>৳ ' + num(yEmp + yComp) + '</b></div>';
-        var donut = donutHtml(yEmp, yComp);
-        el('pgCpfSide').innerHTML = side + (donut || '<div class="pg-empty">এই বছরে CPF এন্ট্রি নেই।</div>');
-      }
-
-      /** নির্বাচিত বছরের প্রথম যে মাসে CPF রেকর্ড নেই ('yyyy-MM'); সব মাসে থাকলে ফাঁকা। */
-      function firstFreeCpfMonth(year) {
-        if (!year) return '';
-        var taken = {};
-        cpfRecords().forEach(function (r) { taken[r.monthKey] = true; });
-        for (var m = 1; m <= 12; m++) {
-          var key = year + '-' + ('0' + m).slice(-2);
-          if (!taken[key]) return key;
-        }
-        return '';
-      }
-
-      function stepCpfYear(dir) {
-        var years = cpfYearList();
-        var i = years.indexOf(state.cpfYear) + dir;
-        if (i < 0 || i >= years.length) return;
-        state.cpfYear = years[i];
-        renderCpfTab();
-      }
-
-      /* =====================================================
-         ট্যাব: ছুটির হিসাব (Earned Leave)
-         যোগদানের তারিখ থেকে প্রতি accrualDays দিনে ১ দিন অর্জিত ছুটি যোগ হয়
-         (Server_PowerGrid.gs > getLeaveData লাইভ হিসাব করে পাঠায়)। ভোগ ও
-         নগদায়ন এন্ট্রি হিসেবে সংরক্ষিত হয়; প্রতিটির পরের "স্থিতি" সার্ভারেই
-         রিক্যালকুলেট হয় (Ledger-এর মতো)।
-         ===================================================== */
-
-      function loadLeave(cb) {
-        var token = getToken();
-        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
-
-        hideLeaveError();
-        el('pgLeaveBody').classList.add('busy');
-
-        google.script.run
-          .withSuccessHandler(function (d) {
-            leaveState.data = d;
-            leaveState.loadedAt = Date.now();
-            leaveState.everLoaded = true;
-            el('pgLeaveBody').classList.remove('busy');
-            renderLeaveTab();
-            if (typeof cb === 'function') cb();
-          })
-          .withFailureHandler(function (err) {
-            el('pgLeaveBody').classList.remove('busy');
-            showLeaveError((err && err.message) || 'ছুটির তথ্য লোড করা যায়নি।');
-          })
-          .getLeaveData(token);
-      }
-
-      function showLeaveError(msg) {
-        el('pgLeaveErrorText').textContent = msg;
-        el('pgLeaveError').classList.add('show');
-      }
-      function hideLeaveError() { el('pgLeaveError').classList.remove('show'); }
-
-      function renderLeaveTab() {
-        var d = leaveState.data;
-        if (!d) return;
-        el('pgLeaveRuleNote').textContent =
-          'প্রতি ' + num(d.accrualDays) + ' দিনের চাকরির মেয়াদে ১ দিন অর্জিত ছুটি যোগ হয়। ' +
-          'অর্জিত ছুটি ভোগ বা নগদায়ন — দুইভাবেই ব্যবহার করা যায়; দুটোই স্থিতি থেকে বিয়োগ হয়।';
-        renderLeaveNotice(d);
-        renderLeaveTop(d);
-        renderLeaveTable(d);
-        renderLeaveSummary(d);
-      }
-
-      function renderLeaveNotice(d) {
-        el('pgLeaveNotice').innerHTML = d.joiningDate ? '' :
-          '<div class="pg-notice"><span>ছুটির হিসাব শুরু করতে আগে কর্মচারীর তথ্যে যোগদানের তারিখ দিন।</span>' +
-          '<button type="button" data-act="leave-emp">যোগদানের তারিখ যোগ করুন</button></div>';
-      }
-
-      function renderLeaveTop(d) {
-        var hasJoin = !!d.joiningDate;
-        var nextIn = hasJoin ? (d.accrualDays - (d.daysServed % d.accrualDays)) : null;
-
-        var sub1 = hasJoin ? ('যোগদান: ' + dispShort(d.joiningDate)) : 'যোগদানের তারিখ নেই';
-        var sub2 = hasJoin
-          ? ('প্রতি ' + num(d.accrualDays) + ' দিনে ১ দিন' + (nextIn !== null ? ' • পরবর্তী দিন: আর ' + num(nextIn) + ' দিন বাকি' : ''))
-          : '—';
-        var sub3 = 'ভোগ: ' + num(d.totalUsed) + ' দিন • নগদায়ন: ' + num(d.totalEncashed) + ' দিন';
-        var sub4 = hasJoin ? 'মোট অর্জিত থেকে ভোগ ও নগদায়ন বাদে' : '—';
-
-        el('pgLeaveTop').innerHTML =
-          cpfKpi('pg-ico-blue', SVG.calendar, 'চাকরির মেয়াদ', hasJoin ? (num(d.daysServed) + ' দিন') : '—', sub1) +
-          cpfKpi('pg-ico-green', SVG.coins, 'মোট অর্জিত ছুটি', hasJoin ? (num(d.totalEarned) + ' দিন') : '—', sub2) +
-          cpfKpi('pg-ico-red', SVG.calc, 'ভোগ/নগদায়নকৃত', num(d.totalUsed + d.totalEncashed) + ' দিন', sub3) +
-          cpfKpi('pg-ico-purple', SVG.hand, 'বর্তমান স্থিতি', num(d.balance) + ' দিন', sub4) +
-          (hasJoin ? '<button type="button" class="pg-add" data-act="leave-add"><span style="font-size:26px;line-height:1">＋</span> নতুন এন্ট্রি</button>' : '');
-      }
-
-      function leaveTypeTag(type) {
-        return type === 'Taken' ? '<span class="pg-tag taken">ভোগ</span>' : '<span class="pg-tag encash">নগদায়ন</span>';
-      }
-
-      function renderLeaveTable(d) {
-        var host = el('pgLeaveTable');
-        var rows = d.entries || [];
-
-        if (!rows.length) {
-          host.innerHTML = '<div class="pg-empty">এখনো কোনো এন্ট্রি নেই।' +
-            (d.joiningDate ? '<br><button type="button" class="pg-tag-btn" data-act="leave-add" style="margin-top:8px">＋ প্রথম এন্ট্রি যোগ করুন</button>' : '') +
-            '</div>';
-          return;
-        }
-
-        var body = rows.slice().reverse().map(function (r) {
-          return '<tr><td>' + dispShort(r.date) + '</td><td>' + leaveTypeTag(r.type) + '</td><td>' + num(r.days) + '</td><td>' + num(r.balance) + '</td>' +
-            '<td style="text-align:left;white-space:normal">' + esc(r.notes || '') + '</td>' +
-            '<td><span class="pg-actcol">' +
-              '<button type="button" class="pg-iconbtn" data-act="leave-edit" data-id="' + esc(r.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
-              '<button type="button" class="pg-iconbtn del" data-act="leave-del" data-id="' + esc(r.id) + '" title="মুছুন">' + ICON_DEL + '</button>' +
-            '</span></td></tr>';
-        }).join('');
-
-        host.innerHTML = '<div class="pg-table-wrap"><table class="pg-table"><thead><tr>' +
-          '<th style="text-align:left">তারিখ</th><th>ধরন</th><th>দিন</th><th>স্থিতি (দিন)</th><th style="text-align:left">নোট</th><th>অ্যাকশন</th>' +
-          '</tr></thead><tbody>' + body + '</tbody></table></div>';
-      }
-
-      function renderLeaveSummary(d) {
-        var host = el('pgLeaveSummary');
-        if (!d.joiningDate) { host.innerHTML = '<div class="pg-empty">তথ্য নেই।</div>'; return; }
-
-        var earned = d.totalEarned || 0;
-        var usedDays = d.totalUsed + d.totalEncashed;
-        var usedPct = earned > 0 ? Math.min(100, Math.max(0, usedDays / earned * 100)) : 0;
-
-        host.innerHTML =
-          '<div class="pg-cpf-row"><span>মোট অর্জিত</span><b>' + num(earned) + ' দিন</b></div>' +
-          '<div class="pg-cpf-row"><span>ভোগকৃত</span><b>' + num(d.totalUsed) + ' দিন</b></div>' +
-          '<div class="pg-cpf-row"><span>নগদায়নকৃত</span><b>' + num(d.totalEncashed) + ' দিন</b></div>' +
-          '<div class="pg-cpf-row"><span>বর্তমান স্থিতি</span><b class="' + (d.balance < 0 ? 'c-red' : 'c-green') + '">' + num(d.balance) + ' দিন</b></div>' +
-          '<div class="pg-leave-track"><div class="pg-leave-fill" style="width:' + usedPct + '%"></div></div>' +
-          '<div class="pg-m-note" style="margin:8px 0 0">ব্যবহৃত (ভোগ + নগদায়ন) মোট অর্জিতের ' + usedPct.toFixed(1) + '%।</div>';
-      }
-
-      /* ---------- মোডাল: ছুটির এন্ট্রি (নতুন / সম্পাদনা) ---------- */
-
-      function findLeaveEntry(id) {
-        var l = (leaveState.data && leaveState.data.entries) || [];
-        for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
-        return null;
-      }
-
-      function todayIsoDhaka_() {
-        var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
-        var y = '', m = '', dd = '';
-        parts.forEach(function (p) { if (p.type === 'year') y = p.value; if (p.type === 'month') m = p.value; if (p.type === 'day') dd = p.value; });
-        return y + '-' + m + '-' + dd;
-      }
-
-      function openLeaveEntryModal(editId) {
-        var d = leaveState.data;
-        if (!d || !d.joiningDate) { showToast('আগে যোগদানের তারিখ দিন।', 'warning'); return; }
-
-        var edit = editId ? findLeaveEntry(editId) : null;
-        var e = edit || {};
-
-        var body =
-          '<div class="form-grid">' +
-            '<div class="form-row"><label>তারিখ *</label><input type="date" class="form-input" id="lveDate" min="' + esc(d.joiningDate) + '" value="' + esc(edit ? e.date : todayIsoDhaka_()) + '"></div>' +
-            '<div class="form-row"><label>ধরন *</label><select class="form-input" id="lveType">' +
-              '<option value="Taken"' + (e.type !== 'Encashed' ? ' selected' : '') + '>ভোগ</option>' +
-              '<option value="Encashed"' + (e.type === 'Encashed' ? ' selected' : '') + '>নগদায়ন</option>' +
-            '</select></div>' +
-            '<div class="form-row span-2"><label>দিন সংখ্যা *</label><input type="number" min="0.5" step="any" class="form-input" id="lveDays" value="' + esc(edit ? e.days : '') + '"></div>' +
-            '<div class="form-row span-2"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="lveNotes" rows="2">' + esc(edit ? e.notes : '') + '</textarea></div>' +
-          '</div>' +
-          '<div class="pg-m-note">বর্তমান স্থিতি: ' + num(d.balance) + ' দিন। সংরক্ষণের পর তালিকা ও স্থিতি নতুন করে হিসাব হবে।</div>';
-
-        showModal(edit ? 'ছুটির এন্ট্রি সম্পাদনা' : 'নতুন ছুটির এন্ট্রি', body, [
-          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
-          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitLeaveEntry(editId); } }
-        ]);
-        el('modalBody').onclick = null;
-      }
-
-      function submitLeaveEntry(editId) {
-        var date = el('lveDate').value;
-        var type = el('lveType').value;
-        var days = el('lveDays').value;
-
-        if (!date) { showToast('তারিখ দিন।', 'warning'); return; }
-        if (!days || Number(days) <= 0) { showToast('দিন সংখ্যা ০-র বেশি লিখুন।', 'warning'); return; }
-
-        call('saveLeaveEntry', [getToken(), {
-          id: editId || '', date: date, type: type, days: days, notes: el('lveNotes').value
-        }], function () {
-          hideModal();
-          showToast('ছুটির এন্ট্রি সংরক্ষণ হয়েছে।', 'success');
-          loadLeave();
-        });
-      }
-
-      function confirmDeleteLeave(id) {
-        var e = findLeaveEntry(id);
-        if (!e) return;
-        confirmDialog(esc(dispShort(e.date)) + ' তারিখের এন্ট্রিটি মুছে ফেলবেন?', function () {
-          call('deleteLeaveEntry', [getToken(), id], function () {
-            showToast('এন্ট্রি মুছে ফেলা হয়েছে।', 'success');
-            loadLeave();
-          });
-        });
-      }
-
-      /* ---------- রিপোর্ট: PDF ও Excel ---------- */
-
-      function exportLeavePdf() {
-        var d = leaveState.data;
-        if (!d || !d.joiningDate) { showToast('আগে যোগদানের তারিখ দিন।', 'warning'); return; }
-
-        var rows = (d.entries || []).slice().reverse();
-        var trs = rows.map(function (r) {
-          return '<tr><td>' + dispShort(r.date) + '</td><td>' + (r.type === 'Taken' ? 'ভোগ' : 'নগদায়ন') + '</td><td>' + num(r.days) + '</td><td>' + num(r.balance) + '</td><td>' + esc(r.notes || '') + '</td></tr>';
-        }).join('');
-
-        printHtml('ছুটির হিসাব',
-          '<h1>ছুটির হিসাব</h1>' + empBlock() +
-          '<div class="sum"><div>চাকরির মেয়াদ<b>' + num(d.daysServed) + ' দিন</b></div>' +
-          '<div>মোট অর্জিত ছুটি<b>' + num(d.totalEarned) + ' দিন</b></div>' +
-          '<div>ভোগকৃত<b>' + num(d.totalUsed) + ' দিন</b></div>' +
-          '<div>নগদায়নকৃত<b>' + num(d.totalEncashed) + ' দিন</b></div>' +
-          '<div>বর্তমান স্থিতি<b>' + num(d.balance) + ' দিন</b></div></div>' +
-          '<h2>এন্ট্রি তালিকা</h2><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>দিন</th><th>স্থিতি</th><th>নোট</th></tr></thead><tbody>' +
-          (trs || '<tr><td colspan="5">কোনো এন্ট্রি নেই</td></tr>') + '</tbody></table>' +
-          '<div class="sub">নিয়ম: প্রতি ' + num(d.accrualDays) + ' দিনের চাকরির মেয়াদে ১ দিন অর্জিত ছুটি যোগ হয়।</div>');
-      }
-
-      function exportLeaveCsv() {
-        var d = leaveState.data;
-        var rows = (d && d.entries) || [];
-        if (!rows.length) { showToast('এক্সপোর্ট করার মতো কোনো এন্ট্রি নেই।', 'warning'); return; }
-
-        var lines = [['Date', 'Type', 'Days', 'Balance', 'Notes'].map(csvCell).join(',')];
-        rows.forEach(function (r) {
-          lines.push([csvCell(r.date), csvCell(r.type === 'Taken' ? 'Taken' : 'Encashed'), r.days, r.balance, csvCell(r.notes)].join(','));
-        });
-        downloadCsv('power-grid-leave.csv', lines);
+          '</div></div>' + manage;
       }
 
       /* =====================================================
@@ -1378,7 +865,7 @@
 
         showModal('CPF এন্ট্রিসমূহ', body, [
           { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
-          { label: '＋ নতুন CPF এন্ট্রি', className: 'btn-primary', onClick: function () { openCpfEntryModal('', '', true); } }
+          { label: '＋ নতুন CPF এন্ট্রি', className: 'btn-primary', onClick: function () { openCpfEntryModal(''); } }
         ]);
         setModalWide(true);
 
@@ -1386,9 +873,9 @@
           var st = e.target.closest('[data-c-st]');
           if (st) { openEntryModal(st.getAttribute('data-c-st')); return; }
           var ed = e.target.closest('[data-c-edit]');
-          if (ed) { openCpfEntryModal(ed.getAttribute('data-c-edit'), '', true); return; }
+          if (ed) { openCpfEntryModal(ed.getAttribute('data-c-edit')); return; }
           var dl = e.target.closest('[data-c-del]');
-          if (dl) confirmDeleteCpf(dl.getAttribute('data-c-del'), true);
+          if (dl) confirmDeleteCpf(dl.getAttribute('data-c-del'));
         };
       }
 
@@ -1398,22 +885,20 @@
         return null;
       }
 
-      /** returnToList = true হলে (তালিকা মোডাল থেকে এলে) কাজ শেষে আবার তালিকা মোডাল খোলে; নইলে শুধু বন্ধ হয়। */
-      function confirmDeleteCpf(id, returnToList) {
+      function confirmDeleteCpf(id) {
         var h = findCpfEntry(id);
         if (!h) return;
         confirmDialog(esc(monthTitle(h.monthKey)) + ' মাসের CPF এন্ট্রিটি মুছে ফেলবেন?', function () {
           call('deletePowerGridCpfEntry', [getToken(), id], function () {
             showToast('CPF এন্ট্রি মুছে ফেলা হয়েছে।', 'success');
-            load(returnToList ? openCpfListModal : null);
+            load(openCpfListModal);
           });
         });
       }
 
-      /** presetMonth = নতুন এন্ট্রির জন্য আগে থেকে বসানো মাস ('yyyy-MM'), ফাঁকা হতে পারে। */
-      function openCpfEntryModal(id, presetMonth, returnToList) {
+      function openCpfEntryModal(id) {
         var edit = id ? findCpfEntry(id) : null;
-        var monthVal = edit ? edit.monthKey : (presetMonth || '');
+        var monthVal = edit ? edit.monthKey : '';
         var body =
           '<div class="form-row"><label>মাস *</label><input type="month" class="form-input" id="pgcMonth" value="' + esc(monthVal) + '"' + (edit ? ' disabled' : '') + '></div>' +
           '<div class="form-grid">' +
@@ -1424,14 +909,14 @@
           '<div class="pg-m-note">এটি শুধু সেই মাসের জন্য, যার বেতন স্টেটমেন্ট এখানে নেই।</div>';
 
         showModal(edit ? 'CPF এন্ট্রি সম্পাদনা — ' + monthTitle(edit.monthKey) : 'নতুন CPF এন্ট্রি', body, [
-          { label: 'বাতিল', className: 'btn-outline', onClick: returnToList ? openCpfListModal : hideModal },
-          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitCpfEntry(edit, returnToList); } }
+          { label: 'বাতিল', className: 'btn-outline', onClick: openCpfListModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitCpfEntry(edit); } }
         ]);
         setModalWide(false);
         el('modalBody').onclick = null;
       }
 
-      function submitCpfEntry(edit, returnToList) {
+      function submitCpfEntry(edit) {
         var monthKey = edit ? edit.monthKey : el('pgcMonth').value;
         if (!/^\d{4}-\d{2}$/.test(monthKey)) { showToast('সঠিক মাস নির্বাচন করুন।', 'warning'); return; }
         var emp = Number(el('pgcEmp').value) || 0;
@@ -1443,14 +928,7 @@
           id: edit ? edit.id : '', monthKey: monthKey, employeeCpf: emp, companyCpf: comp, notes: el('pgcNotes').value
         }], function () {
           showToast('CPF এন্ট্রি সংরক্ষণ হয়েছে।', 'success');
-          if (returnToList) {
-            load(openCpfListModal);
-          } else {
-            hideModal();
-            // নতুন এন্ট্রি যে বছরের, ট্যাব সেই বছরেই খুলুক
-            state.cpfYear = monthKey.substring(0, 4);
-            load();
-          }
+          load(openCpfListModal);
         });
       }
 
@@ -1478,7 +956,6 @@
                 hideModal();
                 showToast('কর্মচারীর তথ্য সংরক্ষণ হয়েছে।', 'success');
                 load();
-                loadLeave();
               });
           } }
         ]);
@@ -1547,36 +1024,22 @@
           '</tbody><tfoot><tr><td>মোট</td><td>' + num(g) + '</td><td>' + num(d) + '</td><td>' + num(n) + '</td><td>' + num(e) + '</td><td>' + num(c) + '</td></tr></tfoot></table>');
       }
 
-      /** yearArg না দিলে বেতন ট্যাবে নির্বাচিত স্টেটমেন্টের বছর ধরা হয়; CPF হিসাব ট্যাব থেকে সেই ট্যাবের বছর পাঠানো হয়। */
-      function exportCpfPdf(yearArg) {
-        var year = yearArg || selectedYear();
+      function exportCpfPdf() {
+        var year = selectedYear();
         var rows = cpfYearRecords(year);
         if (!rows.length) { showToast('এই বছরে কোনো CPF এন্ট্রি নেই।', 'warning'); return; }
-        var cum = cpfCumulative();
-        var e = 0, c = 0;
+        var e = 0, c = 0, run = 0;
         var trs = rows.map(function (r) {
-          e += r.emp; c += r.comp;
-          return '<tr><td>' + monthTitle(r.monthKey) + '</td><td>' + num(r.emp) + '</td><td>' + num(r.comp) + '</td><td>' + num(r.emp + r.comp) + '</td><td>' + num(cum[r.monthKey]) + '</td></tr>';
+          e += r.emp; c += r.comp; run += r.emp + r.comp;
+          return '<tr><td>' + monthTitle(r.monthKey) + '</td><td>' + num(r.emp) + '</td><td>' + num(r.comp) + '</td><td>' + num(r.emp + r.comp) + '</td><td>' + num(run) + '</td></tr>';
         }).join('');
         printHtml('CPF সারাংশ — ' + year,
           '<h1>CPF সারাংশ — ' + esc(bn(year)) + '</h1>' + empBlock() +
           '<table><thead><tr><th>মাস</th><th>Employee CPF</th><th>Company CPF</th><th>মোট CPF</th><th>ক্রমযোজিত মোট</th></tr></thead><tbody>' + trs +
-          '</tbody><tfoot><tr><td>মোট (' + esc(bn(year)) + ')</td><td>' + num(e) + '</td><td>' + num(c) + '</td><td>' + num(e + c) + '</td><td></td></tr></tfoot></table>');
+          '</tbody><tfoot><tr><td>মোট (YTD)</td><td>' + num(e) + '</td><td>' + num(c) + '</td><td>' + num(e + c) + '</td><td></td></tr></tfoot></table>');
       }
 
       function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
-
-      function downloadCsv(fileName, lines) {
-        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
-      }
 
       function exportExcel() {
         var l = list();
@@ -1595,21 +1058,176 @@
         cpfRecords().forEach(function (r) {
           lines.push([csvCell(r.monthKey), r.emp, r.comp, r.emp + r.comp, csvCell(r.source === 'statement' ? 'Salary statement' : 'Earlier entry')].join(','));
         });
-        downloadCsv('power-grid-salary.csv', lines);
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'power-grid-salary.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
       }
 
-      /** CPF হিসাব ট্যাব: শুধু CPF তালিকা (সব বছর, ক্রমযোজিত মোটসহ) */
-      function exportCpfCsv() {
-        var recs = cpfRecords();
-        if (!recs.length) { showToast('এক্সপোর্ট করার মতো কোনো CPF এন্ট্রি নেই।', 'warning'); return; }
-        var cum = cpfCumulative();
-        function r2(x) { return Math.round(x * 100) / 100; }
-        var lines = [['Month', "Employee's CPF", "Company's CPF", 'Total CPF', 'Cumulative Total', 'Source'].map(csvCell).join(',')];
-        recs.forEach(function (r) {
-          lines.push([csvCell(r.monthKey), r2(r.emp), r2(r.comp), r2(r.emp + r.comp), r2(cum[r.monthKey]),
-            csvCell(r.source === 'statement' ? 'Salary statement' : 'Earlier entry')].join(','));
+      /* =====================================================
+         ট্যাব: ছুটির হিসাব (Leave) — Leave sheet: EntryID, Date, Type, Days, Balance, Notes
+         Type: 'Earned' (অর্জিত ছুটি) বা 'Taken' (ছুটি ভোগ)। Balance সার্ভারে
+         রিক্যালকুলেট হয় (তারিখ অনুযায়ী ক্রমযোজিত)।
+         ===================================================== */
+      var LEAVE_TYPE_LABEL = { Earned: 'অর্জিত', Taken: 'ভোগ' };
+
+      function leaveList() { return (leaveState.data && leaveState.data.entries) || []; }
+      function findLeave(id) {
+        var l = leaveList();
+        for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+        return null;
+      }
+      function setLeaveBusy(b) { el('pgLeaveBody').classList.toggle('busy', !!b); }
+      function showLeaveError(msg) { el('pgLeaveErrorText').textContent = msg; el('pgLeaveError').classList.add('show'); }
+      function hideLeaveError() { el('pgLeaveError').classList.remove('show'); }
+
+      function loadLeave(cb) {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        var id = ++leaveState.reqId;
+        hideLeaveError();
+        setLeaveBusy(true);
+
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== leaveState.reqId) return;
+            leaveState.data = d;
+            leaveState.loadedAt = Date.now();
+            leaveState.everLoaded = true;
+            setLeaveBusy(false);
+            renderLeave();
+            if (typeof cb === 'function') cb();
+          })
+          .withFailureHandler(function (err) {
+            if (id !== leaveState.reqId) return;
+            setLeaveBusy(false);
+            showLeaveError((err && err.message) || 'ছুটির তথ্য লোড করা যায়নি।');
+          })
+          .getLeaveData(token);
+      }
+
+      function leaveKpi(cls, svg, label, value) {
+        return '<div class="pg-card pg-kpi"><div class="pg-kpi-ico ' + cls + '">' + svg + '</div>' +
+          '<div><div class="pg-kpi-label">' + label + '</div><div class="pg-kpi-value">' + value + '</div></div></div>';
+      }
+
+      function renderLeave() {
+        var d = leaveState.data;
+        if (!d) return;
+
+        el('pgLeaveTop').innerHTML =
+          leaveKpi('pg-ico-green', SVG.coins, 'মোট অর্জিত ছুটি', num(d.totalEarned) + ' দিন') +
+          leaveKpi('pg-ico-red', SVG.calc, 'মোট ভোগকৃত ছুটি', num(d.totalTaken) + ' দিন') +
+          leaveKpi('pg-ico-blue', SVG.wallet, 'বর্তমান স্থিতি', num(d.balance) + ' দিন') +
+          '<button type="button" class="pg-add" data-act="leave-add"><span style="font-size:26px;line-height:1">＋</span> নতুন এন্ট্রি</button>';
+
+        var host = el('pgLeaveTable');
+        var rows = leaveList().slice().reverse();
+        if (!rows.length) {
+          host.innerHTML = '<div class="pg-empty">এখনো কোনো ছুটির এন্ট্রি নেই।</div>';
+          return;
+        }
+
+        host.innerHTML = '<div class="pg-table-wrap"><table class="pg-table">' +
+          '<thead><tr><th style="text-align:left">তারিখ</th><th>ধরন</th><th>দিন</th><th>স্থিতি (দিন)</th><th style="text-align:left">নোট</th><th>অ্যাকশন</th></tr></thead><tbody>' +
+          rows.map(function (r) {
+            var cls = r.type === 'Earned' ? 'c-green' : 'c-red';
+            return '<tr><td style="text-align:left">' + dispShort(r.date) + '</td>' +
+              '<td><span class="' + cls + '">' + (LEAVE_TYPE_LABEL[r.type] || r.type) + '</span></td>' +
+              '<td>' + num(r.days) + '</td><td>' + num(r.balance) + '</td>' +
+              '<td style="text-align:left">' + esc(r.notes || '') + '</td>' +
+              '<td><button type="button" class="pg-iconbtn" data-act="leave-edit" data-id="' + esc(r.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
+              '<button type="button" class="pg-iconbtn del" data-act="leave-del" data-id="' + esc(r.id) + '" title="মুছুন">' + ICON_DEL + '</button></td></tr>';
+          }).join('') + '</tbody></table></div>';
+      }
+
+      function openLeaveEntryModal(editId) {
+        var edit = editId ? findLeave(editId) : null;
+        var e = edit || {};
+        var body =
+          '<div class="form-row"><label>তারিখ *</label><input type="date" class="form-input" id="lvfDate" value="' + esc(e.date || '') + '"></div>' +
+          '<div class="form-row"><label>ধরন *</label><select class="form-input" id="lvfType">' +
+            '<option value="Earned"' + (e.type === 'Earned' ? ' selected' : '') + '>অর্জিত ছুটি (যোগ)</option>' +
+            '<option value="Taken"' + (e.type === 'Taken' || !e.type ? ' selected' : '') + '>ছুটি ভোগ (বিয়োগ)</option>' +
+          '</select></div>' +
+          '<div class="form-row"><label>দিন সংখ্যা *</label><input type="number" min="0" step="any" class="form-input" id="lvfDays" value="' + esc(e.days || '') + '"></div>' +
+          '<div class="form-row"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="lvfNotes" rows="2">' + esc(e.notes || '') + '</textarea></div>';
+
+        showModal(edit ? 'ছুটির এন্ট্রি সম্পাদনা' : 'নতুন ছুটির এন্ট্রি', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitLeaveEntry(edit); } }
+        ]);
+        el('modalBody').onclick = null;
+      }
+
+      function submitLeaveEntry(edit) {
+        var date = el('lvfDate').value;
+        var type = el('lvfType').value;
+        var days = el('lvfDays').value;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { showToast('সঠিক তারিখ দিন।', 'warning'); return; }
+        if (!days || Number(days) <= 0) { showToast('দিনের সংখ্যা ০-এর বেশি লিখুন।', 'warning'); return; }
+
+        call('saveLeaveEntry', [getToken(), {
+          id: edit ? edit.id : '', date: date, type: type, days: days, notes: el('lvfNotes').value
+        }], function (d) {
+          hideModal();
+          showToast('ছুটির এন্ট্রি সংরক্ষণ হয়েছে।', 'success');
+          leaveState.data = d;
+          leaveState.loadedAt = Date.now();
+          renderLeave();
         });
-        downloadCsv('power-grid-cpf.csv', lines);
+      }
+
+      function confirmDeleteLeave(id) {
+        var e = findLeave(id);
+        if (!e) return;
+        confirmDialog(dispShort(e.date) + ' তারিখের ' + (LEAVE_TYPE_LABEL[e.type] || e.type) + ' এন্ট্রিটি (' + num(e.days) + ' দিন) মুছে ফেলবেন?', function () {
+          call('deleteLeaveEntry', [getToken(), id], function (d) {
+            showToast('এন্ট্রি মুছে ফেলা হয়েছে।', 'success');
+            leaveState.data = d;
+            leaveState.loadedAt = Date.now();
+            renderLeave();
+          });
+        });
+      }
+
+      function exportLeavePdf() {
+        var rows = leaveList();
+        if (!rows.length) { showToast('এক্সপোর্ট করার মতো কোনো এন্ট্রি নেই।', 'warning'); return; }
+        var d = leaveState.data;
+        var trs = rows.map(function (r) {
+          return '<tr><td>' + dispShort(r.date) + '</td><td>' + (LEAVE_TYPE_LABEL[r.type] || r.type) + '</td><td>' + num(r.days) + '</td><td>' + num(r.balance) + '</td><td>' + esc(r.notes || '') + '</td></tr>';
+        }).join('');
+        printHtml('ছুটির হিসাব',
+          '<h1>ছুটির হিসাব</h1>' + empBlock() +
+          '<div class="sum"><div>মোট অর্জিত ছুটি<b>' + num(d.totalEarned) + ' দিন</b></div>' +
+          '<div>মোট ভোগকৃত ছুটি<b>' + num(d.totalTaken) + ' দিন</b></div>' +
+          '<div>বর্তমান স্থিতি<b>' + num(d.balance) + ' দিন</b></div></div>' +
+          '<table><thead><tr><th>তারিখ</th><th>ধরন</th><th>দিন</th><th>স্থিতি</th><th>নোট</th></tr></thead><tbody>' + trs + '</tbody></table>');
+      }
+
+      function exportLeaveCsv() {
+        var rows = leaveList();
+        if (!rows.length) { showToast('এক্সপোর্ট করার মতো কোনো এন্ট্রি নেই।', 'warning'); return; }
+        var lines = [['Date', 'Type', 'Days', 'Balance', 'Notes'].map(csvCell).join(',')];
+        rows.forEach(function (r) {
+          lines.push([csvCell(r.date), csvCell(r.type), r.days, r.balance, csvCell(r.notes)].join(','));
+        });
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'power-grid-leave.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
       }
 
       /* =====================================================
@@ -1642,20 +1260,8 @@
         else if (act === 'pdf-cpf') exportCpfPdf();
         else if (act === 'excel') exportExcel();
         else if (act === 'cpf-list') openCpfListModal();
-        /* CPF হিসাব ট্যাব */
-        else if (act === 'cpf-prev-year') stepCpfYear(-1);
-        else if (act === 'cpf-next-year') stepCpfYear(1);
-        else if (act === 'cpf-year') { state.cpfYear = b.getAttribute('data-year'); renderCpfTab(); }
-        else if (act === 'cpf-add') openCpfEntryModal('', firstFreeCpfMonth(state.cpfYear), false);
-        else if (act === 'cpf-add-month') openCpfEntryModal('', b.getAttribute('data-key'), false);
-        else if (act === 'cpf-edit') openCpfEntryModal(b.getAttribute('data-id'), '', false);
-        else if (act === 'cpf-del') confirmDeleteCpf(b.getAttribute('data-id'), false);
-        else if (act === 'cpf-open-st') openEntryModal(b.getAttribute('data-key'));
-        else if (act === 'cpf-pdf-year') exportCpfPdf(state.cpfYear);
-        else if (act === 'cpf-excel') exportCpfCsv();
-        /* ছুটির হিসাব ট্যাব */
+        /* ছুটির হিসাব */
         else if (act === 'leave-retry') loadLeave();
-        else if (act === 'leave-emp') openEmpModal();
         else if (act === 'leave-add') openLeaveEntryModal('');
         else if (act === 'leave-edit') openLeaveEntryModal(b.getAttribute('data-id'));
         else if (act === 'leave-del') confirmDeleteLeave(b.getAttribute('data-id'));
@@ -1663,18 +1269,24 @@
         else if (act === 'leave-excel') exportLeaveCsv();
       });
 
-      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      /* ---------- পেজ ও সাবট্যাব খোলা হলে (এবং লগইনের পরে) লোড ---------- */
       function isActive() { return root().classList.contains('active'); }
       function isAuthed() { return document.body.classList.contains('authenticated'); }
+      function isLeaveActive() {
+        var panel = document.getElementById('subtab-pg-leave');
+        return !!panel && panel.classList.contains('active');
+      }
 
       function maybeLoad() {
         if (!isActive() || !isAuthed()) return;
         if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
-        if (!leaveState.everLoaded || Date.now() - leaveState.loadedAt > 60000) loadLeave();
+        if (isLeaveActive() && (!leaveState.everLoaded || Date.now() - leaveState.loadedAt > 60000)) loadLeave();
       }
 
       new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
       new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      var pgLeavePanel = document.getElementById('subtab-pg-leave');
+      if (pgLeavePanel) new MutationObserver(maybeLoad).observe(pgLeavePanel, { attributes: true, attributeFilter: ['class'] });
       maybeLoad();
     })();
   </script>

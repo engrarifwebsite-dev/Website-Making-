@@ -2,70 +2,32 @@
 
 ## 2026-09-22
 
-### Power Grid: ছুটির হিসাব (Earned Leave) tab
-- Rule: from the joining date (Employment tab), 1 day of earned leave accrues
-  for every 11 days of service (`PG_LEAVE_ACCRUAL_DAYS` in
-  `Server_PowerGrid.gs`). Earned leave is never stored — it's always computed
-  live from the joining date up to today (or, for a past entry's Balance
-  snapshot, up to that entry's own date).
-- Only leave actually taken (ভোগ) or encashed (নগদায়ন) is logged, in the
-  `Leave` sheet (EntryID, Date, Type, Days, Balance, Notes). Both reduce the
-  balance. Every row's Balance is recomputed in date order after every
-  add/edit/delete, the same way `Server_Budget.gs` recalculates its Ledger.
-- New tab UI: four summary cards (days served, total earned, used/encashed,
-  current balance — with a "next day earned in N days" hint) plus a
-  "নতুন এন্ট্রি" button; an entries table (date, type, days, balance, notes,
-  edit/delete); a balance-usage progress bar and rule note in the side
-  column; PDF (print → Save as PDF) and Excel (CSV) export.
-- If no joining date is set yet, a notice directs the user to add it via the
-  existing employee-info modal (shared with বেতন ও ভাতা); the leave tab
-  refreshes automatically once it's saved.
-- Files changed: `Page_PowerGrid.html` only. Server support (`getLeaveData`,
-  `saveLeaveEntry`, `deleteLeaveEntry`, and the `Leave` sheet) already existed
-  in `Server_PowerGrid.gs`.
-
-### Power Grid: CPF হিসাব card removed from বেতন ও ভাতা tab
-- The "CPF হিসাব" card in the right column of বেতন ও ভাতা is removed —
-  the "CPF হিসাব" tab (added 2026-09-21) is now the only place it lives, so
-  the summary isn't shown twice.
-- Files changed: `Page_PowerGrid.html` only.
-
-## 2026-09-21
-
-### Power Grid: CPF হিসাব tab and card rename
-- The CPF card in the right column of "বেতন ও ভাতা" is renamed from
-  "CPF বার্ষিক সারাংশ" to "CPF হিসাব". The year moved out of the title into a
-  small chip beside it, and a new "সম্পূর্ণ CPF হিসাব দেখুন →" button opens the
-  new tab.
-- New subtab "CPF হিসাব" (between "বেতন ও ভাতা" and "ছুটির হিসাব"):
-  - four cards (total CPF of all years, Employee's CPF, Company's CPF, total of
-    the chosen year) and a "নতুন CPF এন্ট্রি" button;
-  - monthly list for a chosen year (‹ › to change year), always showing all 12
-    months with Employee, Company, total, running cumulative total (all years)
-    and the source. A month with no record shows "＋ এন্ট্রি যোগ";
-  - Employee's vs Company's monthly bar chart for that year;
-  - year-by-year summary table (click a row to jump to that year);
-  - Employee/Company ratio donut for the chosen year;
-  - quick actions: this year's CPF summary (PDF), CPF list (Excel/CSV),
-    earlier CPF entries list.
-- Earlier CPF contributions (months without a salary statement) can be added,
-  edited and deleted straight from the tab. A month that has a salary statement
-  always takes its CPF from the statement (edit it through the statement).
-- The existing "CPF সারাংশ (PDF)" quick action on the salary tab works as before.
-- Files changed: `Page_PowerGrid.html` only. No server or sheet change; the tab
-  uses the data `getPowerGridData` already returns.
-
 ### Power Grid: two tabs and Training Bill
 - The Power Grid page now has subtabs: "বেতন ও ভাতা" (the existing salary
-  statement, CPF summary and reports, unchanged) and "ছুটির হিসাব" (new tab,
-  placeholder for now; its content comes in a later step).
-- New earning line "Training Bill" (after Local Training) in the Earnings card,
-  the entry form, the details modal, PDF and Excel export. It counts in Gross
-  Salary and in Total Allowance.
+  statement, CPF summary and reports, unchanged) and "ছুটির হিসাব" (new tab).
+- "ছুটির হিসাব" tracks earned/taken leave as a simple running-balance ledger,
+  reusing the `Leave` tab Setup_PowerGrid.gs already creates (EntryID, Date,
+  Type, Days, Balance, Notes). Entries can be "অর্জিত" (Earned — adds to the
+  balance) or "ভোগ" (Taken — subtracts). The Balance column is recalculated
+  in date order on every add/edit/delete, the same way `Server_Budget.gs`
+  recalculates its Ledger.
+- New tab UI: three summary cards (total earned, total taken, current
+  balance) plus a "নতুন এন্ট্রি" button; an entries table (date, type, days,
+  balance, notes, edit/delete); PDF (print → Save as PDF) and Excel (CSV)
+  export. The tab's data loads the first time it is opened, not before.
+- New earning line "Training Bill" (after Local Training) in the Earnings
+  card, the entry form, the details modal, PDF and Excel export. It counts
+  in Gross Salary and in Total Allowance.
 - Stored in a new `TrainingBill` column (column 39) at the end of
   `SalaryStatements`; the header is added automatically and old rows read 0.
-- Files changed: `Page_PowerGrid.html`, `Server_PowerGrid.gs`.
-  The comments in `Server_PowerGrid.gs` now describe the new CPF rule.
+- New server file `Server_Leave.gs`: `getLeaveData`, `saveLeaveEntry`,
+  `deleteLeaveEntry`. Reuses `pgSs_`, `pgAuth_`, `pgNum_`, `pgDateStr_` from
+  `Server_PowerGrid.gs` (same Apps Script project).
+- Files changed: `Page_PowerGrid.html`, `Server_PowerGrid.gs` (Training
+  Bill field + CPF-rule comments corrected to match the 2026-09-21 change).
+  New file: `Server_Leave.gs`.
+
+## 2026-09-21
 
 ### Power Grid: CPF card rule and page cleanup
 - The CPF (Provident Fund) card now follows this rule:

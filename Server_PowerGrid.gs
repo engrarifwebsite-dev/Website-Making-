@@ -1,6 +1,6 @@
 /**
  * Server_PowerGrid.gs
- * Server support for the পাওয়ার গ্রিড page (Page_PowerGrid.html), বেতন ও ভাতা tab.
+ * Server support for the পাওয়ার গ্রিড page (Page_PowerGrid.html), tab "বেতন ও ভাতা".
  *
  * Tabs used in the Power_Grid spreadsheet (all are created automatically):
  *   "SalaryStatements" : one row per month (see PG_STATEMENT_HEADERS + PG_EXTRA_*)
@@ -13,7 +13,9 @@
  *
  * The older "Salary" / "CPF" / "Increment" tabs from Setup_PowerGrid.gs are
  * NOT touched. SalaryStatements has one column per line of the approved salary
- * statement design (earnings, deductions, employee + company CPF).
+ * statement design (earnings, deductions, CPF).
+ *
+ * The other tab of the page, "ছুটির হিসাব", is served by Server_Leave.gs.
  *
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs (generateUniqueId),
  * Utils_Sheets.gs (ensureSheetWithHeaders), Server_PersonalInfo.gs (getProfile).
@@ -29,35 +31,37 @@ var PG_FIELDS = [
   'medicalAllowance', 'conveyanceAllowance', 'shiftAllowance', 'responsibilityAllowance', 'specialAllowance',
   // Deductions
   'houseRentDeduction', 'cpfDeduction', 'incomeTax', 'cpfAdvance', 'revenueDeduction', 'othersDeduction',
-  // CPF
+  // CPF (columns 19-20 are no longer used by the page)
   'employeeCpf', 'companyCpf'
 ];
 
 /**
  * Later additions. They live in columns 25 onward, AFTER UpdatedAt, so rows
  * saved before they existed keep their layout (old rows simply read 0 for
- * these). Headers are added automatically to an existing sheet.
+ * these). Headers are added automatically to an existing sheet. New lines
+ * are always appended at the END of this list (a new column at the right).
  *   Earnings   : employerCpfEarning ... localTraining  (columns 25-36)
  *   Deductions : donation, taxWppwfm                   (columns 37-38)
  *   Earnings   : trainingBill                          (column 39)
- * "employerCpfEarning" is also the company's CPF contribution, and
- * "cpfDeduction" is the total CPF (employee + company). The page derives the
- * CPF section from these two: Employee's = CPF Deduction − Employer's
- * Contribution; Company's = Employer's Contribution. The old EmployeeCPF /
- * CompanyCPF columns (19-20) are no longer used by the page.
- * New fields must always be appended at the END of these two lists.
+ * CPF rule used by the page:
+ *   "cpfDeduction" is the TOTAL CPF (employee + company share),
+ *   "employerCpfEarning" is the company's share, so
+ *   Employee's CPF = cpfDeduction − employerCpfEarning.
+ * The old EmployeeCPF / CompanyCPF columns (19-20) are no longer used by the page.
  */
 var PG_EXTRA_FIELDS = [
   'employerCpfEarning', 'residentElectricity', 'chargeAllowance',
   'tiffinBill', 'taDa', 'honorarium', 'incentiveBonus', 'wppwfmProfit',
   'festivalBonus', 'leaveEncashment', 'banglaNoboborsha', 'localTraining',
-  'donation', 'taxWppwfm', 'trainingBill'
+  'donation', 'taxWppwfm',
+  'trainingBill'
 ];
 var PG_EXTRA_HEADERS = [
   'EmployerCPFEarning', 'ResidentElectricityAllowance', 'ChargeAllowance',
   'TiffinBill', 'TA_DA', 'Honorarium', 'IncentiveBonus', 'WPPWFMProfit',
   'FestivalBonus', 'LeaveEncashment', 'BanglaNoboborsha', 'LocalTraining',
-  'Donation', 'TaxOnWPPWFM', 'TrainingBill'
+  'Donation', 'TaxOnWPPWFM',
+  'TrainingBill'
 ];
 var PG_EXTRA_COL = 25;
 
@@ -106,6 +110,13 @@ function pgMonthKey_(v) {
 
 function pgStatementSheet_() {
   var sheet = ensureSheetWithHeaders(pgSs_(), 'SalaryStatements', PG_STATEMENT_HEADERS);
+
+  // make sure the sheet has room for every extra column (a new column at the right)
+  var needCols = PG_EXTRA_COL + PG_EXTRA_HEADERS.length - 1;
+  if (sheet.getMaxColumns() < needCols) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), needCols - sheet.getMaxColumns());
+  }
+
   var head = sheet.getRange(1, PG_EXTRA_COL, 1, PG_EXTRA_HEADERS.length).getValues()[0];
   for (var h = 0; h < PG_EXTRA_HEADERS.length; h++) {
     if (!head[h]) {
@@ -229,7 +240,7 @@ function getPowerGridData(token) {
 }
 
 /**
- * st = { monthKey 'yyyy-MM', notes, basic, educationAllowance, ... (see PG_FIELDS) }
+ * st = { monthKey 'yyyy-MM', notes, basic, educationAllowance, ... (see PG_FIELDS and PG_EXTRA_FIELDS) }
  * One statement per month: saving an existing month updates it.
  * Returns the month key.
  */
