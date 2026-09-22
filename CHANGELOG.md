@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## 2026-09-22
+
+### Power Grid: ছুটির হিসাব (Earned Leave) tab
+- Rule: from the joining date (Employment tab), 1 day of earned leave accrues
+  for every 11 days of service (`PG_LEAVE_ACCRUAL_DAYS` in
+  `Server_PowerGrid.gs`). Earned leave is never stored — it's always computed
+  live from the joining date up to today (or, for a past entry's Balance
+  snapshot, up to that entry's own date).
+- Only leave actually taken (ভোগ) or encashed (নগদায়ন) is logged, in the
+  `Leave` sheet (EntryID, Date, Type, Days, Balance, Notes). Both reduce the
+  balance. Every row's Balance is recomputed in date order after every
+  add/edit/delete, the same way `Server_Budget.gs` recalculates its Ledger.
+- New tab UI: four summary cards (days served, total earned, used/encashed,
+  current balance — with a "next day earned in N days" hint) plus a
+  "নতুন এন্ট্রি" button; an entries table (date, type, days, balance, notes,
+  edit/delete); a balance-usage progress bar and rule note in the side
+  column; PDF (print → Save as PDF) and Excel (CSV) export.
+- If no joining date is set yet, a notice directs the user to add it via the
+  existing employee-info modal (shared with বেতন ও ভাতা); the leave tab
+  refreshes automatically once it's saved.
+- Files changed: `Page_PowerGrid.html` only. Server support (`getLeaveData`,
+  `saveLeaveEntry`, `deleteLeaveEntry`, and the `Leave` sheet) already existed
+  in `Server_PowerGrid.gs`.
+
+### Power Grid: CPF হিসাব card removed from বেতন ও ভাতা tab
+- The "CPF হিসাব" card in the right column of বেতন ও ভাতা is removed —
+  the "CPF হিসাব" tab (added 2026-09-21) is now the only place it lives, so
+  the summary isn't shown twice.
+- Files changed: `Page_PowerGrid.html` only.
+
 ## 2026-09-21
 
 ### Power Grid: CPF হিসাব tab and card rename

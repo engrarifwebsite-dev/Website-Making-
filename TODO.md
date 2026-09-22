@@ -20,12 +20,14 @@
 - [x] Power Grid: CPF card rule (Employee's = CPF Deduction − Employer's Contribution) and removal of the info note card
 - [x] Power Grid: two subtabs ("বেতন ও ভাতা", "ছুটির হিসাব") and the Training Bill earning line
 - [x] Power Grid: CPF card renamed "CPF হিসাব" and a new "CPF হিসাব" tab (monthly list with running total, chart, yearly summary, add/edit earlier entries, PDF/CSV)
+- [x] Power Grid: CPF হিসাব card removed from বেতন ও ভাতা tab (now lives only in the "CPF হিসাব" tab)
+- [x] Power Grid: ছুটির হিসাব tab content (Leave) — accrual rule, ভোগ/নগদায়ন entries, PDF/CSV export
 
 ## In Progress
 - (none)
 
 ## Pending (by phase)
-- [ ] Power Grid: ছুটির হিসাব tab content (Leave), then CPF Loan and Increment sections (Phase 8, remaining part)
+- [ ] Power Grid: CPF Loan and Increment sections (Phase 8, remaining part)
 - [ ] Tax (Phase 9)
 - [ ] Zakat & Fitra (Phase 10)
 - [ ] Prince Account (Phase 11)
