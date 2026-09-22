@@ -1,6 +1,44 @@
 # CHANGELOG
 
-## 2026-09-22
+## 2026-09-22 (Session 10)
+
+### Power Grid: "ছুটির হিসাব" — automatic leave accrual, taken vs encashment
+- Earned leave is no longer entered manually. It is calculated automatically
+  from the Joining Date already stored in "বেতন ও ভাতা" (Employment sheet,
+  same value `pgGetEmployee_()` already returns) — 1 day of earned leave for
+  every 11 days of service since joining (floor division). Editing the
+  Joining Date in the "✏️ তথ্য সম্পাদনা" modal is picked up immediately the
+  next time the ছুটির হিসাব tab loads — no separate sync step.
+- Two entry types remain, both subtracting from the earned balance:
+  - **ছুটি ভোগ (Taken)** — used leave, no payment.
+  - **নগদায়ন (Encashment)** — cashed-out leave. Each day encashed pays an
+    amount equal to ONE DAY's Basic Salary, computed as
+    `latest Basic Salary (from the most recent বেতন ও ভাতা statement) ÷ 30`.
+    The computed rate and amount are shown live in the entry form and stored
+    per entry.
+  - The old manual "Earned" entry type is removed from the UI. Saving now
+    refuses to record more Taken+Encashment days than have actually accrued
+    as of today, and refuses Encashment entirely if no salary statement with
+    a Basic Salary exists yet.
+- ছুটির হিসাব tab now shows: total accrued (auto), total taken + encashed,
+  current balance, and total money received from encashment — plus an info
+  banner with the joining date, the 11-day accrual rule, and the current
+  daily Basic rate. It also warns clearly if no Joining Date is set yet.
+- The entry table adds an "নগদায়ন (৳)" column; PDF and CSV exports for this
+  tab include the encashment amounts, the accrual rule and the daily rate.
+- Sheet schema: `Leave` (Power_Grid) gains a 7th column, `EncashmentAmount`.
+  Added automatically to existing sheets by `leaveSheet_()` in
+  `Server_Leave.gs`, and included for fresh installs in `Setup_PowerGrid.gs`.
+  Any old `Type='Earned'` rows (from before this feature existed) are simply
+  ignored on read — they cause no error, they're just superseded by the
+  automatic calculation.
+- Files changed: `Server_Leave.gs` (full rewrite), `Page_PowerGrid.html`
+  (ছুটির হিসাব tab: markup, styles, script), `Setup_PowerGrid.gs` (Leave
+  header list). No change to `Server_PowerGrid.gs` — it already exposed
+  `pgGetEmployee_()`, `pgStatementSheet_()` and `pgMonthKey_()`, which the
+  new leave logic reuses directly.
+
+## 2026-09-22 (Session 09)
 
 ### Power Grid: Joining Date not saving (bug fix)
 - Fixed: in বেতন ও ভাতা → সেলারি স্টেটমেন্ট card → "✏️ তথ্য সম্পাদনা", changing
@@ -270,8 +308,8 @@
 
 ### Current Status
 - Completed: Home, Personal Info (Profile, Education, Family Tree, Age
-  Calculator), Budget Management, Power Grid (salary and CPF), Auth, app shell,
-  all spreadsheet setups.
+  Calculator), Budget Management, Power Grid (salary, CPF and leave), Auth,
+  app shell, all spreadsheet setups.
 - In progress: none.
 - Placeholder pages: Tax, Zakat, Prince Hisab, My Transactions,
   Emergency Documents, Islamic Corner, Assets, AI Hub, Settings.

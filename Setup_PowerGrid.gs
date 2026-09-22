@@ -19,8 +19,11 @@ function setupPowerGrid() {
     'PaidAmount', 'RemainingAmount', 'OfficeOrderFileID'
   ]);
 
+  // 2026-09-22: EncashmentAmount added — ছুটি নগদায়ন করলে দিন-প্রতি প্রাপ্ত
+  // টাকার পরিমাণ (Server_Leave.gs leaveSheet_() স্বয়ংক্রিয়ভাবেও এটি
+  // যোগ করে দেয় পুরনো ৬-কলাম শিটে, তাই এই আপডেট চালানো ঐচ্ছিক)।
   ensureSheetWithHeaders(ss, 'Leave', [
-    'EntryID', 'Date', 'Type', 'Days', 'Balance', 'Notes'
+    'EntryID', 'Date', 'Type', 'Days', 'Balance', 'Notes', 'EncashmentAmount'
   ]);
 
   ensureSheetWithHeaders(ss, 'Salary', [
