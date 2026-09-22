@@ -18,6 +18,20 @@
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs (generateUniqueId),
  * Utils_Sheets.gs (ensureSheetWithHeaders), Server_PersonalInfo.gs (getProfile).
  * Every function needs a valid session token — salary data is financial.
+ *
+ * ------------------------------------------------------------------
+ * NOTE (2026-09-22): Joining Date persistence fix
+ * savePowerGridEmployee() stores Joining Date as PLAIN TEXT
+ * (cell.setNumberFormat('@') + the 'yyyy-MM-dd' string), exactly like
+ * NextIncrementDate — never as a raw Date object. Google Sheets can
+ * silently reformat/locale-convert a Date-typed cell in a way this file's
+ * string-based date parser (pgDateStr_()) can no longer recognize on
+ * read-back, which made a saved Joining Date appear to "not save" after
+ * a page reload. If you are re-pasting this file to fix that symptom,
+ * remember: saving code changes in the Apps Script editor does NOT update
+ * a live Web App deployment by itself — you must go to
+ * Deploy → Manage deployments → Edit (✏️) → Version: New version → Deploy.
+ * ------------------------------------------------------------------
  */
 
 var PG_TZ = 'Asia/Dhaka';
