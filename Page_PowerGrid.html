@@ -264,14 +264,6 @@
         <div class="pg-side">
 
           <div class="pg-card">
-            <div class="pg-head">
-              <h3 class="pg-title" id="pgCpfTitle">CPF হিসাব</h3>
-              <span class="pg-chip" id="pgCpfYear"></span>
-            </div>
-            <div id="pgCpf"></div>
-          </div>
-
-          <div class="pg-card">
             <div class="pg-head"><h3 class="pg-title" style="color:var(--navy)">দ্রুত অ্যাকশন</h3></div>
             <div class="pg-actions">
               <button type="button" class="pg-act" data-act="pdf-statement">
@@ -544,7 +536,6 @@
         renderStatement(st, t);
         renderSummary(t);
         renderPrevList(st);
-        renderCpf(st);
         renderCpfTab();
       }
 
@@ -698,34 +689,6 @@
           '<div class="pg-lg"><i style="background:#15803d"></i><div>Employee\'s CPF<small>' + (emp / total * 100).toFixed(1) + '% (৳ ' + num(emp) + ')</small></div></div>' +
           '<div class="pg-lg"><i style="background:#1d4ed8"></i><div>Company\'s CPF<small>' + (comp / total * 100).toFixed(1) + '% (৳ ' + num(comp) + ')</small></div></div>' +
           '</div></div>';
-      }
-
-      /** বেতন ও ভাতা ট্যাবের ডান কলামের "CPF হিসাব" কার্ড */
-      function renderCpf() {
-        var year = selectedYear();
-        var emp = 0, comp = 0, allTotal = 0;
-        cpfYearRecords(year).forEach(function (r) { emp += r.emp; comp += r.comp; });
-        cpfRecords().forEach(function (r) { allTotal += r.emp + r.comp; });
-        var total = emp + comp;
-
-        el('pgCpfTitle').textContent = 'CPF হিসাব';
-        el('pgCpfYear').textContent = bn(year);
-
-        var html =
-          '<div class="pg-cpf-row"><span>Employee\'s CPF (YTD)</span><b>৳ ' + num(emp) + '</b></div>' +
-          '<div class="pg-cpf-row"><span>Company\'s CPF (YTD)</span><b>৳ ' + num(comp) + '</b></div>' +
-          '<div class="pg-cpf-row"><span>মোট CPF (YTD)</span><b>৳ ' + num(total) + '</b></div>' +
-          '<div class="pg-cpf-row"><span>সর্বমোট জমা (সব বছর)</span><b>৳ ' + num(allTotal) + '</b></div>';
-
-        var more = '<button type="button" class="pg-more" data-act="goto-cpf">সম্পূর্ণ CPF হিসাব দেখুন →</button>' +
-          '<button type="button" class="pg-more" data-act="cpf-list">পূর্বের CPF এন্ট্রি দেখুন ও সম্পাদনা →</button>';
-
-        var donut = donutHtml(emp, comp);
-        if (!donut) {
-          el('pgCpf').innerHTML = html + '<div class="pg-empty">এই বছরে CPF এন্ট্রি নেই।</div>' + more;
-          return;
-        }
-        el('pgCpf').innerHTML = html + donut + more;
       }
 
       /* =====================================================
@@ -916,11 +879,6 @@
         if (i < 0 || i >= years.length) return;
         state.cpfYear = years[i];
         renderCpfTab();
-      }
-
-      function gotoCpfTab() {
-        var btn = root().querySelector('.subtab-btn[data-subtab="pg-cpf"]');
-        if (btn) btn.click();
       }
 
       /* =====================================================
@@ -1407,7 +1365,6 @@
         else if (act === 'excel') exportExcel();
         else if (act === 'cpf-list') openCpfListModal();
         /* CPF হিসাব ট্যাব */
-        else if (act === 'goto-cpf') gotoCpfTab();
         else if (act === 'cpf-prev-year') stepCpfYear(-1);
         else if (act === 'cpf-next-year') stepCpfYear(1);
         else if (act === 'cpf-year') { state.cpfYear = b.getAttribute('data-year'); renderCpfTab(); }
