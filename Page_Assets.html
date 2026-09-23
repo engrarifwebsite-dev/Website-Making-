@@ -1,6 +1,984 @@
 <section id="page-assets" class="page">
-  <div class="page-placeholder">
-    <h2>আমার সম্পদ ও সামগ্রী</h2>
-    <p>এই পেজের কন্টেন্ট Phase 14-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       আমার সম্পদ ও সামগ্রী (Phase 14) — সব ক্লাস as- দিয়ে শুরু
+       ========================================================= */
+    #page-assets {
+      --as-blue: #1d4ed8;
+      --as-green: #15803d;
+      --as-purple: #7c3aed;
+      --as-orange: #d97706;
+      --as-red: #dc2626;
+      --as-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-assets * { box-sizing: border-box; }
+
+    #page-assets .as-card {
+      background: #fff;
+      border: 1px solid var(--as-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-assets .as-card-title { font-size: 15.5px; font-weight: 800; color: var(--navy); margin: 0 0 14px; }
+    #page-assets .as-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    #page-assets .as-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-assets .as-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-assets .as-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    #page-assets .as-body { transition: opacity .15s ease; }
+    #page-assets .as-body.busy { opacity: .5; pointer-events: none; }
+
+    /* ---------- ৫টি KPI কার্ড ---------- */
+    #page-assets .as-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+    #page-assets .as-kpi { display: flex; align-items: center; gap: 12px; padding: 16px; }
+    #page-assets .as-kpi-ico { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 22px; }
+    #page-assets .as-ico-blue { background: #e8effd; color: var(--as-blue); }
+    #page-assets .as-ico-green { background: #dcfce7; color: var(--as-green); }
+    #page-assets .as-ico-purple { background: #ede9fe; color: var(--as-purple); }
+    #page-assets .as-ico-orange { background: #fef3c7; color: var(--as-orange); }
+    #page-assets .as-ico-red { background: #fee2e2; color: var(--as-red); }
+    #page-assets .as-kpi-label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+    #page-assets .as-kpi-value { margin-top: 2px; font-size: 20px; font-weight: 800; color: var(--navy); line-height: 1.25; white-space: nowrap; }
+    #page-assets .as-kpi-link { margin-top: 6px; background: none; border: 0; padding: 0; color: var(--as-blue); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+    #page-assets .as-kpi-link:hover { text-decoration: underline; }
+
+    /* ---------- ক্যাটাগরি ---------- */
+    #page-assets .as-cats { display: flex; gap: 14px; flex-wrap: wrap; }
+    #page-assets .as-cat { width: 84px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; background: none; border: 0; font-family: inherit; }
+    #page-assets .as-cat-ico { width: 56px; height: 56px; border-radius: 14px; background: #eef2ff; color: var(--as-blue); display: grid; place-items: center; font-size: 24px; border: 2px solid transparent; }
+    #page-assets .as-cat.active .as-cat-ico { border-color: var(--as-blue); background: #dbe7ff; }
+    #page-assets .as-cat-name { font-size: 12px; font-weight: 700; color: var(--text); text-align: center; }
+    #page-assets .as-cat-count { font-size: 11px; color: var(--text-muted); }
+    #page-assets .as-cat-add .as-cat-ico { background: #f1f5f9; color: var(--text-muted); border: 2px dashed var(--border); font-size: 26px; }
+    #page-assets .as-cat-add:hover .as-cat-ico { background: var(--accent-soft); color: var(--navy); border-color: var(--accent); }
+
+    /* ---------- সার্চ/ফিল্টার/অ্যাড ---------- */
+    #page-assets .as-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    #page-assets .as-select, #page-assets .as-input { border: 1px solid var(--as-line); background: #fff; border-radius: 9px; padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--text); }
+    #page-assets .as-input { flex: 1; min-width: 180px; }
+    #page-assets .as-search-wrap { flex: 1; min-width: 220px; display: flex; }
+    #page-assets .as-search-wrap .as-input { border-radius: 9px 0 0 9px; }
+    #page-assets .as-search-btn { border: 1px solid var(--as-line); border-left: 0; background: #fff; border-radius: 0 9px 9px 0; padding: 0 14px; cursor: pointer; color: var(--text-muted); }
+    #page-assets .as-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--as-line); background: #fff; border-radius: 9px; padding: 9px 16px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); cursor: pointer; white-space: nowrap; }
+    #page-assets .as-btn:hover { background: #f4f7fc; }
+    #page-assets .as-btn-primary { background: var(--as-blue); border-color: var(--as-blue); color: #fff; }
+    #page-assets .as-btn-primary:hover { background: #1638a8; }
+
+    /* ---------- টেবিল ---------- */
+    #page-assets .as-table-wrap { overflow-x: auto; border: 1px solid var(--as-line); border-radius: 10px; }
+    #page-assets table.as-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px; }
+    #page-assets .as-table th { background: #f4f7fc; color: var(--text-muted); font-weight: 700; font-size: 12px; padding: 10px; text-align: center; border-bottom: 1px solid var(--as-line); white-space: nowrap; }
+    #page-assets .as-table th:first-child, #page-assets .as-table td:first-child { text-align: left; }
+    #page-assets .as-table td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--as-line); color: var(--text); font-weight: 600; white-space: nowrap; }
+    #page-assets .as-table tr:last-child td { border-bottom: 0; }
+    #page-assets .as-item { display: flex; align-items: center; gap: 10px; }
+    #page-assets .as-item-ico { width: 32px; height: 32px; border-radius: 9px; background: #eef2ff; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+    #page-assets .as-tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+    #page-assets .as-tag.active { background: #dcfce7; color: var(--as-green); }
+    #page-assets .as-tag.expired { background: #fee2e2; color: var(--as-red); }
+    #page-assets .as-tag.critical { background: #fee2e2; color: var(--as-red); }
+    #page-assets .as-tag.warn { background: #fef3c7; color: var(--as-orange); }
+    #page-assets .as-tag.na { background: #f1f5f9; color: var(--text-muted); }
+    #page-assets .as-actcol { display: inline-flex; gap: 6px; }
+    #page-assets .as-iconbtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; display: inline-grid; place-items: center; background: #f8fafc; color: var(--text-muted); }
+    #page-assets .as-iconbtn:hover { background: #eef2ff; color: var(--as-blue); }
+    #page-assets .as-iconbtn.del:hover { background: #fee9e9; color: var(--as-red); }
+    #page-assets .as-more { display: block; margin: 14px auto 0; border: 1px solid #c7d5f5; background: #fff; color: var(--as-blue); border-radius: 10px; padding: 8px 20px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    #page-assets .as-more:hover { background: #f4f7fc; }
+    #page-assets .as-empty { text-align: center; color: var(--text-muted); font-size: 13.5px; padding: 30px 10px; }
+
+    /* ---------- সাইড কার্ড ---------- */
+    #page-assets .as-actions { display: flex; flex-direction: column; gap: 8px; }
+    #page-assets .as-act { display: flex; align-items: center; gap: 10px; border: 1px solid var(--as-line); background: #fff; border-radius: 9px; padding: 10px 12px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; text-align: left; }
+    #page-assets .as-act:hover { background: #f4f7fc; }
+    #page-assets .as-act .dot { width: 20px; text-align: center; }
+    #page-assets .as-sum-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--as-line); font-size: 13px; }
+    #page-assets .as-sum-row:last-child { border-bottom: 0; }
+    #page-assets .as-sum-ico { display: inline-flex; align-items: center; gap: 8px; color: var(--text); }
+    #page-assets .as-sum-val { font-weight: 800; color: var(--navy); }
+
+    /* ---------- দ্বিতীয় সারি: ডোনাট / মেইনটেনেন্স / লোকেশন ---------- */
+    #page-assets .as-row2, #page-assets .as-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+    #page-assets .as-donut-wrap { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    #page-assets .as-donut { width: 140px; height: 140px; flex-shrink: 0; }
+    #page-assets .as-donut svg { width: 100%; height: 100%; }
+    #page-assets .as-legend { flex: 1; min-width: 120px; }
+    #page-assets .as-lg { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; padding: 4px 0; color: var(--text); }
+    #page-assets .as-lg i { width: 10px; height: 10px; border-radius: 3px; }
+
+    #page-assets .as-maint-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--as-line); font-size: 12.5px; }
+    #page-assets .as-maint-row:last-child { border-bottom: 0; }
+    #page-assets .as-maint-ico { width: 30px; height: 30px; border-radius: 8px; background: #fef3c7; color: var(--as-orange); display: grid; place-items: center; font-size: 14px; flex-shrink: 0; }
+    #page-assets .as-maint-body { flex: 1; min-width: 0; }
+    #page-assets .as-maint-title { font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #page-assets .as-maint-sub { color: var(--text-muted); font-size: 11.5px; margin-top: 1px; }
+    #page-assets .as-maint-cost { font-weight: 800; color: var(--navy); white-space: nowrap; }
+
+    /* ---------- তৃতীয় সারি: মেইন/সাব, দলিলপত্র, দ্রুত তথ্য ---------- */
+    #page-assets .as-spot { display: flex; gap: 14px; }
+    #page-assets .as-spot-photo { width: 84px; height: 84px; border-radius: 12px; background: #eef2ff; flex-shrink: 0; overflow: hidden; display: grid; place-items: center; font-size: 30px; color: var(--as-blue); }
+    #page-assets .as-spot-photo img { width: 100%; height: 100%; object-fit: cover; }
+    #page-assets .as-spot-name { font-weight: 800; color: var(--navy); font-size: 14.5px; }
+    #page-assets .as-spot-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.7; }
+    #page-assets .as-sub-title { font-size: 12px; font-weight: 700; color: var(--text-muted); margin: 12px 0 6px; }
+    #page-assets .as-sub-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12.5px; }
+    #page-assets .as-sub-ico { width: 26px; height: 26px; border-radius: 7px; background: #f1f5f9; display: grid; place-items: center; font-size: 13px; flex-shrink: 0; }
+    #page-assets .as-sub-name { flex: 1; font-weight: 600; color: var(--text); }
+    #page-assets .as-sub-price { color: var(--text-muted); }
+
+    #page-assets .as-doc-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px dashed var(--as-line); font-size: 12.5px; }
+    #page-assets .as-doc-row:last-child { border-bottom: 0; }
+    #page-assets .as-doc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text); }
+    #page-assets .as-doc-date { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+    #page-assets .as-doc-dl { color: var(--as-blue); font-weight: 700; text-decoration: none; }
+    #page-assets .as-doc-dl:hover { text-decoration: underline; }
+    #page-assets .as-doc-add { margin-top: 10px; }
+
+    #page-assets .as-fact-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--as-line); font-size: 12.5px; color: var(--text); }
+    #page-assets .as-fact-row:last-child { border-bottom: 0; }
+    #page-assets .as-fact-val { font-weight: 800; color: var(--navy); }
+
+    /* ---------- মোডাল সহায়ক ---------- */
+    .as-m-note { font-size: 12px; color: var(--text-muted); margin: 6px 0 10px; }
+    .as-m-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13.5px; }
+    .as-m-row:last-child { border-bottom: 0; }
+    .as-m-list-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13.5px; }
+    .as-m-list-row:last-child { border-bottom: 0; }
+    .as-m-grow { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .as-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 5px 10px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .as-m-mini.danger { color: var(--danger); }
+    .as-photo-preview { width: 72px; height: 72px; border-radius: 12px; overflow: hidden; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 26px; color: var(--navy); border: 3px solid var(--border); margin-bottom: 10px; }
+    .as-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ---------- রেসপনসিভ ---------- */
+    @media (max-width: 1280px) {
+      #page-assets .as-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #page-assets .as-layout { grid-template-columns: minmax(0, 1fr) !important; }
+      #page-assets .as-row2, #page-assets .as-row3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 820px) {
+      #page-assets .as-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-assets .as-row2, #page-assets .as-row3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      #page-assets .as-kpis { grid-template-columns: 1fr; }
+      #page-assets .as-toolbar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+
+  <div class="as-error" id="asError"><span id="asErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+
+  <div class="as-body" id="asBody">
+
+    <div class="as-kpis" id="asKpis"></div>
+
+    <div class="pg-layout as-layout" style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start;">
+
+      <div class="as-main" style="display:flex;flex-direction:column;gap:16px;min-width:0;">
+
+        <div class="as-card">
+          <div class="as-card-title">সম্পদের ক্যাটাগরি</div>
+          <div class="as-cats" id="asCats"></div>
+        </div>
+
+        <div class="as-card">
+          <div class="as-toolbar">
+            <select class="as-select" id="asFilterCat"><option value="">সব ক্যাটাগরি</option></select>
+            <div class="as-search-wrap">
+              <input type="text" class="as-input" id="asSearch" placeholder="নাম, ব্র্যান্ড, মডেল, সিরিয়াল/IMEI খুঁজুন">
+              <button type="button" class="as-search-btn" id="asSearchBtn" aria-label="খুঁজুন">🔍</button>
+            </div>
+            <select class="as-select" id="asFilterStatus">
+              <option value="">🔻 ফিল্টার (সব অবস্থা)</option>
+              <option value="সক্রিয়">সক্রিয়</option>
+              <option value="মেরামতাধীন">মেরামতাধীন</option>
+              <option value="বিক্রিত">বিক্রিত</option>
+              <option value="নষ্ট">নষ্ট</option>
+            </select>
+            <button type="button" class="as-btn as-btn-primary" data-act="add-asset">＋ নতুন সম্পদ যোগ করুন</button>
+          </div>
+        </div>
+
+        <div class="as-card">
+          <div class="as-card-title" id="asTableTitle">সম্পদের তালিকা (সর্বশেষ আপডেট অনুযায়ী)</div>
+          <div id="asTable"></div>
+        </div>
+
+      </div>
+
+      <div class="as-side" style="display:flex;flex-direction:column;gap:16px;min-width:0;">
+
+        <div class="as-card">
+          <div class="as-card-title">দ্রুত অ্যাকশন</div>
+          <div class="as-actions">
+            <button type="button" class="as-act" data-act="add-asset"><span class="dot">➕</span> নতুন সম্পদ যোগ করুন</button>
+            <button type="button" class="as-act" data-act="manage-cats"><span class="dot">📁</span> সম্পদ ক্যাটাগরি ব্যবস্থাপনা</button>
+            <button type="button" class="as-act" data-act="warranty-list"><span class="dot">⏰</span> ওয়ারেন্টি মেয়াদ রিমাইন্ডার</button>
+            <button type="button" class="as-act" data-act="maint-schedule"><span class="dot">🗓️</span> রক্ষণাবেক্ষণ সময়সূচী</button>
+            <button type="button" class="as-act" data-act="maint-report"><span class="dot">📊</span> ভারি মেইনটেনেন্স রিপোর্ট</button>
+            <button type="button" class="as-act" data-act="pdf"><span class="dot">📄</span> PDF রিপোর্ট ডাউনলোড</button>
+            <button type="button" class="as-act" data-act="excel"><span class="dot">📊</span> Excel রিপোর্ট ডাউনলোড</button>
+          </div>
+        </div>
+
+        <div class="as-card">
+          <div class="as-card-title">ওয়ারেন্টি সারাংশ</div>
+          <div id="asWarrantySummary"></div>
+        </div>
+
+        <div class="as-card">
+          <div class="as-card-title">রক্ষণাবেক্ষণ সারাংশ</div>
+          <div id="asMaintSummary"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="as-row2">
+      <div class="as-card">
+        <div class="as-card-title">মূল্যহ্রাস বিশ্লেষণ (ক্যাটাগরি অনুযায়ী)</div>
+        <div id="asDepDonut"></div>
+      </div>
+      <div class="as-card">
+        <div class="as-head" style="margin-bottom:10px;"><div class="as-card-title" style="margin:0;">সাম্প্রতিক মেইনটেনেন্স</div>
+          <button type="button" class="as-btn" style="padding:5px 10px;font-size:12px;" data-act="add-maint">＋ যোগ করুন</button></div>
+        <div id="asMaintList"></div>
+        <button type="button" class="as-more" data-act="all-maint">সব মেইনটেনেন্স দেখুন →</button>
+      </div>
+      <div class="as-card">
+        <div class="as-card-title">সম্পদের অবস্থান</div>
+        <div id="asLocDonut"></div>
+      </div>
+    </div>
+
+    <div class="as-row3">
+      <div class="as-card">
+        <div class="as-card-title">মেইন ও সাব এসেট</div>
+        <div id="asSpotlight"></div>
+      </div>
+      <div class="as-card">
+        <div class="as-head" style="margin-bottom:10px;"><div class="as-card-title" style="margin:0;">সম্পদ দলিলপত্র</div></div>
+        <div id="asDocs"></div>
+        <button type="button" class="as-btn as-doc-add" data-act="add-doc">📎 দলিলপত্র যোগ করুন</button>
+      </div>
+      <div class="as-card">
+        <div class="as-card-title">সম্পদের দ্রুত সংক্ষিপ্ত তথ্য</div>
+        <div id="asFacts"></div>
+      </div>
+    </div>
+
   </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__assetsInit) return;
+      window.__assetsInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+      var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var PALETTE = ['#1d4ed8', '#15803d', '#7c3aed', '#d97706', '#dc2626', '#0ea5e9', '#ec4899', '#14b8a6', '#f97316', '#64748b'];
+      var CONDITION_TAG = { 'সক্রিয়': 'active', 'মেরামতাধীন': 'warn', 'বিক্রিত': 'na', 'নষ্ট': 'expired' };
+
+      var state = { data: null, reqId: 0, loadedAt: 0, everLoaded: false, catFilter: '', statusFilter: '', search: '', showAll: false };
+
+      /* ---------- helpers ---------- */
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-assets'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function num(n) { return bn((Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })); }
+      function money(n) { return '৳ ' + num(n); }
+      function dispShort(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+        return m ? m[3] + '/' + m[2] + '/' + m[1] : '—';
+      }
+      function call(fnName, args, ok, fail) {
+        var runner = google.script.run
+          .withSuccessHandler(ok || function () {})
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger');
+            if (fail) fail(err);
+          });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('asBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('asErrorText').textContent = msg; el('asError').classList.add('show'); }
+      function hideError() { el('asError').classList.remove('show'); }
+      function catIcon(name) {
+        var d = state.data;
+        if (!d) return '📦';
+        for (var i = 0; i < d.categories.length; i++) if (d.categories[i].name === name) return d.categories[i].icon;
+        return '📦';
+      }
+
+      /* ---------- load ---------- */
+      function load(cb) {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        var id = ++state.reqId;
+        hideError();
+        setBusy(true);
+
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return;
+            applyData(d);
+            setBusy(false);
+            if (typeof cb === 'function') cb();
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'সম্পদের তথ্য লোড করা যায়নি।');
+          })
+          .getAssetsData(token);
+      }
+
+      function applyData(d) {
+        state.data = d;
+        state.loadedAt = Date.now();
+        state.everLoaded = true;
+        render();
+      }
+
+      function render() {
+        var d = state.data;
+        if (!d) return;
+        renderKpis(d);
+        renderCats(d);
+        renderFilterCatOptions(d);
+        renderTable(d);
+        renderWarrantySummary(d);
+        renderMaintSummary(d);
+        renderDepDonut(d);
+        renderMaintList(d);
+        renderLocDonut(d);
+        renderSpotlight(d);
+        renderDocs(d);
+        renderFacts(d);
+      }
+
+      /* ---------- KPI ---------- */
+      function kpi(cls, ico, label, value, kind) {
+        return '<div class="as-card as-kpi"><div class="as-kpi-ico ' + cls + '">' + ico + '</div>' +
+          '<div><div class="as-kpi-label">' + label + '</div><div class="as-kpi-value">' + value + '</div>' +
+          '<button type="button" class="as-kpi-link" data-act="kpi-detail" data-kind="' + kind + '">বিস্তারিত দেখুন →</button></div></div>';
+      }
+      function renderKpis(d) {
+        el('asKpis').innerHTML =
+          kpi('as-ico-blue', '💼', 'মোট সম্পদের সংখ্যা', bn(d.summary.totalAssets) + ' টি সম্পদ', 'count') +
+          kpi('as-ico-green', '💰', 'মোট ক্রয়মূল্য (৳)', money(d.summary.totalPurchase), 'purchase') +
+          kpi('as-ico-purple', '📈', 'বর্তমান আনুমানিক মূল্য (৳)', money(d.summary.totalCurrent), 'current') +
+          kpi('as-ico-orange', '🥧', 'মোট মেইনটেনেন্স খরচ (৳)', money(d.summary.totalMaintenance), 'maint') +
+          kpi('as-ico-red', '🔧', 'রক্ষণাবেক্ষণ খরচ (এই মাসে, ৳)', money(d.summary.thisMonthMaintenance), 'maint-month');
+      }
+
+      /* ---------- ক্যাটাগরি ---------- */
+      function renderCats(d) {
+        var html = d.categories.map(function (c) {
+          return '<button type="button" class="as-cat' + (state.catFilter === c.name ? ' active' : '') + '" data-cat="' + esc(c.name) + '">' +
+            '<div class="as-cat-ico">' + c.icon + '</div><div class="as-cat-name">' + esc(c.name) + '</div><div class="as-cat-count">' + bn(c.count) + ' টি</div></button>';
+        }).join('');
+        html += '<button type="button" class="as-cat as-cat-add" data-act="add-cat"><div class="as-cat-ico">＋</div><div class="as-cat-name">নতুন ক্যাটাগরি</div></button>';
+        el('asCats').innerHTML = html;
+      }
+
+      function renderFilterCatOptions(d) {
+        var sel = el('asFilterCat');
+        var cur = sel.value;
+        sel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + d.categories.map(function (c) {
+          return '<option value="' + esc(c.name) + '">' + esc(c.icon) + ' ' + esc(c.name) + '</option>';
+        }).join('');
+        sel.value = cur || state.catFilter || '';
+      }
+
+      /* ---------- টেবিল ---------- */
+      function filteredAssets(d) {
+        var q = state.search.trim().toLowerCase();
+        return d.assets.filter(function (a) {
+          if (state.catFilter && a.category !== state.catFilter) return false;
+          if (state.statusFilter && a.condition !== state.statusFilter) return false;
+          if (q) {
+            var hay = (a.name + ' ' + a.brand + ' ' + a.model + ' ' + a.serialNumber).toLowerCase();
+            if (hay.indexOf(q) === -1) return false;
+          }
+          return true;
+        });
+      }
+
+      function warrantyCellHtml(a) {
+        if (a.warrantyStatus === 'na') return '<span class="as-tag na">N/A</span>';
+        if (a.warrantyStatus === 'expired') return '<span class="as-tag expired">Expired</span>';
+        return '<span class="as-tag ' + a.warrantyStatus + '">' + bn(a.warrantyDaysLeft) + ' দিন বাকি</span>';
+      }
+
+      var ICON_EYE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+      var ICON_EDIT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+      var ICON_DEL = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>';
+
+      function renderTable(d) {
+        var list = filteredAssets(d);
+        var host = el('asTable');
+        el('asTableTitle').textContent = 'সম্পদের তালিকা (' + bn(list.length) + ' টি)';
+
+        if (!list.length) {
+          host.innerHTML = '<div class="as-empty">কোনো সম্পদ পাওয়া যায়নি।<br><br><button type="button" class="as-btn as-btn-primary" data-act="add-asset">＋ নতুন সম্পদ যোগ করুন</button></div>';
+          return;
+        }
+
+        var shown = state.showAll ? list : list.slice(0, 7);
+        var rows = shown.map(function (a) {
+          return '<tr>' +
+            '<td><div class="as-item"><span class="as-item-ico">' + catIcon(a.category) + '</span>' + esc(a.name) + '</div></td>' +
+            '<td>' + esc(a.category || '—') + '</td>' +
+            '<td>' + esc([a.brand, a.model].filter(Boolean).join(' / ') || '—') + '</td>' +
+            '<td>' + dispShort(a.purchaseDate) + '</td>' +
+            '<td>' + money(a.purchasePrice) + '</td>' +
+            '<td>' + money(a.currentValue) + '</td>' +
+            '<td>' + warrantyCellHtml(a) + '</td>' +
+            '<td><span class="as-tag ' + (CONDITION_TAG[a.condition] || 'na') + '">' + esc(a.condition) + '</span></td>' +
+            '<td><span class="as-actcol">' +
+              '<button type="button" class="as-iconbtn" data-act="view-asset" data-id="' + esc(a.id) + '" title="দেখুন">' + ICON_EYE + '</button>' +
+              '<button type="button" class="as-iconbtn" data-act="edit-asset" data-id="' + esc(a.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
+              '<button type="button" class="as-iconbtn del" data-act="del-asset" data-id="' + esc(a.id) + '" title="মুছুন">' + ICON_DEL + '</button>' +
+            '</span></td></tr>';
+        }).join('');
+
+        host.innerHTML = '<div class="as-table-wrap"><table class="as-table"><thead><tr>' +
+          '<th>সম্পদের নাম</th><th>ক্যাটাগরি</th><th>ব্র্যান্ড/মডেল</th><th>ক্রয়ের তারিখ</th><th>ক্রয়মূল্য (৳)</th><th>বর্তমান মূল্য (৳)</th><th>ওয়ারেন্টি</th><th>অবস্থা</th><th>অ্যাকশন</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+          (list.length > 7 ? '<button type="button" class="as-more" data-act="toggle-all">' + (state.showAll ? 'কম দেখুন ↑' : 'সব সম্পদ দেখুন →') + '</button>' : '');
+      }
+
+      /* ---------- ওয়ারেন্টি সারাংশ ---------- */
+      function renderWarrantySummary(d) {
+        var w = d.warrantyCounts;
+        el('asWarrantySummary').innerHTML =
+          '<div class="as-sum-row"><span class="as-sum-ico">🟢 সক্রিয় ওয়ারেন্টি</span><span class="as-sum-val">' + bn(w.active) + ' টি</span></div>' +
+          '<div class="as-sum-row"><span class="as-sum-ico">🟠 মেয়াদ শেষ হতে যাচ্ছে</span><span class="as-sum-val">' + bn(w.warn + w.critical) + ' টি</span></div>' +
+          '<div class="as-sum-row"><span class="as-sum-ico">🔴 মেয়াদ উত্তীর্ণ</span><span class="as-sum-val">' + bn(w.expired) + ' টি</span></div>' +
+          '<div class="as-sum-row"><span class="as-sum-ico">⚪ ওয়ারেন্টি নেই</span><span class="as-sum-val">' + bn(w.na) + ' টি</span></div>';
+      }
+
+      /* ---------- রক্ষণাবেক্ষণ সারাংশ ---------- */
+      function renderMaintSummary(d) {
+        el('asMaintSummary').innerHTML =
+          '<div class="as-sum-row"><span class="as-sum-ico">🧾 মোট রক্ষণাবেক্ষণ খরচ</span><span class="as-sum-val">' + money(d.summary.totalMaintenance) + '</span></div>' +
+          '<div class="as-sum-row"><span class="as-sum-ico">📅 এই মাসের খরচ</span><span class="as-sum-val">' + money(d.summary.thisMonthMaintenance) + '</span></div>' +
+          '<div class="as-sum-row"><span class="as-sum-ico">🛠️ মেরামতাধীন সম্পদ</span><span class="as-sum-val">' + bn(d.assets.filter(function (a) { return a.condition === 'মেরামতাধীন'; }).length) + ' টি</span></div>' +
+          '<div class="as-sum-row"><span class="as-sum-ico">🚫 নষ্ট সম্পদ</span><span class="as-sum-val">' + bn(d.assets.filter(function (a) { return a.condition === 'নষ্ট'; }).length) + ' টি</span></div>';
+      }
+
+      /* ---------- ডোনাট (জেনেরিক) ---------- */
+      function donut(rows, totalLabel, totalValueText, host, buildLegend) {
+        var total = rows.reduce(function (s, r) { return s + r.value; }, 0);
+        if (!rows.length || total <= 0) {
+          host.innerHTML = '<div class="as-empty">এখনো কোনো তথ্য নেই।</div>';
+          return;
+        }
+        var r = 52, c = 2 * Math.PI * r, offset = 0;
+        var svg = '<svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#eef1f6" stroke-width="20"/>';
+        var legend = '';
+        rows.forEach(function (row, i) {
+          var frac = row.value / total;
+          var dash = frac * c;
+          var color = PALETTE[i % PALETTE.length];
+          var visible = rows.length > 1 ? Math.max(dash - 1.5, 0.5) : dash;
+          svg += '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="20" stroke-dasharray="' + visible + ' ' + (c - visible) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 70 70)"/>';
+          offset += dash;
+          legend += '<div class="as-lg"><i style="background:' + color + '"></i><span>' + esc(row.name) + '</span><b>' + buildLegend(row, frac) + '</b></div>';
+        });
+        svg += '<text x="70" y="65" text-anchor="middle" font-size="10" fill="#64748b">' + totalLabel + '</text>' +
+          '<text x="70" y="82" text-anchor="middle" font-size="12.5" font-weight="800" fill="#10233F">' + totalValueText + '</text></svg>';
+        host.innerHTML = '<div class="as-donut-wrap"><div class="as-donut">' + svg + '</div><div class="as-legend">' + legend + '</div></div>';
+      }
+
+      function renderDepDonut(d) {
+        donut(d.depreciationByCategory, 'মোট মূল্যহ্রাস', money(d.depreciationByCategory.reduce(function (s, r) { return s + r.value; }, 0)),
+          el('asDepDonut'), function (row, frac) { return money(row.value) + ' (' + bn(Math.round(frac * 100)) + '%)'; });
+      }
+
+      function renderLocDonut(d) {
+        var rows = d.locationBreakdown.map(function (r) { return { name: r.name, value: r.count }; });
+        donut(rows, 'মোট', bn(d.summary.totalAssets) + ' টি', el('asLocDonut'), function (row) { return bn(row.value) + ' টি'; });
+      }
+
+      /* ---------- সাম্প্রতিক মেইনটেনেন্স ---------- */
+      function renderMaintList(d) {
+        var host = el('asMaintList');
+        if (!d.maintenance.length) { host.innerHTML = '<div class="as-empty">এখনো কোনো মেইনটেনেন্স এন্ট্রি নেই।</div>'; return; }
+        host.innerHTML = d.maintenance.map(function (m) {
+          return '<div class="as-maint-row"><span class="as-maint-ico">🔧</span><div class="as-maint-body">' +
+            '<div class="as-maint-title" title="' + esc(m.assetName + ' — ' + m.description) + '">' + esc(m.assetName) + ' — ' + esc(m.description) + '</div>' +
+            '<div class="as-maint-sub">' + dispShort(m.date) + '</div></div><div class="as-maint-cost">' + money(m.cost) + '</div></div>';
+        }).join('');
+      }
+
+      /* ---------- মেইন/সাব স্পটলাইট ---------- */
+      function renderSpotlight(d) {
+        var host = el('asSpotlight');
+        var sp = d.spotlight;
+        if (!sp) { host.innerHTML = '<div class="as-empty">কোনো সম্পদের সাথে সাব-এসেট যুক্ত করা নেই।<br>সম্পদ যোগ/সম্পাদনার সময় "প্যারেন্ট সম্পদ" নির্বাচন করলে এখানে দেখানো হবে।</div>'; return; }
+        var m = sp.main;
+        var photo = m.photoFileId ? '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(m.photoFileId) + '&sz=w200" alt="">' : catIcon(m.category);
+        var subs = sp.subs.map(function (s) {
+          return '<div class="as-sub-row"><span class="as-sub-ico">' + catIcon(s.category) + '</span><span class="as-sub-name">' + esc(s.name) + '</span><span class="as-sub-price">' + money(s.purchasePrice) + '</span></div>';
+        }).join('');
+        host.innerHTML = '<div class="as-spot"><div class="as-spot-photo">' + photo + '</div><div><div class="as-spot-name">' + esc(m.name) + '</div>' +
+          '<div class="as-spot-meta">ক্রয় তারিখ: ' + dispShort(m.purchaseDate) + '<br>ক্রয়মূল্য: ' + money(m.purchasePrice) + '<br>বর্তমান মূল্য: ' + money(m.currentValue) + '</div></div></div>' +
+          '<div class="as-sub-title">Supporting Assets (' + bn(sp.subs.length) + ')</div>' + subs;
+      }
+
+      /* ---------- দলিলপত্র ---------- */
+      function renderDocs(d) {
+        var host = el('asDocs');
+        if (!d.documents.length) { host.innerHTML = '<div class="as-empty">এখনো কোনো দলিলপত্র যোগ করা হয়নি।</div>'; return; }
+        host.innerHTML = d.documents.slice(0, 6).map(function (doc) {
+          return '<div class="as-doc-row"><span>📄</span><span class="as-doc-name" title="' + esc(doc.name) + '">' + esc(doc.name) + (doc.assetName ? ' (' + esc(doc.assetName) + ')' : '') + '</span>' +
+            '<span class="as-doc-date">' + dispShort(doc.uploadedAt) + '</span>' +
+            '<a class="as-doc-dl" href="https://drive.google.com/uc?export=download&id=' + encodeURIComponent(doc.fileId) + '" target="_blank" rel="noopener">⬇</a>' +
+            '<button type="button" class="as-iconbtn del" data-act="del-doc" data-id="' + esc(doc.id) + '" title="মুছুন">' + ICON_DEL + '</button></div>';
+        }).join('');
+      }
+
+      /* ---------- দ্রুত তথ্য ---------- */
+      function renderFacts(d) {
+        var f = d.facts;
+        function row(label, value) { return '<div class="as-fact-row"><span>' + label + '</span><span class="as-fact-val">' + value + '</span></div>'; }
+        el('asFacts').innerHTML =
+          row('১০ বছরের মধ্যে ক্রয়কৃত', bn(f.within10y) + ' টি') +
+          row('৫ বছরের মধ্যে ক্রয়কৃত', bn(f.within5y) + ' টি') +
+          row('১ বছরের মধ্যে ক্রয়কৃত', bn(f.within1y) + ' টি') +
+          row('Expired Warranty', bn(f.expiredWarranty) + ' টি') +
+          row('Active Warranty', bn(f.activeWarranty) + ' টি') +
+          row('মোট ছবি', bn(f.totalPhotos) + ' টি') +
+          row('মোট দলিলপত্র', bn(f.totalDocuments) + ' টি');
+      }
+
+      /* =====================================================
+         মোডাল: সম্পদ যোগ/সম্পাদনা
+         ===================================================== */
+      var assetPendingPhoto = null;
+
+      function findAsset(id) {
+        var l = (state.data && state.data.assets) || [];
+        for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+        return null;
+      }
+
+      function categoryOptionsHtml(selected) {
+        var cats = (state.data && state.data.categories) || [];
+        return '<option value="">নির্বাচন করুন</option>' + cats.map(function (c) {
+          return '<option value="' + esc(c.name) + '"' + (c.name === selected ? ' selected' : '') + '>' + esc(c.icon) + ' ' + esc(c.name) + '</option>';
+        }).join('');
+      }
+
+      function parentOptionsHtml(excludeId, selected) {
+        var l = (state.data && state.data.assets) || [];
+        return '<option value="">— নেই (এটি একটি স্বাধীন/মেইন সম্পদ) —</option>' + l.filter(function (a) { return a.id !== excludeId; }).map(function (a) {
+          return '<option value="' + esc(a.id) + '"' + (a.id === selected ? ' selected' : '') + '>' + esc(a.name) + '</option>';
+        }).join('');
+      }
+
+      function openAssetModal(editId) {
+        var edit = editId ? findAsset(editId) : null;
+        var a = edit || {};
+        assetPendingPhoto = null;
+
+        var photoPreview = (edit && edit.photoFileId)
+          ? '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(edit.photoFileId) + '&sz=w200" alt="">'
+          : '📦';
+
+        var body =
+          '<div class="as-photo-preview" id="asfPhotoPreview">' + photoPreview + '</div>' +
+          '<div class="form-row"><label>ছবি (ঐচ্ছিক)</label><input type="file" class="form-input" id="asfPhoto" accept="image/*"></div>' +
+          '<div class="form-grid">' +
+            '<div class="form-row span-2"><label>সম্পদের নাম *</label><input type="text" class="form-input" id="asfName" value="' + esc(a.name || '') + '"></div>' +
+            '<div class="form-row"><label>ক্যাটাগরি</label><select class="form-input" id="asfCategory">' + categoryOptionsHtml(a.category) + '</select></div>' +
+            '<div class="form-row"><label>অবস্থা</label><select class="form-input" id="asfCondition">' +
+              ['সক্রিয়', 'মেরামতাধীন', 'বিক্রিত', 'নষ্ট'].map(function (s) { return '<option value="' + s + '"' + (a.condition === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></div>' +
+            '<div class="form-row"><label>ব্র্যান্ড</label><input type="text" class="form-input" id="asfBrand" value="' + esc(a.brand || '') + '"></div>' +
+            '<div class="form-row"><label>মডেল</label><input type="text" class="form-input" id="asfModel" value="' + esc(a.model || '') + '"></div>' +
+            '<div class="form-row"><label>ক্রয়ের তারিখ</label><input type="date" class="form-input" id="asfDate" value="' + esc(a.purchaseDate || '') + '"></div>' +
+            '<div class="form-row"><label>ক্রয়মূল্য (৳)</label><input type="number" min="0" step="any" class="form-input" id="asfPrice" value="' + esc(a.purchasePrice || '') + '"></div>' +
+            '<div class="form-row"><label>সিরিয়াল/IMEI</label><input type="text" class="form-input" id="asfSerial" value="' + esc(a.serialNumber || '') + '"></div>' +
+            '<div class="form-row"><label>ওয়ারেন্টি (মাস)</label><input type="number" min="0" step="1" class="form-input" id="asfWarranty" value="' + esc(a.warrantyMonths || '') + '"></div>' +
+            '<div class="form-row"><label>অবস্থান</label><input type="text" class="form-input" id="asfLocation" value="' + esc(a.location || '') + '" placeholder="যেমন: বাসা, অফিস"></div>' +
+            '<div class="form-row"><label>সালভেজ মূল্য (৳, ঐচ্ছিক)</label><input type="number" min="0" step="any" class="form-input" id="asfSalvage" value="' + esc(a.salvageValue || '') + '"></div>' +
+            '<div class="form-row"><label>ব্যবহারযোগ্য আয়ুষ্কাল (বছর, ঐচ্ছিক)</label><input type="number" min="0" step="1" class="form-input" id="asfLife" value="' + esc(a.usefulLifeYears || '') + '"></div>' +
+            '<div class="form-row span-2"><label>প্যারেন্ট সম্পদ (এটি সাব-এসেট হলে নির্বাচন করুন)</label><select class="form-input" id="asfParent">' + parentOptionsHtml(editId, a.parentAssetId) + '</select></div>' +
+            '<div class="form-row span-2"><label>নোট</label><textarea class="form-input" id="asfNotes" rows="2">' + esc(a.notes || '') + '</textarea></div>' +
+          '</div>' +
+          '<div class="as-m-note">বর্তমান মূল্য সালভেজ মূল্য ও আয়ুষ্কাল থেকে স্বয়ংক্রিয়ভাবে হিসাব হয়; না দিলে ক্রয়মূল্যই দেখানো হবে।</div>';
+
+        showModal(edit ? 'সম্পদ সম্পাদনা' : 'নতুন সম্পদ যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitAsset(editId); } }
+        ]);
+
+        el('asfPhoto').addEventListener('change', function () {
+          var file = this.files && this.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            assetPendingPhoto = { base64: String(reader.result).split(',')[1] || '', mime: file.type };
+            el('asfPhotoPreview').innerHTML = '<img src="' + reader.result + '" alt="">';
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function submitAsset(editId) {
+        var name = el('asfName').value.trim();
+        if (!name) { showToast('সম্পদের নাম লিখুন।', 'warning'); return; }
+
+        var payload = {
+          id: editId || '', name: name, category: el('asfCategory').value, condition: el('asfCondition').value,
+          brand: el('asfBrand').value, model: el('asfModel').value, purchaseDate: el('asfDate').value,
+          purchasePrice: el('asfPrice').value, serialNumber: el('asfSerial').value, warrantyMonths: el('asfWarranty').value,
+          location: el('asfLocation').value, salvageValue: el('asfSalvage').value, usefulLifeYears: el('asfLife').value,
+          parentAssetId: el('asfParent').value, notes: el('asfNotes').value
+        };
+        if (editId) { var existing = findAsset(editId); payload.photoFileId = existing ? existing.photoFileId : ''; }
+        if (assetPendingPhoto) { payload.photoBase64 = assetPendingPhoto.base64; payload.photoMimeType = assetPendingPhoto.mime; }
+
+        call('saveAsset', [getToken(), payload], function () {
+          hideModal();
+          showToast('সম্পদ সংরক্ষণ হয়েছে।', 'success');
+          load();
+        });
+      }
+
+      function confirmDeleteAsset(id) {
+        var a = findAsset(id);
+        if (!a) return;
+        confirmDialog('"' + esc(a.name) + '" সম্পদটি মুছে ফেলবেন? এর সাথে যুক্ত মেইনটেনেন্স ও দলিলপত্রও মুছে যাবে।', function () {
+          call('deleteAsset', [getToken(), id], function () {
+            showToast('সম্পদ মুছে ফেলা হয়েছে।', 'success');
+            load();
+          });
+        });
+      }
+
+      function openViewAssetModal(id) {
+        var a = findAsset(id);
+        if (!a) return;
+        var photo = a.photoFileId ? '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(a.photoFileId) + '&sz=w300" alt="" style="width:64px;height:64px;border-radius:10px;object-fit:cover;">' : '<span style="font-size:30px;">' + catIcon(a.category) + '</span>';
+        var maint = ((state.data && state.data.maintenanceAll) || []).filter(function (m) { return m.assetId === id; });
+
+        var body = '<div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;">' + photo +
+          '<div><b style="font-size:15px;color:var(--navy);">' + esc(a.name) + '</b><div style="font-size:12.5px;color:var(--text-muted);">' + esc([a.category, a.brand, a.model].filter(Boolean).join(' • ')) + '</div></div></div>' +
+          '<div class="as-m-row"><span>ক্রয়ের তারিখ</span><b>' + dispShort(a.purchaseDate) + '</b></div>' +
+          '<div class="as-m-row"><span>ক্রয়মূল্য</span><b>' + money(a.purchasePrice) + '</b></div>' +
+          '<div class="as-m-row"><span>বর্তমান মূল্য</span><b>' + money(a.currentValue) + '</b></div>' +
+          '<div class="as-m-row"><span>সিরিয়াল/IMEI</span><b>' + esc(a.serialNumber || '—') + '</b></div>' +
+          '<div class="as-m-row"><span>ওয়ারেন্টি</span><b>' + warrantyCellHtml(a) + (a.warrantyExpiry ? ' (' + dispShort(a.warrantyExpiry) + ')' : '') + '</b></div>' +
+          '<div class="as-m-row"><span>অবস্থান</span><b>' + esc(a.location || '—') + '</b></div>' +
+          (a.notes ? '<div class="as-m-row"><span>নোট</span><b>' + esc(a.notes) + '</b></div>' : '') +
+          '<div class="as-card-title" style="margin-top:16px;">এই সম্পদের মেইনটেনেন্স (' + bn(maint.length) + ')</div>' +
+          (maint.length ? maint.map(function (m) { return '<div class="as-m-list-row"><span class="as-m-grow">' + dispShort(m.date) + ' — ' + esc(m.description) + '</span><span>' + money(m.cost) + '</span></div>'; }).join('') : '<div class="as-empty">এখনো কোনো মেইনটেনেন্স এন্ট্রি নেই।</div>');
+
+        showModal('সম্পদের বিস্তারিত', body, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '✏️ সম্পাদনা', className: 'btn-outline', onClick: function () { openAssetModal(id); } },
+          { label: '＋ মেইনটেনেন্স যোগ করুন', className: 'btn-primary', onClick: function () { openMaintModal(id); } }
+        ]);
+      }
+
+      /* =====================================================
+         মোডাল: ক্যাটাগরি ব্যবস্থাপনা
+         ===================================================== */
+      function openCategoryModal(cat) {
+        var edit = !!cat;
+        var c = cat || { id: '', name: '', icon: '📦' };
+        var body =
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>ইমোজি আইকন</label><input type="text" class="form-input" id="acIcon" value="' + esc(c.icon) + '" maxlength="4"></div>' +
+            '<div class="form-row"><label>ক্যাটাগরির নাম *</label><input type="text" class="form-input" id="acName" value="' + esc(c.name) + '"></div>' +
+          '</div>';
+        showModal(edit ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: openManageCatsModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+              var name = el('acName').value.trim();
+              if (!name) { showToast('ক্যাটাগরির নাম লিখুন।', 'warning'); return; }
+              call('saveAssetCategory', [getToken(), { id: c.id, name: name, icon: el('acIcon').value }], function () {
+                showToast('ক্যাটাগরি সংরক্ষণ হয়েছে।', 'success');
+                load(openManageCatsModal);
+              });
+          } }
+        ]);
+      }
+
+      function openManageCatsModal() {
+        var cats = (state.data && state.data.categories) || [];
+        var rows = cats.length ? cats.map(function (c) {
+          return '<div class="as-m-list-row"><span style="font-size:18px;">' + c.icon + '</span><span class="as-m-grow">' + esc(c.name) + '</span><span style="color:var(--text-muted);font-size:12px;">' + bn(c.count) + ' টি</span>' +
+            '<button type="button" class="as-m-mini" data-mc-edit="' + esc(c.id) + '">সম্পাদনা</button>' +
+            '<button type="button" class="as-m-mini danger" data-mc-del="' + esc(c.id) + '">মুছুন</button></div>';
+        }).join('') : '<div class="as-empty">কোনো ক্যাটাগরি নেই।</div>';
+
+        showModal('সম্পদ ক্যাটাগরি ব্যবস্থাপনা', rows, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ নতুন ক্যাটাগরি', className: 'btn-primary', onClick: function () { openCategoryModal(null); } }
+        ]);
+        el('modalBody').onclick = function (e) {
+          var ed = e.target.closest('[data-mc-edit]');
+          if (ed) { var id = ed.getAttribute('data-mc-edit'); var c = cats.filter(function (x) { return x.id === id; })[0]; openCategoryModal(c); return; }
+          var dl = e.target.closest('[data-mc-del]');
+          if (dl) {
+            var did = dl.getAttribute('data-mc-del');
+            confirmDialog('এই ক্যাটাগরিটি মুছে ফেলবেন?', function () {
+              call('deleteAssetCategory', [getToken(), did], function () { showToast('ক্যাটাগরি মুছে ফেলা হয়েছে।', 'success'); load(openManageCatsModal); });
+            });
+          }
+        };
+      }
+
+      /* =====================================================
+         মোডাল: মেইনটেনেন্স যোগ করুন
+         ===================================================== */
+      function openMaintModal(presetAssetId) {
+        var assets = (state.data && state.data.assets) || [];
+        var opts = assets.map(function (a) { return '<option value="' + esc(a.id) + '"' + (a.id === presetAssetId ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('');
+        var body =
+          '<div class="form-row"><label>সম্পদ *</label><select class="form-input" id="amAsset">' + opts + '</select></div>' +
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>তারিখ *</label><input type="date" class="form-input" id="amDate" value="' + new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka' }).format(new Date()) + '"></div>' +
+            '<div class="form-row"><label>খরচ (৳)</label><input type="number" min="0" step="any" class="form-input" id="amCost"></div>' +
+          '</div>' +
+          '<div class="form-row"><label>বিবরণ *</label><input type="text" class="form-input" id="amDesc" placeholder="যেমন: ব্যাটারি পরিবর্তন"></div>';
+
+        showModal('মেইনটেনেন্স এন্ট্রি যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+              var assetId = el('amAsset').value, date = el('amDate').value, desc = el('amDesc').value.trim(), cost = el('amCost').value;
+              if (!assetId) { showToast('সম্পদ নির্বাচন করুন।', 'warning'); return; }
+              if (!desc) { showToast('বিবরণ লিখুন।', 'warning'); return; }
+              call('addMaintenance', [getToken(), { assetId: assetId, date: date, description: desc, cost: cost }], function (d) {
+                hideModal(); showToast('মেইনটেনেন্স যোগ হয়েছে।', 'success'); applyData(d);
+              });
+          } }
+        ]);
+      }
+
+      function openAllMaintModal() {
+        var all = (state.data && state.data.maintenanceAll) || [];
+        var body = all.length ? all.map(function (m) {
+          return '<div class="as-m-list-row"><span class="as-m-grow">' + dispShort(m.date) + ' — ' + esc(m.assetName) + ' — ' + esc(m.description) + '</span><span>' + money(m.cost) + '</span>' +
+            '<button type="button" class="as-m-mini danger" data-mm-del="' + esc(m.id) + '">মুছুন</button></div>';
+        }).join('') : '<div class="as-empty">কোনো মেইনটেনেন্স এন্ট্রি নেই।</div>';
+
+        showModal('সব মেইনটেনেন্স এন্ট্রি', body, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ নতুন এন্ট্রি', className: 'btn-primary', onClick: function () { openMaintModal(''); } }
+        ]);
+        el('modalBody').onclick = function (e) {
+          var dl = e.target.closest('[data-mm-del]');
+          if (!dl) return;
+          confirmDialog('এই মেইনটেনেন্স এন্ট্রিটি মুছে ফেলবেন?', function () {
+            call('deleteMaintenance', [getToken(), dl.getAttribute('data-mm-del')], function (d) {
+              showToast('এন্ট্রি মুছে ফেলা হয়েছে।', 'success'); applyData(d); openAllMaintModal();
+            });
+          });
+        };
+      }
+
+      /* =====================================================
+         মোডাল: দলিলপত্র যোগ করুন
+         ===================================================== */
+      var docPendingFile = null;
+      function openDocModal() {
+        docPendingFile = null;
+        var assets = (state.data && state.data.assets) || [];
+        var opts = '<option value="">— সাধারণ (নির্দিষ্ট কোনো সম্পদের নয়) —</option>' + assets.map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; }).join('');
+        var body =
+          '<div class="form-row"><label>সম্পদ (ঐচ্ছিক)</label><select class="form-input" id="adAsset">' + opts + '</select></div>' +
+          '<div class="form-row"><label>ফাইল *</label><input type="file" class="form-input" id="adFile" accept=".pdf,.jpg,.jpeg,.png,.zip,application/pdf,image/*"></div>' +
+          '<div class="as-m-note">PDF, ছবি বা ZIP ফাইল আপলোড করা যাবে।</div>';
+
+        showModal('সম্পদ দলিলপত্র যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'আপলোড করুন', className: 'btn-primary', onClick: submitDoc }
+        ]);
+        el('adFile').addEventListener('change', function () {
+          var file = this.files && this.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () { docPendingFile = { base64: String(reader.result).split(',')[1] || '', mime: file.type, name: file.name }; };
+          reader.readAsDataURL(file);
+        });
+      }
+      function submitDoc() {
+        if (!docPendingFile) { showToast('একটি ফাইল নির্বাচন করুন।', 'warning'); return; }
+        var assetId = el('adAsset').value;
+        call('uploadAssetDocument', [getToken(), assetId, docPendingFile.base64, docPendingFile.mime, docPendingFile.name], function (d) {
+          hideModal(); showToast('দলিলপত্র আপলোড হয়েছে।', 'success'); applyData(d);
+        });
+      }
+      function confirmDeleteDoc(id) {
+        confirmDialog('এই দলিলটি মুছে ফেলবেন?', function () {
+          call('deleteAssetDocument', [getToken(), id], function (d) { showToast('মুছে ফেলা হয়েছে।', 'success'); applyData(d); });
+        });
+      }
+
+      /* =====================================================
+         মোডাল: ওয়ারেন্টি রিমাইন্ডার / মেইনটেনেন্স সময়সূচী / রিপোর্ট
+         ===================================================== */
+      function openWarrantyListModal() {
+        var list = (state.data && state.data.assets || []).filter(function (a) { return a.warrantyStatus === 'warn' || a.warrantyStatus === 'critical' || a.warrantyStatus === 'expired'; });
+        list.sort(function (a, b) { return (a.warrantyDaysLeft || -99999) - (b.warrantyDaysLeft || -99999); });
+        var body = list.length ? list.map(function (a) {
+          return '<div class="as-m-row"><span>' + esc(a.name) + '</span>' + warrantyCellHtml(a) + '</div>';
+        }).join('') : '<div class="as-empty">নিকট ভবিষ্যতে বা ইতিমধ্যে মেয়াদোত্তীর্ণ কোনো ওয়ারেন্টি নেই।</div>';
+        showModal('ওয়ারেন্টি মেয়াদ রিমাইন্ডার', body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+      }
+
+      function openMaintScheduleModal() {
+        var all = ((state.data && state.data.maintenanceAll) || []).slice().sort(function (a, b) { return b.date.localeCompare(a.date); });
+        var body = all.length ? all.map(function (m) {
+          return '<div class="as-m-row"><span>' + dispShort(m.date) + ' — ' + esc(m.assetName) + '</span><span>' + esc(m.description) + '</span></div>';
+        }).join('') : '<div class="as-empty">কোনো মেইনটেনেন্স রেকর্ড নেই।</div>';
+        showModal('রক্ষণাবেক্ষণ সময়সূচী (এ পর্যন্ত সম্পন্ন)', body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+      }
+
+      function openMaintReportModal() {
+        var byAsset = {};
+        ((state.data && state.data.maintenanceAll) || []).forEach(function (m) {
+          byAsset[m.assetName] = (byAsset[m.assetName] || 0) + m.cost;
+        });
+        var rows = Object.keys(byAsset).sort(function (a, b) { return byAsset[b] - byAsset[a]; });
+        var body = rows.length ? rows.map(function (name) {
+          return '<div class="as-m-row"><span>' + esc(name) + '</span><b>' + money(byAsset[name]) + '</b></div>';
+        }).join('') : '<div class="as-empty">কোনো মেইনটেনেন্স রেকর্ড নেই।</div>';
+        showModal('ভারি মেইনটেনেন্স রিপোর্ট (সম্পদ অনুযায়ী মোট খরচ)', body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+      }
+
+      /* =====================================================
+         KPI বিস্তারিত
+         ===================================================== */
+      function openKpiDetail(kind) {
+        var d = state.data;
+        if (!d) return;
+        if (kind === 'count' || kind === 'purchase' || kind === 'current') {
+          var rows = d.assets.slice(0, 15).map(function (a) {
+            return '<div class="as-m-row"><span>' + esc(a.name) + '</span><b>' + (kind === 'current' ? money(a.currentValue) : (kind === 'purchase' ? money(a.purchasePrice) : esc(a.category || '—'))) + '</b></div>';
+          }).join('');
+          showModal('বিস্তারিত', rows || '<div class="as-empty">কোনো সম্পদ নেই।</div>', [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+        } else if (kind === 'maint') {
+          openMaintReportModal();
+        } else {
+          openMaintScheduleModal();
+        }
+      }
+
+      /* =====================================================
+         এক্সপোর্ট: PDF ও Excel
+         ===================================================== */
+      function printHtml(title, inner) {
+        var w = window.open('', '_blank');
+        if (!w) { showToast('পপআপ আটকে গেছে — ব্রাউজারে পপআপ অনুমতি দিন।', 'warning'); return; }
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
+          '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">' +
+          '<style>body{font-family:"Noto Sans Bengali",Arial,sans-serif;color:#10233F;padding:28px;font-size:13px}h1{font-size:20px;margin:0 0 14px}' +
+          'table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #d7dde8;padding:7px 9px;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f1f5fb}</style></head><body>' +
+          inner + '</body></html>');
+        w.document.close(); w.focus();
+        setTimeout(function () { w.print(); }, 900);
+        showToast('প্রিন্ট উইন্ডোতে "Save as PDF" নির্বাচন করুন।', 'default');
+      }
+
+      function exportPdf() {
+        var d = state.data;
+        if (!d || !d.assets.length) { showToast('এক্সপোর্ট করার মতো কোনো সম্পদ নেই।', 'warning'); return; }
+        var rows = d.assets.map(function (a) {
+          return '<tr><td>' + esc(a.name) + '</td><td>' + esc(a.category) + '</td><td>' + dispShort(a.purchaseDate) + '</td><td>' + num(a.purchasePrice) + '</td><td>' + num(a.currentValue) + '</td><td>' + esc(a.condition) + '</td></tr>';
+        }).join('');
+        printHtml('সম্পদের তালিকা', '<h1>আমার সম্পদ ও সামগ্রী</h1><table><thead><tr><th>নাম</th><th>ক্যাটাগরি</th><th>ক্রয় তারিখ</th><th>ক্রয়মূল্য</th><th>বর্তমান মূল্য</th><th>অবস্থা</th></tr></thead><tbody>' + rows + '</tbody></table>');
+      }
+
+      function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+      function exportExcel() {
+        var d = state.data;
+        if (!d || !d.assets.length) { showToast('এক্সপোর্ট করার মতো কোনো সম্পদ নেই।', 'warning'); return; }
+        var lines = [['Name', 'Category', 'Brand', 'Model', 'PurchaseDate', 'PurchasePrice', 'CurrentValue', 'WarrantyStatus', 'Condition', 'Location'].map(csvCell).join(',')];
+        d.assets.forEach(function (a) {
+          lines.push([csvCell(a.name), csvCell(a.category), csvCell(a.brand), csvCell(a.model), csvCell(a.purchaseDate), a.purchasePrice, a.currentValue, csvCell(a.warrantyStatus), csvCell(a.condition), csvCell(a.location)].join(','));
+        });
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a2 = document.createElement('a');
+        a2.href = url; a2.download = 'assets.csv';
+        document.body.appendChild(a2); a2.click();
+        setTimeout(function () { document.body.removeChild(a2); URL.revokeObjectURL(url); }, 500);
+        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
+      }
+
+      /* =====================================================
+         ইভেন্ট
+         ===================================================== */
+      root().addEventListener('click', function (e) {
+        var catBtn = e.target.closest('[data-cat]');
+        if (catBtn) {
+          var name = catBtn.getAttribute('data-cat');
+          state.catFilter = state.catFilter === name ? '' : name;
+          el('asFilterCat').value = state.catFilter;
+          render();
+          return;
+        }
+
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+
+        if (act === 'retry') load();
+        else if (act === 'add-asset') openAssetModal('');
+        else if (act === 'edit-asset') openAssetModal(b.getAttribute('data-id'));
+        else if (act === 'view-asset') openViewAssetModal(b.getAttribute('data-id'));
+        else if (act === 'del-asset') confirmDeleteAsset(b.getAttribute('data-id'));
+        else if (act === 'add-cat') openCategoryModal(null);
+        else if (act === 'manage-cats') openManageCatsModal();
+        else if (act === 'add-maint') openMaintModal('');
+        else if (act === 'all-maint') openAllMaintModal();
+        else if (act === 'add-doc') openDocModal();
+        else if (act === 'del-doc') confirmDeleteDoc(b.getAttribute('data-id'));
+        else if (act === 'warranty-list') openWarrantyListModal();
+        else if (act === 'maint-schedule') openMaintScheduleModal();
+        else if (act === 'maint-report') openMaintReportModal();
+        else if (act === 'pdf') exportPdf();
+        else if (act === 'excel') exportExcel();
+        else if (act === 'kpi-detail') openKpiDetail(b.getAttribute('data-kind'));
+        else if (act === 'toggle-all') { state.showAll = !state.showAll; renderTable(state.data); }
+      });
+
+      el('asFilterCat').addEventListener('change', function () { state.catFilter = this.value; render(); });
+      el('asFilterStatus').addEventListener('change', function () { state.statusFilter = this.value; render(); });
+      el('asSearchBtn').addEventListener('click', function () { state.search = el('asSearch').value; renderTable(state.data); });
+      el('asSearch').addEventListener('keydown', function (e) { if (e.key === 'Enter') { state.search = this.value; renderTable(state.data); } });
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      maybeLoad();
+    })();
+  </script>
+
 </section>
