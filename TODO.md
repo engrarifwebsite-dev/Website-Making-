@@ -19,6 +19,7 @@
 - [x] Power Grid: salary statements, CPF annual summary and earlier CPF entries, PDF/Excel export (Phase 8, first part)
 - [x] Power Grid: CPF card rule (Employee's = CPF Deduction − Employer's Contribution) and removal of the info note card
 - [x] Power Grid: two subtabs ("বেতন ও ভাতা", "ছুটির হিসাব") and the Training Bill earning line
+- [x] My Assets & Items: dashboard, categories, warranty, maintenance, documents, main/sub assets (Phase 14)`
 
 ## In Progress
 - (none)
@@ -31,7 +32,6 @@
 - [ ] My Transactions (Phase 11)
 - [ ] Emergency Documents (Phase 12)
 - [ ] Islamic Corner (Phase 13)
-- [ ] My Assets & Items (Phase 14)
 - [ ] AI Assistant Hub (Phase 15)
 - [ ] Settings (Phase 16)
 - [ ] Automation and cross-module refinements (Phase 17)
