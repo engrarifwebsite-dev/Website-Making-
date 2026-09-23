@@ -21,13 +21,44 @@
  *          স্থিতি (দিন) = বর্তমান স্থিতি (capped) − সেই এন্ট্রির দিন সংখ্যা
  *      (আগের accrued-as-of-date ভিত্তিক জটিল হিসাব বাদ দেওয়া হয়েছে)।
  *
- * getLeaveData() এর রিটার্ন কন্ট্র্যাক্ট (আগের ফিল্ডগুলো অপরিবর্তিত রাখা
+ * ------------------------------------------------------------------
+ * NOTE (2026-09-22, Session 13): "ছুটির এন্ট্রি তালিকা" কার্ডে প্রতিটি
+ * এন্ট্রির নিজস্ব "কাগজপত্র" (যেমন ছুটির আবেদন, মেডিকেল সার্টিফিকেট)
+ * আপলোড ও ডাউনলোড করার ব্যবস্থা যোগ করা হয়েছে — Education Documents
+ * ফিচারের (Server_PersonalInfo.gs) একই প্যাটার্ন অনুসরণ করে:
+ *   - নতুন শিট 'LeaveDocuments' (Power_Grid spreadsheet): DocID, EntryID,
+ *     FileID, FileName, UploadedAt। প্রথম ব্যবহারে স্বয়ংক্রিয়ভাবে তৈরি হয়।
+ *   - ফাইল Drive-এ যায় DRIVE_FOLDER_IDS.PhotosAndFiles ফোল্ডারে (অন্যান্য
+ *     আপলোডের মতোই)।
+ *   - getLeaveDocumentsMap(), uploadLeaveDocument(), deleteLeaveDocument()
+ *     — নতুন ফাংশন, getLeaveData()-এর রিটার্ন কন্ট্র্যাক্ট অপরিবর্তিত।
+ *   - একটি এন্ট্রি মুছে ফেলা হলে (deleteLeaveEntry) তার সংযুক্ত সব
+ *     কাগজপত্রও মুছে যায় (Drive ট্র্যাশে, পুনরুদ্ধারযোগ্য)।
+ *   - এই সেশনে "স্থিতি (দিন)" কলামটি ফ্রন্টএন্ডের এন্ট্রি তালিকা থেকে
+ *     সরিয়ে ফেলা হয়েছে (Page_PowerGrid.html) — সার্ভারের হিসাব
+ *     (entries[].balance) অপরিবর্তিত রাখা হয়েছে, শুধু আর UI-তে দেখানো
+ *     হয় না।
+ * ------------------------------------------------------------------
+ * ------------------------------------------------------------------
+ * NOTE (2026-09-23, Session 14): balance-এর ক্যাপ প্রয়োগের ক্রম ঠিক করা
+ * হয়েছে। আগে: min(মোট অর্জিত − ভোগ − নগদায়ন, ১৮০) — অর্থাৎ প্রথমে বিয়োগ,
+ * তারপর ক্যাপ। এখন: min(মোট অর্জিত, ১৮০) − ভোগ − নগদায়ন — অর্থাৎ প্রথমে
+ * ক্যাপ, তারপর বিয়োগ। উদাহরণ: মোট অর্জিত ২২৫ দিন হলে পুল ধরা হয় ১৮০;
+ * প্রথম এন্ট্রি ৬০ দিন হলে স্থিতি ১৮০−৬০=১২০; পরের এন্ট্রি ৪০ দিন হলে
+ * স্থিতি ১২০−৪০=৮০। (rawBalance ফিল্ডটি এখন balance-এর সমান রাখা হয়েছে,
+ * যেহেতু পুরনো "uncapped তারপর capped" ধারণাটি আর প্রযোজ্য নয়।)
+ * saveLeaveEntry()-এর সেভের আগের availability-check-ও একই সূত্রে ঠিক
+ * করা হয়েছে। এছাড়া Page_PowerGrid.html-এর এন্ট্রি তালিকায় প্রতি রো-তে
+ * ফাইল আপলোড/ডাউনলোড UI যোগ করা হয়েছে, getLeaveDocumentsMap() /
+ * uploadLeaveDocument() / deleteLeaveDocument() ব্যবহার করে (এই ফাংশনগুলো
+ * অপরিবর্তিত)।
+ * ------------------------------------------------------------------
+ * (আগের ফিল্ডগুলো অপরিবর্তিত রাখা
  * হয়েছে, নতুন ফিল্ড শুধু যোগ করা হয়েছে — পুরনো ফ্রন্টএন্ড কোড ভাঙবে না):
  *   joiningDate, accrualDays, daysServed, totalEarned, totalUsed,
  *   totalEncashed, balance, entries[]
  *   + নতুন: rawBalance, maxBalance, alertThreshold, forfeitedDays,
  *           nearCap, capReached
- * ------------------------------------------------------------------
  *
  * Leave তাব "Leave" শিট ব্যবহার করে (Power_Grid spreadsheet):
  *   EntryID, Date, Type, Days, Balance, Notes
@@ -41,15 +72,18 @@
  *
  * pgSs_(), pgAuth_(), pgNum_(), pgDateStr_(), pgGetEmployee_() এবং PG_TZ
  * Server_PowerGrid.gs থেকে পুনরায় ব্যবহৃত হয় (একই Apps Script প্রজেক্টে
- * থাকায় এগুলো এমনিতেই scope-এ আছে)।
+ * থাকায় এগুলো এমনিতেই scope-এ আছে)। formatIfDate_() Server_PersonalInfo.gs
+ * থেকে একইভাবে পুনরায় ব্যবহৃত হয়।
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs (generateUniqueId),
- * Utils_Sheets.gs (ensureSheetWithHeaders), Server_PowerGrid.gs.
+ * Utils_Sheets.gs (ensureSheetWithHeaders), Utils_Drive.gs (uploadFileToFolder_),
+ * Server_PowerGrid.gs, Server_PersonalInfo.gs (formatIfDate_).
  */
 
 var LEAVE_ACCRUAL_DAYS = 11;   // চাকরির প্রতি ১১ দিনে ১ দিন অর্জিত ছুটি
 var LEAVE_MAX_BALANCE = 180;   // বর্তমান স্থিতি (usable balance) সর্বোচ্চ এই পরিমাণ
 var LEAVE_ALERT_THRESHOLD = 170; // এই বা এর বেশি (কিন্তু সীমার নিচে) হলে "কাছাকাছি সীমা" সতর্কতা
 var LEAVE_HEADERS = ['EntryID', 'Date', 'Type', 'Days', 'Balance', 'Notes'];
+var LEAVE_DOC_HEADERS = ['DocID', 'EntryID', 'FileID', 'FileName', 'UploadedAt'];
 
 function leaveSheet_() {
   return ensureSheetWithHeaders(pgSs_(), 'Leave', LEAVE_HEADERS);
@@ -111,11 +145,16 @@ function leaveReadEntries_() {
  * সব হিসাব এক জায়গায়:
  *   - totalEarned      : মোট অর্জিত (raw, সীমাহীন — যোগদানের তারিখ থেকে হিসাব)
  *   - totalUsed / totalEncashed : মোট ভোগ / নগদায়ন
- *   - rawBalance       : totalEarned − totalUsed − totalEncashed (সীমাহীন)
- *   - balance          : rawBalance কে ১৮০ দিনে বাঁধা (এটাই "বর্তমান স্থিতি")
- *   - forfeitedDays    : rawBalance যদি ১৮০ ছাড়িয়ে যায়, সেই বাড়তি অংশ
- *   - nearCap/capReached : সতর্কতা ফ্ল্যাগ
- *   - entries[].balance : ব্যবহারকারীর সূত্র — বর্তমান (capped) স্থিতি − সেই এন্ট্রির দিন সংখ্যা
+ *   - cappedEarned     : totalEarned-কে ১৮০ দিনে বাঁধা — যত বেশিই অর্জিত হোক,
+ *     "ব্যবহারযোগ্য পুল" কখনো ১৮০-র বেশি শুরু হয় না
+ *   - balance          : বর্তমান স্থিতি = cappedEarned − totalUsed − totalEncashed
+ *     (যেমন: মোট অর্জিত ২২৫ হলেও পুল ধরা হয় ১৮০; প্রথম এন্ট্রি ৬০ দিন হলে
+ *      স্থিতি ১৮০−৬০=১২০; পরের এন্ট্রি ৪০ দিন হলে স্থিতি ১২০−৪০=৮০)
+ *   - forfeitedDays    : totalEarned যদি ১৮০ ছাড়িয়ে যায়, সেই বাড়তি অংশ
+ *     (ব্যবহার-নির্বিশেষে, অর্জনের সময়ই হারিয়ে যাওয়া ধরা হয়)
+ *   - nearCap/capReached : সতর্কতা ফ্ল্যাগ (নতুন balance-এর ওপর ভিত্তি করে)
+ *   - entries[].balance : সেই এন্ট্রি সেভ হওয়ার মুহূর্তে বর্তমান স্থিতি −
+ *     সেই এন্ট্রির দিন সংখ্যা (ফ্রন্টএন্ডে আর দেখানো হয় না, রেফারেন্সের জন্য রাখা)
  */
 function leaveComputeSummary_(joining, asOfDate) {
   var daysServed = leaveServiceDays_(joining, asOfDate);
@@ -129,10 +168,10 @@ function leaveComputeSummary_(joining, asOfDate) {
   totalUsed = Math.round(totalUsed * 100) / 100;
   totalEncashed = Math.round(totalEncashed * 100) / 100;
 
-  var rawBalance = Math.round((totalEarned - totalUsed - totalEncashed) * 100) / 100;
-  var balance = Math.min(rawBalance, LEAVE_MAX_BALANCE);
+  var cappedEarned = Math.min(totalEarned, LEAVE_MAX_BALANCE);
+  var balance = Math.round((cappedEarned - totalUsed - totalEncashed) * 100) / 100;
   if (balance < 0) balance = 0; // সুরক্ষামূলক — validation আগেই ঋণাত্মক হওয়া আটকায়
-  var forfeitedDays = Math.round(Math.max(0, rawBalance - LEAVE_MAX_BALANCE) * 100) / 100;
+  var forfeitedDays = Math.round(Math.max(0, totalEarned - LEAVE_MAX_BALANCE) * 100) / 100;
   var nearCap = balance >= LEAVE_ALERT_THRESHOLD && balance < LEAVE_MAX_BALANCE;
   var capReached = balance >= LEAVE_MAX_BALANCE;
 
@@ -143,7 +182,6 @@ function leaveComputeSummary_(joining, asOfDate) {
       type: e.type,
       days: e.days,
       notes: e.notes,
-      // ব্যবহারকারীর নির্ধারিত সূত্র: স্থিতি (দিন) = বর্তমান স্থিতি − দিন সংখ্যা
       balance: Math.round((balance - e.days) * 100) / 100
     };
   });
@@ -153,7 +191,7 @@ function leaveComputeSummary_(joining, asOfDate) {
     totalEarned: totalEarned,
     totalUsed: totalUsed,
     totalEncashed: totalEncashed,
-    rawBalance: rawBalance,
+    rawBalance: balance,
     balance: balance,
     maxBalance: LEAVE_MAX_BALANCE,
     alertThreshold: LEAVE_ALERT_THRESHOLD,
@@ -257,9 +295,8 @@ function saveLeaveEntry(token, entry) {
     if (e.type === 'Taken') usedExcludingThis += e.days; else encashedExcludingThis += e.days;
   });
 
-  var rawAvailable = totalEarned - usedExcludingThis - encashedExcludingThis;
-  var available = Math.round(Math.min(rawAvailable, LEAVE_MAX_BALANCE) * 100) / 100;
-  if (available < 0) available = 0;
+  var rawAvailable = Math.min(totalEarned, LEAVE_MAX_BALANCE) - usedExcludingThis - encashedExcludingThis;
+  var available = Math.round(Math.max(0, rawAvailable) * 100) / 100;
 
   if (days > available + 1e-9) {
     throw new Error('পর্যাপ্ত অর্জিত ছুটি নেই। বর্তমান স্থিতি: ' + available + ' দিন (সর্বোচ্চ সীমা ' + LEAVE_MAX_BALANCE + ' দিন)।');
@@ -287,7 +324,7 @@ function saveLeaveEntry(token, entry) {
   return getLeaveData(token);
 }
 
-/** Returns the refreshed getLeaveData() payload. */
+/** Returns the refreshed getLeaveData() payload. Also removes any documents attached to the entry. */
 function deleteLeaveEntry(token, entryId) {
   pgAuth_(token);
 
@@ -296,9 +333,107 @@ function deleteLeaveEntry(token, entryId) {
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(entryId)) {
       sheet.deleteRow(i + 1);
+      removeLeaveDocumentsForEntry_(entryId);
       leaveRecalcBalances_();
       return getLeaveData(token);
     }
   }
   throw new Error('এন্ট্রি পাওয়া যায়নি।');
+}
+
+/* ============================================================
+ * Leave entry documents (কাগজপত্র) — ছুটির আবেদন, মেডিকেল সার্টিফিকেট
+ * ইত্যাদি, প্রতিটি এন্ট্রির নিজস্ব তালিকা। প্যাটার্নটি Education
+ * Documents-এর (Server_PersonalInfo.gs) অনুরূপ।
+ * Sheet 'LeaveDocuments' (Power_Grid): DocID, EntryID, FileID, FileName, UploadedAt
+ * ============================================================ */
+
+function leaveDocumentsSheet_() {
+  return ensureSheetWithHeaders(pgSs_(), 'LeaveDocuments', LEAVE_DOC_HEADERS);
+}
+
+/**
+ * Returns every uploaded document for every leave entry in ONE call,
+ * grouped by EntryID: { 'LEV-...': [ { docId, fileId, fileName, uploadedAt }, ... ] }.
+ * The client fetches this once alongside getLeaveData().
+ */
+function getLeaveDocumentsMap() {
+  var sheet = leaveDocumentsSheet_();
+  var data = sheet.getDataRange().getValues();
+  var map = {};
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0] || !row[1]) continue;
+    var entryId = String(row[1]);
+    if (!map[entryId]) map[entryId] = [];
+    map[entryId].push({
+      docId: String(row[0]),
+      fileId: row[2],
+      fileName: row[3] || 'ডকুমেন্ট',
+      uploadedAt: formatIfDate_(row[4])
+    });
+  }
+  return map;
+}
+
+/**
+ * Uploads one document for a given leave entry into Drive
+ * (PhotosAndFiles folder) and records it against that entry.
+ * Returns the new document's info so the client can show it immediately
+ * without re-fetching the whole map.
+ */
+function uploadLeaveDocument(compositeToken, entryId, base64Data, mimeType, fileName) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+  if (!entryId) throw new Error('ছুটির এন্ট্রি খুঁজে পাওয়া যায়নি — আগে এন্ট্রিটি সংরক্ষণ করুন।');
+
+  var safeName = (fileName && String(fileName).trim()) || 'leave-document';
+  var fileId = uploadFileToFolder_(DRIVE_FOLDER_IDS.PhotosAndFiles, base64Data, mimeType, 'leave-' + entryId + '-' + safeName);
+
+  var sheet = leaveDocumentsSheet_();
+  var docId = generateUniqueId('LVDOC');
+  var now = new Date();
+  sheet.appendRow([docId, entryId, fileId, safeName, now]);
+
+  return {
+    docId: docId,
+    fileId: fileId,
+    fileName: safeName,
+    uploadedAt: Utilities.formatDate(now, PG_TZ, 'yyyy-MM-dd')
+  };
+}
+
+/** Deletes one document's record and trashes the underlying Drive file (recoverable). */
+function deleteLeaveDocument(compositeToken, docId) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  var sheet = leaveDocumentsSheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(docId)) {
+      var fileId = data[i][2];
+      if (fileId) {
+        try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) { /* file may already be gone — ignore */ }
+      }
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Internal: removes all documents (rows + Drive files) belonging to one leave entry — used when that entry itself is deleted. */
+function removeLeaveDocumentsForEntry_(entryId) {
+  var sheet = leaveDocumentsSheet_();
+  var data = sheet.getDataRange().getValues();
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][1]) === String(entryId)) {
+      var fileId = data[i][2];
+      if (fileId) {
+        try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) { /* ignore */ }
+      }
+      sheet.deleteRow(i + 1);
+    }
+  }
 }
