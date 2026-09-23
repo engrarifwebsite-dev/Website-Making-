@@ -1,6 +1,770 @@
 <section id="page-emergency-documents" class="page">
-  <div class="page-placeholder">
-    <h2>জরুরি ডকুমেন্টস</h2>
-    <p>এই পেজের কন্টেন্ট Phase 12-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       জরুরি ডকুমেন্টস (Phase 12) — সব ক্লাস ed- দিয়ে শুরু
+       ========================================================= */
+    #page-emergency-documents {
+      --ed-blue: #1d4ed8;
+      --ed-green: #15803d;
+      --ed-purple: #7c3aed;
+      --ed-orange: #d97706;
+      --ed-red: #dc2626;
+      --ed-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-emergency-documents * { box-sizing: border-box; }
+
+    #page-emergency-documents .ed-card {
+      background: #fff;
+      border: 1px solid var(--ed-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-emergency-documents .ed-card-title { font-size: 15.5px; font-weight: 800; color: var(--navy); margin: 0; }
+    #page-emergency-documents .ed-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    #page-emergency-documents .ed-link { background: none; border: 0; padding: 0; color: var(--ed-blue); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    #page-emergency-documents .ed-link:hover { text-decoration: underline; }
+
+    #page-emergency-documents .ed-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-emergency-documents .ed-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-emergency-documents .ed-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    #page-emergency-documents .ed-body { transition: opacity .15s ease; }
+    #page-emergency-documents .ed-body.busy { opacity: .5; pointer-events: none; }
+
+    /* ---------- টপ হেডার: শিরোনাম + অ্যাকশন + সার্চ ---------- */
+    #page-emergency-documents .ed-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+    #page-emergency-documents .ed-toolbar-title { font-size: 19px; font-weight: 800; color: var(--navy); margin: 0; }
+    #page-emergency-documents .ed-toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #page-emergency-documents .ed-search-wrap { display: flex; }
+    #page-emergency-documents .ed-input { border: 1px solid var(--ed-line); background: #fff; border-radius: 9px; padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--text); }
+    #page-emergency-documents .ed-search-wrap .ed-input { border-radius: 9px 0 0 9px; width: 200px; }
+    #page-emergency-documents .ed-search-btn { border: 1px solid var(--ed-line); border-left: 0; background: #fff; border-radius: 0 9px 9px 0; padding: 0 14px; cursor: pointer; color: var(--text-muted); }
+    #page-emergency-documents .ed-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ed-line); background: #fff; border-radius: 9px; padding: 9px 16px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); cursor: pointer; white-space: nowrap; }
+    #page-emergency-documents .ed-btn:hover { background: #f4f7fc; }
+    #page-emergency-documents .ed-btn-primary { background: var(--ed-blue); border-color: var(--ed-blue); color: #fff; }
+    #page-emergency-documents .ed-btn-primary:hover { background: #1638a8; }
+
+    /* ---------- লেআউট: প্রধান + সাইড ---------- */
+    #page-emergency-documents .ed-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; margin-bottom: 16px; }
+    #page-emergency-documents .ed-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+    /* ---------- ক্যাটাগরি গ্রিড ---------- */
+    #page-emergency-documents .ed-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+    #page-emergency-documents .ed-cat { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--ed-line); border-radius: 12px; background: #fff; cursor: pointer; font-family: inherit; text-align: left; }
+    #page-emergency-documents .ed-cat:hover { background: #f8fafc; }
+    #page-emergency-documents .ed-cat.active { border-color: var(--ed-blue); background: #eef4ff; }
+    #page-emergency-documents .ed-cat-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; color: var(--ed-blue); display: grid; place-items: center; font-size: 19px; flex-shrink: 0; }
+    #page-emergency-documents .ed-cat-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    #page-emergency-documents .ed-cat-count { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+    #page-emergency-documents .ed-cat-add { border-style: dashed; }
+    #page-emergency-documents .ed-cat-add .ed-cat-ico { background: #f1f5f9; color: var(--text-muted); font-size: 22px; }
+
+    /* ---------- আপলোড ড্রপজোন ---------- */
+    #page-emergency-documents .ed-drop { border: 2px dashed #c7d5f5; border-radius: 12px; padding: 26px 16px; text-align: center; cursor: pointer; background: #f7faff; transition: background .15s ease, border-color .15s ease; }
+    #page-emergency-documents .ed-drop:hover, #page-emergency-documents .ed-drop.drag { background: #eef4ff; border-color: var(--ed-blue); }
+    #page-emergency-documents .ed-drop-ico { font-size: 30px; color: var(--ed-blue); margin-bottom: 8px; }
+    #page-emergency-documents .ed-drop-text { font-size: 13px; font-weight: 700; color: var(--text); }
+    #page-emergency-documents .ed-drop-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+    #page-emergency-documents .ed-drop input[type="file"] { display: none; }
+    #page-emergency-documents .ed-upload-progress { margin-top: 12px; padding: 8px 10px; border: 1px solid var(--ed-line); border-radius: 9px; background: #fff; font-size: 12px; display: none; }
+    #page-emergency-documents .ed-upload-progress.show { display: block; }
+    #page-emergency-documents .ed-upload-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+    #page-emergency-documents .ed-upload-name { font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #page-emergency-documents .ed-upload-x { background: none; border: 0; cursor: pointer; color: var(--text-muted); font-size: 13px; }
+    #page-emergency-documents .ed-ptrack { height: 6px; background: #e6eaf0; border-radius: 99px; overflow: hidden; }
+    #page-emergency-documents .ed-pfill { height: 100%; width: 0%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); border-radius: 99px; transition: width .25s ease; }
+
+    /* ---------- ফিল্টার ---------- */
+    #page-emergency-documents .ed-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    #page-emergency-documents .ed-select { border: 1px solid var(--ed-line); background: #fff; border-radius: 9px; padding: 8px 10px; font-family: inherit; font-size: 12.5px; color: var(--text); }
+
+    /* ---------- ডকুমেন্ট টেবিল ---------- */
+    #page-emergency-documents .ed-table-wrap { overflow-x: auto; border: 1px solid var(--ed-line); border-radius: 10px; }
+    #page-emergency-documents table.ed-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
+    #page-emergency-documents .ed-table th { background: #f4f7fc; color: var(--text-muted); font-weight: 700; font-size: 12px; padding: 10px; text-align: center; border-bottom: 1px solid var(--ed-line); white-space: nowrap; }
+    #page-emergency-documents .ed-table th:first-child, #page-emergency-documents .ed-table td:first-child { text-align: left; }
+    #page-emergency-documents .ed-table td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--ed-line); color: var(--text); font-weight: 600; white-space: nowrap; }
+    #page-emergency-documents .ed-table tr:last-child td { border-bottom: 0; }
+    #page-emergency-documents .ed-doc { display: flex; align-items: center; gap: 9px; }
+    #page-emergency-documents .ed-doc-ico { font-size: 17px; flex-shrink: 0; }
+    #page-emergency-documents .ed-doc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+    #page-emergency-documents .ed-actcol { display: inline-flex; gap: 6px; }
+    #page-emergency-documents .ed-iconbtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; display: inline-grid; place-items: center; background: #f8fafc; color: var(--text-muted); }
+    #page-emergency-documents .ed-iconbtn:hover { background: #eef2ff; color: var(--ed-blue); }
+    #page-emergency-documents .ed-iconbtn.star.on { color: #d97706; background: #fef3c7; }
+    #page-emergency-documents .ed-more { display: block; margin: 14px auto 0; border: 1px solid #c7d5f5; background: #fff; color: var(--ed-blue); border-radius: 10px; padding: 8px 20px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    #page-emergency-documents .ed-more:hover { background: #f4f7fc; }
+    #page-emergency-documents .ed-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 26px 10px; }
+
+    /* ---------- দ্রুত অ্যাকশন ---------- */
+    #page-emergency-documents .ed-actions { display: flex; flex-direction: column; gap: 8px; }
+    #page-emergency-documents .ed-act { display: flex; align-items: center; gap: 10px; border: 1px solid var(--ed-line); background: #fff; border-radius: 9px; padding: 10px 12px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; text-align: left; text-decoration: none; }
+    #page-emergency-documents .ed-act:hover { background: #f4f7fc; }
+    #page-emergency-documents .ed-act .dot { width: 20px; text-align: center; flex-shrink: 0; }
+
+    /* ---------- গুরুত্বপূর্ণ ডকুমেন্টস ---------- */
+    #page-emergency-documents .ed-imp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+    #page-emergency-documents .ed-imp-card { position: relative; padding: 14px 12px; border-radius: 13px; color: #fff; }
+    #page-emergency-documents .ed-imp-star { position: absolute; top: 8px; right: 8px; font-size: 13px; }
+    #page-emergency-documents .ed-imp-ico { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.25); display: grid; place-items: center; font-size: 16px; margin-bottom: 10px; }
+    #page-emergency-documents .ed-imp-name { font-size: 13px; font-weight: 800; line-height: 1.3; }
+    #page-emergency-documents .ed-imp-cat { font-size: 11px; font-weight: 700; opacity: .92; margin-top: 4px; }
+    #page-emergency-documents .ed-imp-date { font-size: 10.5px; opacity: .85; margin-top: 8px; }
+
+    /* ---------- সাম্প্রতিক কার্যকলাপ ---------- */
+    #page-emergency-documents .ed-act-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--ed-line); font-size: 12.5px; }
+    #page-emergency-documents .ed-act-row:last-child { border-bottom: 0; }
+    #page-emergency-documents .ed-act-dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    #page-emergency-documents .ed-act-body { flex: 1; min-width: 0; }
+    #page-emergency-documents .ed-act-text { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #page-emergency-documents .ed-act-time { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+    /* ---------- স্টোরেজ তথ্য ---------- */
+    #page-emergency-documents .ed-store-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--ed-line); font-size: 13px; color: var(--text); }
+    #page-emergency-documents .ed-store-row:last-of-type { border-bottom: 0; }
+    #page-emergency-documents .ed-store-row b { font-weight: 800; color: var(--navy); }
+    #page-emergency-documents .ed-store-bar { padding: 6px 0 4px; }
+    #page-emergency-documents .ed-track { height: 7px; background: #e6eaf0; border-radius: 99px; overflow: hidden; }
+    #page-emergency-documents .ed-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+    /* ---------- মোডাল সহায়ক ---------- */
+    .ed-m-note { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; }
+    .ed-m-list-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13.5px; }
+    .ed-m-list-row:last-child { border-bottom: 0; }
+    .ed-m-grow { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ed-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 5px 10px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .ed-m-mini.danger { color: var(--danger); }
+    .ed-m-check { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 13.5px; font-weight: 600; color: var(--text); }
+
+    /* ---------- রেসপনসিভ ---------- */
+    @media (max-width: 1180px) {
+      #page-emergency-documents .ed-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      #page-emergency-documents .ed-toolbar { flex-direction: column; align-items: stretch; }
+      #page-emergency-documents .ed-toolbar-right { justify-content: stretch; }
+      #page-emergency-documents .ed-search-wrap .ed-input { width: 100%; flex: 1; }
+      #page-emergency-documents .ed-filters { flex-direction: column; }
+    }
+  </style>
+
+  <div class="ed-toolbar">
+    <h2 class="ed-toolbar-title">ডকুমেন্ট ক্যাটাগরি</h2>
+    <div class="ed-toolbar-right">
+      <button type="button" class="ed-btn ed-btn-primary" data-act="focus-upload">＋ ডকুমেন্ট আপলোড করুন</button>
+      <button type="button" class="ed-btn" data-act="manage-cats">⚙️ ক্যাটাগরি ব্যবস্থাপনা</button>
+      <div class="ed-search-wrap">
+        <input type="text" class="ed-input" id="edSearch" placeholder="ডকুমেন্ট খুঁজুন...">
+        <button type="button" class="ed-search-btn" id="edSearchBtn" aria-label="খুঁজুন">🔍</button>
+      </div>
+    </div>
   </div>
+
+  <div class="ed-error" id="edError"><span id="edErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+
+  <div class="ed-body" id="edBody">
+
+    <div class="ed-layout">
+      <div class="ed-card">
+        <div class="ed-cats" id="edCats"></div>
+      </div>
+
+      <div class="ed-card" id="edUploadCard">
+        <div class="ed-card-title" style="margin-bottom:12px;">ডকুমেন্ট আপলোড করুন</div>
+        <div class="ed-drop" id="edDrop">
+          <div class="ed-drop-ico">☁️</div>
+          <div class="ed-drop-text">ফাইল এখানে ড্র্যাগ করুন অথবা ক্লিক করে আপলোড করুন</div>
+          <div class="ed-drop-sub">সর্বোচ্চ সাইজ: ২৫ MB<br>সমর্থিত ফরম্যাট: PDF, JPG, PNG, DOC, DOCX<br>একবারে একটি ফাইল</div>
+          <input type="file" id="edFileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,application/pdf,image/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+        </div>
+        <div class="ed-upload-progress" id="edUploadProgress">
+          <div class="ed-upload-row"><span class="ed-upload-name" id="edUploadName">—</span><span id="edUploadPct">০%</span></div>
+          <div class="ed-ptrack"><div class="ed-pfill" id="edUploadFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ed-layout">
+      <div class="ed-card">
+        <div class="ed-head"><div class="ed-card-title" id="edTableTitle">সাম্প্রতিক ডকুমেন্টসমূহ</div></div>
+        <div class="ed-filters">
+          <select class="ed-select" id="edFilterCat"><option value="">সব ক্যাটাগরি</option></select>
+          <select class="ed-select" id="edFilterFormat">
+            <option value="">সব ফাইল টাইপ</option>
+            <option value="PDF">PDF</option>
+            <option value="JPG">JPG</option>
+            <option value="PNG">PNG</option>
+            <option value="DOC">DOC</option>
+            <option value="DOCX">DOCX</option>
+          </select>
+          <input type="date" class="ed-select" id="edFilterDate" title="এই তারিখ থেকে">
+        </div>
+        <div id="edTable"></div>
+      </div>
+
+      <div class="ed-side">
+        <div class="ed-card">
+          <div class="ed-card-title" style="margin-bottom:12px;">দ্রুত অ্যাকশন</div>
+          <div class="ed-actions">
+            <button type="button" class="ed-act" data-act="focus-upload"><span class="dot">📤</span> নতুন ডকুমেন্ট আপলোড</button>
+            <a class="ed-act" id="edDriveLink" href="#" target="_blank" rel="noopener"><span class="dot">🗂️</span> Google Drive ফোল্ডার দেখুন</a>
+            <button type="button" class="ed-act" data-act="manage-cats"><span class="dot">🏷️</span> ক্যাটাগরি ব্যবস্থাপনা</button>
+            <button type="button" class="ed-act" data-act="scroll-important"><span class="dot">⭐</span> গুরুত্বপূর্ণ ডকুমেন্টস</button>
+            <button type="button" class="ed-act" data-act="scroll-storage"><span class="dot">💾</span> স্টোরেজ তথ্য</button>
+            <button type="button" class="ed-act" data-act="backup"><span class="dot">📦</span> ডকুমেন্ট ব্যাকআপ (CSV)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ed-card" id="edImportantSection" style="margin-bottom:16px;">
+      <div class="ed-head"><div class="ed-card-title">⭐ গুরুত্বপূর্ণ ডকুমেন্টস</div></div>
+      <div class="ed-imp-grid" id="edImportantGrid"></div>
+    </div>
+
+    <div class="ed-layout">
+      <div class="ed-card">
+        <div class="ed-head"><div class="ed-card-title">সাম্প্রতিক কার্যকলাপ</div></div>
+        <div id="edActivity"></div>
+      </div>
+
+      <div class="ed-side" id="edStorageSection">
+        <div class="ed-card">
+          <div class="ed-card-title" style="margin-bottom:10px;">স্টোরেজ তথ্য</div>
+          <div id="edStorage"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__edocInit) return;
+      window.__edocInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+      var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      var PALETTE = ['#1d4ed8', '#15803d', '#7c3aed', '#d97706', '#dc2626', '#0ea5e9', '#ec4899', '#14b8a6', '#f97316'];
+      var ACTION_LABEL = { uploaded: 'আপলোড করা হয়েছে', updated: 'আপডেট করা হয়েছে', downloaded: 'ডাউনলোড করা হয়েছে', deleted: 'মুছে ফেলা হয়েছে' };
+      var ACTION_ICON = { uploaded: ['⬆️', '#dbeafe', '#1d4ed8'], updated: ['✏️', '#e3f6e8', '#15803d'], downloaded: ['⬇️', '#eef2ff', '#7c3aed'], deleted: ['🗑️', '#fee2e2', '#dc2626'] };
+
+      var state = { data: null, reqId: 0, loadedAt: 0, everLoaded: false, catFilter: '', formatFilter: '', dateFilter: '', search: '', showAll: false };
+      var pendingUpload = null; // { base64, mimeType, fileName }
+
+      /* ---------- helpers ---------- */
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-emergency-documents'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function bnDate(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+        if (!m) return '—';
+        return bn(Number(m[3])) + ' ' + BN_MONTHS[Number(m[2]) - 1] + ' ' + bn(m[1]);
+      }
+      function humanSize(bytes) {
+        bytes = Number(bytes) || 0;
+        if (bytes >= 1048576) return bn((bytes / 1048576).toFixed(2)) + ' MB';
+        if (bytes >= 1024) return bn(Math.round(bytes / 1024)) + ' KB';
+        return bn(bytes) + ' B';
+      }
+      function call(fnName, args, ok, fail) {
+        var runner = google.script.run
+          .withSuccessHandler(ok || function () {})
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger');
+            if (fail) fail(err);
+          });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('edBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('edErrorText').textContent = msg; el('edError').classList.add('show'); }
+      function hideError() { el('edError').classList.remove('show'); }
+      function findCat(id) {
+        var list = (state.data && state.data.categories) || [];
+        for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+        return null;
+      }
+      function colorFor(seed) {
+        var s = String(seed || '');
+        var h = 0;
+        for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+        return PALETTE[h % PALETTE.length];
+      }
+
+      /* ---------- load ---------- */
+      function load(cb) {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        var id = ++state.reqId;
+        hideError();
+        setBusy(true);
+
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return;
+            applyData(d);
+            setBusy(false);
+            if (typeof cb === 'function') cb();
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'ডকুমেন্টের তথ্য লোড করা যায়নি।');
+          })
+          .getEmergencyDocumentsData(token);
+      }
+
+      function applyData(d) {
+        state.data = d;
+        state.loadedAt = Date.now();
+        state.everLoaded = true;
+        render();
+      }
+
+      function render() {
+        var d = state.data;
+        if (!d) return;
+        renderCats(d);
+        renderFilterCatOptions(d);
+        renderTable(d);
+        renderImportant(d);
+        renderActivity(d);
+        renderStorage(d);
+        el('edDriveLink').href = d.storage.folderUrl || '#';
+      }
+
+      /* ---------- ক্যাটাগরি গ্রিড ---------- */
+      function renderCats(d) {
+        var html = d.categories.map(function (c) {
+          return '<button type="button" class="ed-cat' + (state.catFilter === c.id ? ' active' : '') + '" data-cat="' + esc(c.id) + '">' +
+            '<div class="ed-cat-ico">' + c.icon + '</div><div><div class="ed-cat-name">' + esc(c.name) + '</div>' +
+            '<div class="ed-cat-count">' + bn(c.count) + 'টি ডকুমেন্ট</div></div></button>';
+        }).join('');
+        html += '<button type="button" class="ed-cat ed-cat-add" data-act="add-cat"><div class="ed-cat-ico">＋</div><div class="ed-cat-name">নতুন ক্যাটাগরি</div></button>';
+        el('edCats').innerHTML = html;
+      }
+
+      function renderFilterCatOptions(d) {
+        var sel = el('edFilterCat');
+        var cur = sel.value;
+        sel.innerHTML = '<option value="">সব ক্যাটাগরি</option>' + d.categories.map(function (c) {
+          return '<option value="' + esc(c.id) + '">' + esc(c.icon) + ' ' + esc(c.name) + '</option>';
+        }).join('');
+        sel.value = cur || state.catFilter || '';
+      }
+
+      /* ---------- টেবিল ---------- */
+      function filteredDocs(d) {
+        var q = state.search.trim().toLowerCase();
+        return d.documentsAll.filter(function (doc) {
+          if (state.catFilter && doc.categoryId !== state.catFilter) return false;
+          if (state.formatFilter && doc.format !== state.formatFilter) return false;
+          if (state.dateFilter && String(doc.uploadedAt) < state.dateFilter) return false;
+          if (q && doc.name.toLowerCase().indexOf(q) === -1) return false;
+          return true;
+        });
+      }
+
+      function docIcon(format) {
+        if (format === 'PDF') return '📕';
+        if (format === 'JPG' || format === 'PNG' || format === 'IMG') return '🖼️';
+        if (format === 'DOC' || format === 'DOCX') return '📘';
+        return '📄';
+      }
+
+      function renderTable(d) {
+        var list = filteredDocs(d);
+        var host = el('edTable');
+        el('edTableTitle').textContent = 'সাম্প্রতিক ডকুমেন্টসমূহ (' + bn(list.length) + ')';
+
+        if (!list.length) {
+          host.innerHTML = '<div class="ed-empty">কোনো ডকুমেন্ট পাওয়া যায়নি।</div>';
+          return;
+        }
+
+        var shown = state.showAll ? list : list.slice(0, 8);
+        var rows = shown.map(function (doc) {
+          return '<tr>' +
+            '<td><div class="ed-doc"><span class="ed-doc-ico">' + docIcon(doc.format) + '</span><span class="ed-doc-name" title="' + esc(doc.name) + '">' + esc(doc.name) + '</span></div></td>' +
+            '<td>' + esc(doc.categoryName) + '</td>' +
+            '<td>' + bnDate(doc.uploadedAt) + '</td>' +
+            '<td>' + humanSize(doc.sizeBytes) + '</td>' +
+            '<td>' + esc(doc.format) + '</td>' +
+            '<td><span class="ed-actcol">' +
+              '<button type="button" class="ed-iconbtn" data-act="view-doc" data-id="' + esc(doc.id) + '" title="দেখুন">👁️</button>' +
+              '<button type="button" class="ed-iconbtn" data-act="dl-doc" data-id="' + esc(doc.id) + '" title="ডাউনলোড">⬇️</button>' +
+              '<button type="button" class="ed-iconbtn" data-act="more-doc" data-id="' + esc(doc.id) + '" title="আরও">⋮</button>' +
+            '</span></td></tr>';
+        }).join('');
+
+        host.innerHTML = '<div class="ed-table-wrap"><table class="ed-table"><thead><tr>' +
+          '<th>ডকুমেন্টের নাম</th><th>ক্যাটাগরি</th><th>তারিখ</th><th>সাইজ</th><th>ফরম্যাট</th><th>অ্যাকশন</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+          (list.length > 8 ? '<button type="button" class="ed-more" data-act="toggle-all">' + (state.showAll ? 'কম দেখুন ↑' : 'সব ডকুমেন্ট দেখুন →') + '</button>' : '');
+      }
+
+      /* ---------- গুরুত্বপূর্ণ ডকুমেন্টস ---------- */
+      function renderImportant(d) {
+        var host = el('edImportantGrid');
+        if (!d.important.length) {
+          host.innerHTML = '<div class="ed-empty">এখনো কোনো ডকুমেন্ট গুরুত্বপূর্ণ হিসেবে চিহ্নিত করা হয়নি — টেবিলের ⋮ মেনু থেকে ⭐ চিহ্নিত করুন।</div>';
+          return;
+        }
+        host.innerHTML = d.important.map(function (doc) {
+          var color = colorFor(doc.categoryName);
+          return '<div class="ed-imp-card" style="background:' + color + '">' +
+            '<span class="ed-imp-star">⭐</span>' +
+            '<div class="ed-imp-ico">' + docIcon(doc.format) + '</div>' +
+            '<div class="ed-imp-name" title="' + esc(doc.name) + '">' + esc(doc.name) + '</div>' +
+            '<div class="ed-imp-cat">' + esc(doc.categoryName) + '</div>' +
+            '<div class="ed-imp-date">' + bnDate(doc.uploadedAt) + '</div>' +
+            '</div>';
+        }).join('');
+      }
+
+      /* ---------- সাম্প্রতিক কার্যকলাপ ---------- */
+      function renderActivity(d) {
+        var host = el('edActivity');
+        if (!d.activity.length) { host.innerHTML = '<div class="ed-empty">এখনো কোনো কার্যকলাপ নেই।</div>'; return; }
+        host.innerHTML = d.activity.map(function (a) {
+          var ic = ACTION_ICON[a.action] || ['•', '#f1f5f9', '#64748b'];
+          var when = a.timestamp ? new Date(a.timestamp) : null;
+          var whenText = when && !isNaN(when.getTime())
+            ? bnDate(Utilities_formatLocalDate(when)) + ', ' + bn(pad2(when.getHours() % 12 || 12)) + ':' + bn(pad2(when.getMinutes())) + ' ' + (when.getHours() < 12 ? 'AM' : 'PM')
+            : '';
+          return '<div class="ed-act-row"><span class="ed-act-dot" style="background:' + ic[1] + ';color:' + ic[2] + '">' + ic[0] + '</span>' +
+            '<div class="ed-act-body"><div class="ed-act-text" title="' + esc(a.docName) + '">' + esc(a.docName) + ' ' + (ACTION_LABEL[a.action] || a.action) + '</div>' +
+            '<div class="ed-act-time">' + whenText + '</div></div></div>';
+        }).join('');
+      }
+      function pad2(n) { return String(n).padStart(2, '0'); }
+      function Utilities_formatLocalDate(dt) {
+        return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
+      }
+
+      /* ---------- স্টোরেজ তথ্য ---------- */
+      function renderStorage(d) {
+        var s = d.storage;
+        // ভিজ্যুয়াল বার — প্রকৃত Google অ্যাকাউন্ট কোটা নয়, শুধু এই ফোল্ডারের ব্যবহারের একটি ধারণা (৫ GB রেফারেন্স ধরে)
+        var refBytes = 5 * 1024 * 1024 * 1024;
+        var pct = Math.min(100, (s.totalSizeBytes / refBytes) * 100);
+        el('edStorage').innerHTML =
+          '<div class="ed-store-row"><span>ব্যবহৃত জায়গা (এই ফোল্ডারে)</span><b>' + humanSize(s.totalSizeBytes) + '</b></div>' +
+          '<div class="ed-store-bar"><div class="ed-track"><div class="ed-fill" style="width:' + pct + '%"></div></div></div>' +
+          '<div class="ed-store-row"><span>মোট ডকুমেন্ট</span><b>' + bn(s.totalDocuments) + ' টি</b></div>' +
+          '<div class="ed-store-row"><span>এই মাসে আপলোড</span><b>' + bn(s.thisMonthUploads) + ' টি</b></div>';
+      }
+
+      /* =====================================================
+         আপলোড: ড্রপজোন + মোডাল
+         ===================================================== */
+      var dropEl, fileInput;
+
+      function initDropzone() {
+        dropEl = el('edDrop');
+        fileInput = el('edFileInput');
+
+        dropEl.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', function () {
+          var f = fileInput.files && fileInput.files[0];
+          fileInput.value = '';
+          if (f) handlePickedFile(f);
+        });
+
+        ['dragenter', 'dragover'].forEach(function (evt) {
+          dropEl.addEventListener(evt, function (e) { e.preventDefault(); dropEl.classList.add('drag'); });
+        });
+        ['dragleave', 'drop'].forEach(function (evt) {
+          dropEl.addEventListener(evt, function (e) { e.preventDefault(); dropEl.classList.remove('drag'); });
+        });
+        dropEl.addEventListener('drop', function (e) {
+          var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) handlePickedFile(f);
+        });
+      }
+
+      function handlePickedFile(file) {
+        if (file.size > 25 * 1024 * 1024) { showToast('ফাইলের সাইজ ২৫ MB-এর বেশি হতে পারবে না।', 'warning'); return; }
+        var reader = new FileReader();
+        reader.onload = function () {
+          pendingUpload = { base64: String(reader.result).split(',')[1] || '', mimeType: file.type || 'application/octet-stream', fileName: file.name };
+          openUploadDetailsModal();
+        };
+        reader.onerror = function () { showToast('ফাইলটি পড়া যায়নি।', 'danger'); };
+        reader.readAsDataURL(file);
+      }
+
+      function openUploadDetailsModal() {
+        if (!pendingUpload) return;
+        var cats = (state.data && state.data.categories) || [];
+        var opts = '<option value="">নির্বাচন করুন</option>' + cats.map(function (c) {
+          return '<option value="' + esc(c.id) + '">' + esc(c.icon) + ' ' + esc(c.name) + '</option>';
+        }).join('');
+
+        var body =
+          '<div class="form-row"><label>ডকুমেন্টের নাম *</label><input type="text" class="form-input" id="eduName" value="' + esc(pendingUpload.fileName) + '"></div>' +
+          '<div class="form-row"><label>ক্যাটাগরি</label><select class="form-input" id="eduCategory">' + opts + '</select></div>' +
+          '<div class="ed-m-check"><input type="checkbox" id="eduImportant"> <label for="eduImportant" style="margin:0;">⭐ গুরুত্বপূর্ণ হিসেবে চিহ্নিত করুন</label></div>' +
+          '<div class="form-row"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="eduNotes" rows="2"></textarea></div>';
+
+        showModal('ডকুমেন্টের তথ্য দিন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: function () { pendingUpload = null; hideModal(); } },
+          { label: 'আপলোড করুন', className: 'btn-primary', onClick: submitUpload }
+        ]);
+      }
+
+      function submitUpload() {
+        var name = el('eduName').value.trim();
+        if (!name) { showToast('ডকুমেন্টের নাম লিখুন।', 'warning'); return; }
+        if (!pendingUpload) { showToast('ফাইল পাওয়া যায়নি, আবার চেষ্টা করুন।', 'danger'); return; }
+
+        var payload = {
+          name: name, categoryId: el('eduCategory').value, important: el('eduImportant').checked,
+          notes: el('eduNotes').value, base64: pendingUpload.base64, mimeType: pendingUpload.mimeType, fileName: pendingUpload.fileName
+        };
+        hideModal();
+        showUploadProgress(name);
+
+        call('uploadEmergencyDocument', [getToken(), payload], function (d) {
+          finishUploadProgress();
+          pendingUpload = null;
+          showToast('ডকুমেন্ট আপলোড হয়েছে।', 'success');
+          applyData(d);
+        }, function () {
+          finishUploadProgress();
+        });
+      }
+
+      function showUploadProgress(name) {
+        el('edUploadName').textContent = name;
+        el('edUploadPct').textContent = '০%';
+        el('edUploadFill').style.width = '0%';
+        el('edUploadProgress').classList.add('show');
+        var pct = 0;
+        var timer = setInterval(function () {
+          pct = Math.min(90, pct + Math.random() * 18);
+          el('edUploadFill').style.width = pct + '%';
+          el('edUploadPct').textContent = bn(Math.round(pct)) + '%';
+        }, 220);
+        el('edUploadProgress').dataset.timer = timer;
+      }
+      function finishUploadProgress() {
+        var timer = el('edUploadProgress').dataset.timer;
+        if (timer) clearInterval(Number(timer));
+        el('edUploadFill').style.width = '100%';
+        el('edUploadPct').textContent = '১০০%';
+        setTimeout(function () { el('edUploadProgress').classList.remove('show'); }, 900);
+      }
+
+      /* =====================================================
+         মোডাল: ক্যাটাগরি ব্যবস্থাপনা
+         ===================================================== */
+      function openCategoryModal(cat) {
+        var edit = !!cat;
+        var c = cat || { id: '', name: '', icon: '📁' };
+        var body =
+          '<div class="form-grid">' +
+            '<div class="form-row"><label>ইমোজি আইকন</label><input type="text" class="form-input" id="edcIcon" value="' + esc(c.icon) + '" maxlength="4"></div>' +
+            '<div class="form-row"><label>ক্যাটাগরির নাম *</label><input type="text" class="form-input" id="edcName" value="' + esc(c.name) + '"></div>' +
+          '</div>';
+        showModal(edit ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: openManageCatsModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+              var name = el('edcName').value.trim();
+              if (!name) { showToast('ক্যাটাগরির নাম লিখুন।', 'warning'); return; }
+              call('saveDocumentCategory', [getToken(), { id: c.id, name: name, icon: el('edcIcon').value }], function () {
+                showToast('ক্যাটাগরি সংরক্ষণ হয়েছে।', 'success');
+                load(openManageCatsModal);
+              });
+          } }
+        ]);
+      }
+
+      function openManageCatsModal() {
+        var cats = (state.data && state.data.categories) || [];
+        var rows = cats.length ? cats.map(function (c) {
+          return '<div class="ed-m-list-row"><span style="font-size:18px;">' + c.icon + '</span><span class="ed-m-grow">' + esc(c.name) + '</span><span style="color:var(--text-muted);font-size:12px;">' + bn(c.count) + ' টি</span>' +
+            '<button type="button" class="ed-m-mini" data-mc-edit="' + esc(c.id) + '">সম্পাদনা</button>' +
+            '<button type="button" class="ed-m-mini danger" data-mc-del="' + esc(c.id) + '">মুছুন</button></div>';
+        }).join('') : '<div class="ed-empty">কোনো ক্যাটাগরি নেই।</div>';
+
+        showModal('ডকুমেন্ট ক্যাটাগরি ব্যবস্থাপনা', rows, [
+          { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
+          { label: '＋ নতুন ক্যাটাগরি', className: 'btn-primary', onClick: function () { openCategoryModal(null); } }
+        ]);
+        el('modalBody').onclick = function (e) {
+          var ed = e.target.closest('[data-mc-edit]');
+          if (ed) { var id = ed.getAttribute('data-mc-edit'); var c = cats.filter(function (x) { return x.id === id; })[0]; openCategoryModal(c); return; }
+          var dl = e.target.closest('[data-mc-del]');
+          if (dl) {
+            var did = dl.getAttribute('data-mc-del');
+            confirmDialog('এই ক্যাটাগরিটি মুছে ফেলবেন?', function () {
+              call('deleteDocumentCategory', [getToken(), did], function () { showToast('ক্যাটাগরি মুছে ফেলা হয়েছে।', 'success'); load(openManageCatsModal); });
+            });
+          }
+        };
+      }
+
+      /* =====================================================
+         ডকুমেন্ট: দেখুন / ডাউনলোড / আরও (সম্পাদনা, ⭐, মুছুন)
+         ===================================================== */
+      function findDoc(id) {
+        var l = (state.data && state.data.documentsAll) || [];
+        for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+        return null;
+      }
+
+      function viewDoc(id) {
+        var doc = findDoc(id);
+        if (!doc) return;
+        window.open('https://drive.google.com/file/d/' + encodeURIComponent(doc.fileId) + '/view', '_blank');
+      }
+
+      function downloadDoc(id) {
+        var doc = findDoc(id);
+        if (!doc) return;
+        window.open('https://drive.google.com/uc?export=download&id=' + encodeURIComponent(doc.fileId), '_blank');
+        call('logDocumentDownload', [getToken(), id], function () {}); // fire-and-forget activity log
+      }
+
+      function openDocMenuModal(id) {
+        var doc = findDoc(id);
+        if (!doc) return;
+        var cats = (state.data && state.data.categories) || [];
+        var opts = cats.map(function (c) {
+          return '<option value="' + esc(c.id) + '"' + (c.id === doc.categoryId ? ' selected' : '') + '>' + esc(c.icon) + ' ' + esc(c.name) + '</option>';
+        }).join('');
+
+        var body =
+          '<div class="form-row"><label>ডকুমেন্টের নাম *</label><input type="text" class="form-input" id="edmName" value="' + esc(doc.name) + '"></div>' +
+          '<div class="form-row"><label>ক্যাটাগরি</label><select class="form-input" id="edmCategory">' + opts + '</select></div>' +
+          '<div class="ed-m-check"><input type="checkbox" id="edmImportant"' + (doc.important ? ' checked' : '') + '> <label for="edmImportant" style="margin:0;">⭐ গুরুত্বপূর্ণ হিসেবে চিহ্নিত</label></div>' +
+          '<div class="form-row"><label>নোট (ঐচ্ছিক)</label><textarea class="form-input" id="edmNotes" rows="2">' + esc(doc.notes || '') + '</textarea></div>' +
+          '<div class="ed-m-note">' + esc(doc.format) + ' · ' + humanSize(doc.sizeBytes) + ' · আপলোড: ' + bnDate(doc.uploadedAt) + '</div>';
+
+        showModal('ডকুমেন্ট সম্পাদনা', body, [
+          { label: '🗑️ মুছুন', className: 'btn-danger', onClick: function () { confirmDeleteDoc(id); } },
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitDocEdit(id); } }
+        ]);
+      }
+
+      function submitDocEdit(id) {
+        var name = el('edmName').value.trim();
+        if (!name) { showToast('ডকুমেন্টের নাম লিখুন।', 'warning'); return; }
+        call('updateEmergencyDocument', [getToken(), {
+          id: id, name: name, categoryId: el('edmCategory').value, important: el('edmImportant').checked, notes: el('edmNotes').value
+        }], function (d) {
+          hideModal();
+          showToast('পরিবর্তন সংরক্ষণ হয়েছে।', 'success');
+          applyData(d);
+        });
+      }
+
+      function confirmDeleteDoc(id) {
+        var doc = findDoc(id);
+        if (!doc) return;
+        confirmDialog('"' + esc(doc.name) + '" ডকুমেন্টটি মুছে ফেলবেন? ফাইলটি ড্রাইভের ট্র্যাশে চলে যাবে।', function () {
+          call('deleteEmergencyDocument', [getToken(), id], function (d) {
+            hideModal();
+            showToast('ডকুমেন্ট মুছে ফেলা হয়েছে।', 'success');
+            applyData(d);
+          });
+        });
+      }
+
+      function toggleImportant(id) {
+        call('toggleDocumentImportant', [getToken(), id], function (d) {
+          applyData(d);
+        });
+      }
+
+      /* =====================================================
+         ব্যাকআপ (CSV ম্যানিফেস্ট)
+         ===================================================== */
+      function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+
+      function exportBackup() {
+        call('getDocumentBackupManifest', [getToken()], function (rows) {
+          if (!rows || !rows.length) { showToast('ব্যাকআপ করার মতো কোনো ডকুমেন্ট নেই।', 'warning'); return; }
+          var lines = [['Name', 'Category', 'Format', 'SizeBytes', 'UploadedAt', 'DriveLink'].map(csvCell).join(',')];
+          rows.forEach(function (r) {
+            lines.push([csvCell(r.name), csvCell(r.category), csvCell(r.format), r.sizeBytes, csvCell(r.uploadedAt), csvCell(r.driveLink)].join(','));
+          });
+          var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'emergency-documents-backup.csv';
+          document.body.appendChild(a); a.click();
+          setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+          showToast('ব্যাকআপ তালিকা (CSV) ডাউনলোড হচ্ছে — প্রতিটি লাইনে ফাইলের Drive লিংক আছে।', 'success');
+        });
+      }
+
+      /* =====================================================
+         ইভেন্ট
+         ===================================================== */
+      root().addEventListener('click', function (e) {
+        var catBtn = e.target.closest('[data-cat]');
+        if (catBtn) {
+          var cid = catBtn.getAttribute('data-cat');
+          state.catFilter = state.catFilter === cid ? '' : cid;
+          el('edFilterCat').value = state.catFilter;
+          renderCats(state.data);
+          renderTable(state.data);
+          return;
+        }
+
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+
+        if (act === 'retry') load();
+        else if (act === 'focus-upload') el('edDrop').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        else if (act === 'manage-cats') openManageCatsModal();
+        else if (act === 'add-cat') openCategoryModal(null);
+        else if (act === 'view-doc') viewDoc(b.getAttribute('data-id'));
+        else if (act === 'dl-doc') downloadDoc(b.getAttribute('data-id'));
+        else if (act === 'more-doc') openDocMenuModal(b.getAttribute('data-id'));
+        else if (act === 'toggle-all') { state.showAll = !state.showAll; renderTable(state.data); }
+        else if (act === 'scroll-important') el('edImportantSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else if (act === 'scroll-storage') el('edStorageSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else if (act === 'backup') exportBackup();
+      });
+
+      el('edFilterCat').addEventListener('change', function () { state.catFilter = this.value; renderCats(state.data); renderTable(state.data); });
+      el('edFilterFormat').addEventListener('change', function () { state.formatFilter = this.value; renderTable(state.data); });
+      el('edFilterDate').addEventListener('change', function () { state.dateFilter = this.value; renderTable(state.data); });
+      el('edSearchBtn').addEventListener('click', function () { state.search = el('edSearch').value; renderTable(state.data); });
+      el('edSearch').addEventListener('keydown', function (e) { if (e.key === 'Enter') { state.search = this.value; renderTable(state.data); } });
+
+      initDropzone();
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      maybeLoad();
+    })();
+  </script>
+
 </section>
