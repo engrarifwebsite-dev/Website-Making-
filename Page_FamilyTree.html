@@ -252,7 +252,7 @@
     <div class="ft-toolbar">
       <div>
         <h2 class="ft-title">🌳 ফ্যামিলি ট্রি</h2>
-        <p class="ft-sub">ছবিতে ক্লিক করলে বিস্তারিত তথ্য দেখা যাবে, আবার ক্লিক করলে বন্ধ হবে। ছবির নিচের কোণার <b>+</b> চেপে নতুন সন্তান/ব্রাঞ্চ, আর ওপরের কোণার <b>⬆</b> চেপে পিতা/মাতা যোগ করুন (যার পিতা/মাতা এখনো নেই তার ছবিতেই শুধু ⬆ দেখা যাবে)।</p>
+        <p class="ft-sub">ছবিতে ক্লিক করলে বিস্তারিত তথ্য দেখা যাবে, আবার ক্লিক করলে বন্ধ হবে। ছবির নিচের কোণার <b>+</b> চেপে নতুন সন্তান/ব্রাঞ্চ, ওপরের কোণার <b>⬆</b> চেপে পিতা/মাতা যোগ করুন (যার পিতা/মাতা এখনো নেই তার ছবিতেই শুধু ⬆ দেখা যাবে), আর পপআপ থেকে "👫 ভাই/বোন যোগ" চেপে একই পিতামাতার আরেকটি সন্তান যোগ করুন।</p>
       </div>
       <div class="ft-actions">
         <div class="ft-zoom">
@@ -579,6 +579,7 @@
         '<div class="ft-pop-foot" data-id="' + esc(m.memberId) + '">' +
           '<button type="button" class="ft-pop-btn" data-pop="edit">✏️ সম্পাদনা</button>' +
           '<button type="button" class="ft-pop-btn" data-pop="add-child">🌿 ব্রাঞ্চ যোগ</button>' +
+          (hasParent(m) ? '<button type="button" class="ft-pop-btn" data-pop="add-sibling">👫 ভাই/বোন যোগ</button>' : '') +
           (spouse ? '' : '<button type="button" class="ft-pop-btn" data-pop="add-spouse">💍 স্ত্রী/স্বামী যোগ</button>') +
           (parent ? '' : '<button type="button" class="ft-pop-btn" data-pop="add-ancestor">⬆️ পিতা/মাতা (উপরে) যোগ</button>') +
           '<button type="button" class="ft-pop-btn danger" data-pop="delete">🗑️ মুছুন</button>' +
@@ -696,6 +697,7 @@
 
       if (action === 'edit') openForm({ member: m });
       else if (action === 'add-child') openForm({ parentId: id });
+      else if (action === 'add-sibling') openForm({ parentId: m.parentMemberId, isSibling: true });
       else if (action === 'add-spouse') openForm({ spouseId: id, gender: m.gender === 'Male' ? 'Female' : (m.gender === 'Female' ? 'Male' : ''), relationship: m.gender === 'Male' ? 'স্ত্রী' : (m.gender === 'Female' ? 'স্বামী' : '') });
       else if (action === 'add-ancestor') openAncestorForm(m);
       else if (action === 'delete') confirmDelete(m);
@@ -725,7 +727,7 @@
     document.getElementById('ftZoomReset').addEventListener('click', function () { setZoom(1); });
     document.getElementById('ftAddRoot').addEventListener('click', function () { openForm({}); });
 
-    /* ---------- Add / Edit form (সন্তান/স্ত্রী-স্বামী/নতুন স্বাধীন সদস্য/সম্পাদনা) ---------- */
+    /* ---------- Add / Edit form (সন্তান/ভাই-বোন/স্ত্রী-স্বামী/নতুন স্বাধীন সদস্য/সম্পাদনা) ---------- */
     function optionHtml(value, label, selected) {
       return '<option value="' + esc(value) + '"' + (selected ? ' selected' : '') + '>' + esc(label) + '</option>';
     }
@@ -781,7 +783,9 @@
         '</div>' +
         '<div class="ft-form-hint">সঠিক তারিখ জানা না থাকলে শুধু বছর ঠিক রেখে ১ জানুয়ারি দিন।</div>';
 
-      var title = edit ? 'সদস্যের তথ্য সম্পাদনা' : (cfg.parentId ? 'নতুন ব্রাঞ্চ যোগ করুন' : (cfg.spouseId ? 'স্ত্রী/স্বামী যোগ করুন' : 'নতুন সদস্য যোগ করুন'));
+      var title = edit
+        ? 'সদস্যের তথ্য সম্পাদনা'
+        : (cfg.isSibling ? 'ভাই/বোন যোগ করুন' : (cfg.parentId ? 'নতুন ব্রাঞ্চ যোগ করুন' : (cfg.spouseId ? 'স্ত্রী/স্বামী যোগ করুন' : 'নতুন সদস্য যোগ করুন')));
 
       showModal(title, body, [
         { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
