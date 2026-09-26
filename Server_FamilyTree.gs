@@ -5,7 +5,7 @@
  * It sits ON TOP of the functions already in Server_PersonalInfo.gs
  * (listFamilyMembers, saveFamilyMember, deleteFamilyMember,
  * trashDriveFile_) and does NOT change them. The tree page reads with
- * listFamilyMembers() and writes with the two functions below.
+ * listFamilyMembers() and writes with the functions below.
  *
  * FamilyMembers columns (1-based sheet columns):
  *   1 MemberID, 2 Name, 3 PhotoFileID, 4 DOB, 5 Relationship, 6 Gender,
@@ -52,6 +52,53 @@ function saveFamilyTreeMember(compositeToken, member) {
   var savedId = saveFamilyMember(compositeToken, member);
   syncFamilySpouseLinks_(savedId, spouseId);
   return savedId;
+}
+
+/**
+ * "উপরের দিকে ব্রাঞ্চ" (পূর্বপুরুষ) যোগ করা।
+ * targetMemberId-এর এখনো কোনো ParentMemberID না থাকলেই এটি ব্যবহারযোগ্য —
+ * newParentMember-কে একটি সম্পূর্ণ নতুন সদস্য হিসেবে তৈরি করে
+ * targetMemberId-এর ParentMemberID সরাসরি সেই নতুন সদস্যের দিকে বসিয়ে দেয়।
+ * ফলাফলে target এখন নতুন সদস্যের "সন্তান" হিসেবে ট্রিতে দেখাবে এবং নতুন
+ * সদস্যই ট্রির নতুন root হয়ে যাবে — অর্থাৎ ট্রি ওপরের দিকে বেড়ে গেল।
+ *
+ * newParentMember = সাধারণ member payload, saveFamilyMember()-এর মতোই:
+ *   { name, dob, relationship, gender, status, deathDate, notes,
+ *     photoBase64, photoMimeType (উভয়ই ঐচ্ছিক) }
+ * (memberId/parentMemberId/spouseMemberId নতুন সদস্যের জন্য এখানে সবসময়
+ * ফাঁকা রাখা হয় — নতুন পূর্বপুরুষ শুরুতে একা/স্বাধীন হিসেবেই তৈরি হয়;
+ * তার নিজের স্ত্রী/স্বামী বা পূর্বপুরুষ চাইলে পরে আলাদাভাবে যোগ করা যাবে।)
+ *
+ * Returns নতুন পূর্বপুরুষের memberId।
+ */
+function addAncestorAbove(compositeToken, targetMemberId, newParentMember) {
+  var user = validateSession(compositeToken);
+  if (!user) throw new Error('সেশন মেয়াদোত্তীর্ণ হয়ে গেছে, আবার লগইন করুন।');
+
+  targetMemberId = String(targetMemberId || '');
+  if (!targetMemberId) throw new Error('সদস্য খুঁজে পাওয়া যায়নি।');
+
+  var sheet = getFamilySheet_();
+  var data = sheet.getDataRange().getValues();
+  var targetRow = -1;
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === targetMemberId) { targetRow = i + 1; break; }
+  }
+  if (targetRow < 0) throw new Error('সদস্য খুঁজে পাওয়া যায়নি।');
+  if (data[targetRow - 1][FAMILY_COL_PARENT - 1]) {
+    throw new Error('এই সদস্যের আগে থেকেই পিতা/মাতা যুক্ত আছে।');
+  }
+
+  newParentMember = newParentMember || {};
+  newParentMember.memberId = '';        // সবসময় সম্পূর্ণ নতুন সদস্য
+  newParentMember.parentMemberId = '';  // নতুন পূর্বপুরুষ নিজে root হিসেবে শুরু করে
+  newParentMember.spouseMemberId = '';
+
+  var newId = saveFamilyMember(compositeToken, newParentMember);
+
+  sheet.getRange(targetRow, FAMILY_COL_PARENT).setValue(newId);
+
+  return newId;
 }
 
 /**

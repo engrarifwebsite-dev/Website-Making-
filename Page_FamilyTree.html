@@ -4,7 +4,8 @@
   Index.html-এ Page_PersonalInfo-এর পরে include করা হয়; নিচের স্ক্রিপ্ট
   #ftRoot-কে #subtab-family-tree প্যানেলের ভেতরে বসিয়ে দেয়।
   সার্ভার: listFamilyMembers (Server_PersonalInfo.gs),
-           saveFamilyTreeMember / deleteFamilyTreeMember (Server_FamilyTree.gs)
+           saveFamilyTreeMember / deleteFamilyTreeMember / addAncestorAbove
+           (Server_FamilyTree.gs)
 -->
 <style>
   /* =========================================================
@@ -139,6 +140,22 @@
   }
   .ft-add:hover { transform: scale(1.2); }
 
+  .ft-add-up {
+    position: absolute; left: -4px; top: -4px;
+    width: 27px; height: 27px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: #0ea5e9;
+    color: #fff;
+    font-size: 15px; font-weight: 700; line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .3);
+    transition: transform .15s ease;
+    padding: 0;
+  }
+  .ft-add-up:hover { transform: scale(1.2); }
+
   .ft-dead-badge {
     position: absolute; left: -4px; top: -2px;
     width: 26px; height: 26px;
@@ -226,7 +243,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .ft-pop.open { animation: none; }
-    .ft-photo-ring, .ft-add { transition: none; }
+    .ft-photo-ring, .ft-add, .ft-add-up { transition: none; }
   }
 </style>
 
@@ -235,7 +252,7 @@
     <div class="ft-toolbar">
       <div>
         <h2 class="ft-title">🌳 ফ্যামিলি ট্রি</h2>
-        <p class="ft-sub">ছবিতে ক্লিক করলে বিস্তারিত তথ্য দেখা যাবে, আবার ক্লিক করলে বন্ধ হবে। ছবির কোণার <b>+</b> চেপে নতুন ব্রাঞ্চ যোগ করুন।</p>
+        <p class="ft-sub">ছবিতে ক্লিক করলে বিস্তারিত তথ্য দেখা যাবে, আবার ক্লিক করলে বন্ধ হবে। ছবির নিচের কোণার <b>+</b> চেপে নতুন সন্তান/ব্রাঞ্চ, আর ওপরের কোণার <b>⬆</b> চেপে পিতা/মাতা যোগ করুন (যার পিতা/মাতা এখনো নেই তার ছবিতেই শুধু ⬆ দেখা যাবে)।</p>
       </div>
       <div class="ft-actions">
         <div class="ft-zoom">
@@ -427,6 +444,7 @@
           '<div class="ft-ring-wrap">' +
             '<div class="ft-photo-ring ft-ring-' + g + '" role="button" tabindex="0" aria-label="' + esc(m.name) + ' — তথ্য দেখুন">' + photo + '</div>' +
             (dead ? '<div class="ft-dead-badge" title="প্রয়াত">🕊️</div>' : '') +
+            (hasParent(m) ? '' : '<button type="button" class="ft-add-up" title="পিতা/মাতা যোগ করুন (ওপরে)" aria-label="পিতা/মাতা যোগ করুন">⬆</button>') +
             '<button type="button" class="ft-add" title="এই সদস্যের অধীনে নতুন ব্রাঞ্চ যোগ করুন" aria-label="নতুন ব্রাঞ্চ যোগ করুন">+</button>' +
           '</div>' +
           '<div class="ft-name">' + esc(m.name) + '</div>' +
@@ -562,6 +580,7 @@
           '<button type="button" class="ft-pop-btn" data-pop="edit">✏️ সম্পাদনা</button>' +
           '<button type="button" class="ft-pop-btn" data-pop="add-child">🌿 ব্রাঞ্চ যোগ</button>' +
           (spouse ? '' : '<button type="button" class="ft-pop-btn" data-pop="add-spouse">💍 স্ত্রী/স্বামী যোগ</button>') +
+          (parent ? '' : '<button type="button" class="ft-pop-btn" data-pop="add-ancestor">⬆️ পিতা/মাতা (উপরে) যোগ</button>') +
           '<button type="button" class="ft-pop-btn danger" data-pop="delete">🗑️ মুছুন</button>' +
         '</div>' +
         '<div class="ft-pop-hint">ছবিতে আবার ক্লিক করলে এটি বন্ধ হবে</div>';
@@ -633,6 +652,15 @@
         return;
       }
 
+      var addUpBtn = t.closest('.ft-add-up');
+      if (addUpBtn) {
+        var uid = addUpBtn.closest('.ft-node').getAttribute('data-id');
+        var um = byId[uid];
+        closePop();
+        if (um) openAncestorForm(um);
+        return;
+      }
+
       var ring = t.closest('.ft-photo-ring');
       if (ring) {
         var id = ring.closest('.ft-node').getAttribute('data-id');
@@ -669,6 +697,7 @@
       if (action === 'edit') openForm({ member: m });
       else if (action === 'add-child') openForm({ parentId: id });
       else if (action === 'add-spouse') openForm({ spouseId: id, gender: m.gender === 'Male' ? 'Female' : (m.gender === 'Female' ? 'Male' : ''), relationship: m.gender === 'Male' ? 'স্ত্রী' : (m.gender === 'Female' ? 'স্বামী' : '') });
+      else if (action === 'add-ancestor') openAncestorForm(m);
       else if (action === 'delete') confirmDelete(m);
     });
 
@@ -696,7 +725,7 @@
     document.getElementById('ftZoomReset').addEventListener('click', function () { setZoom(1); });
     document.getElementById('ftAddRoot').addEventListener('click', function () { openForm({}); });
 
-    /* ---------- Add / Edit form ---------- */
+    /* ---------- Add / Edit form (সন্তান/স্ত্রী-স্বামী/নতুন স্বাধীন সদস্য/সম্পাদনা) ---------- */
     function optionHtml(value, label, selected) {
       return '<option value="' + esc(value) + '"' + (selected ? ' selected' : '') + '>' + esc(label) + '</option>';
     }
@@ -847,6 +876,96 @@
           showToast((err && err.message) || 'সংরক্ষণ ব্যর্থ হয়েছে।', 'danger');
         })
         .saveFamilyTreeMember(localStorage.getItem(TOKEN_KEY), member);
+    }
+
+    /* ---------- Add ancestor form (উপরের দিকে পিতা/মাতা যোগ) ----------
+       target m-এর এখনো কোনো পিতা/মাতা নেই বলেই এই বাটন দেখা যায় (popHtml
+       ও cardHtml-এ চেক করা হয়) — তাই এখানে ftfParent/ftfSpouse সিলেক্টর
+       লাগে না, শুধু নতুন ব্যক্তির নিজের তথ্য নেওয়া হয়। ------------- */
+    function openAncestorForm(m) {
+      pendingPhoto = null;
+
+      var body =
+        '<div class="ft-form-photo">' +
+          '<div class="ft-form-preview" id="ftfPreview">👤</div>' +
+          '<div style="flex:1;min-width:0;"><input type="file" class="form-input" id="ftfPhoto" accept="image/*">' +
+          '<div class="ft-form-hint">ছবি স্বয়ংক্রিয়ভাবে ছোট করে আপলোড হবে।</div></div>' +
+        '</div>' +
+        '<div class="form-grid">' +
+          '<div class="form-row span-2"><label>নাম *</label><input type="text" class="form-input" id="ftfName" value=""></div>' +
+          '<div class="form-row"><label>লিঙ্গ</label><select class="form-input" id="ftfGender">' +
+            optionHtml('', 'নির্বাচন করুন', true) + optionHtml('Male', 'পুরুষ', false) +
+            optionHtml('Female', 'মহিলা', false) + optionHtml('Other', 'অন্যান্য', false) + '</select></div>' +
+          '<div class="form-row"><label>অবস্থা</label><select class="form-input" id="ftfStatus">' +
+            optionHtml('Living', 'জীবিত', true) + optionHtml('Deceased', 'প্রয়াত', false) + '</select></div>' +
+          '<div class="form-row span-2"><label>সম্পর্ক (যেমন: পিতা, মাতা)</label><input type="text" class="form-input" id="ftfRel" list="ftRelList" value=""></div>' +
+          '<div class="form-row"><label>জন্ম তারিখ</label><input type="date" class="form-input" id="ftfDob" value=""></div>' +
+          '<div class="form-row" id="ftfDeathRow" style="display:none;"><label>মৃত্যুর তারিখ</label><input type="date" class="form-input" id="ftfDeath" value=""></div>' +
+          '<div class="form-row span-2"><label>অন্যান্য তথ্য</label><textarea class="form-input" id="ftfNotes" rows="2"></textarea></div>' +
+        '</div>' +
+        '<div class="ft-form-hint">এই নতুন ব্যক্তিকে "' + esc(m.name) + '"-এর পিতা/মাতা হিসেবে ট্রির ওপরে যোগ করা হবে।</div>';
+
+      showModal('উপরে নতুন ব্রাঞ্চ (পিতা/মাতা) যোগ করুন', body, [
+        { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+        { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitAncestorForm(m); } }
+      ]);
+
+      document.getElementById('ftfStatus').addEventListener('change', function () {
+        document.getElementById('ftfDeathRow').style.display = this.value === 'Deceased' ? '' : 'none';
+      });
+
+      document.getElementById('ftfPhoto').addEventListener('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) { pendingPhoto = null; return; }
+        processPhoto(file, function (result) {
+          pendingPhoto = result;
+          document.getElementById('ftfPreview').innerHTML = '<img src="' + result.dataUrl + '" alt="">';
+        });
+      });
+    }
+
+    function submitAncestorForm(m) {
+      if (saving) return;
+      var name = val('ftfName').trim();
+      if (!name) { showToast('নাম লিখুন।', 'warning'); return; }
+
+      var status = val('ftfStatus') || 'Living';
+      var dob = val('ftfDob');
+      var death = status === 'Deceased' ? val('ftfDeath') : '';
+      if (dob && death && death < dob) {
+        showToast('মৃত্যুর তারিখ জন্ম তারিখের আগে হতে পারে না।', 'warning');
+        return;
+      }
+
+      var newMember = {
+        name: name,
+        dob: dob,
+        relationship: val('ftfRel').trim(),
+        gender: val('ftfGender'),
+        status: status,
+        deathDate: death,
+        notes: val('ftfNotes').trim()
+      };
+      if (pendingPhoto) {
+        newMember.photoBase64 = pendingPhoto.base64;
+        newMember.photoMimeType = pendingPhoto.mime;
+      }
+
+      saving = true;
+      showToast('সংরক্ষণ হচ্ছে...', 'default');
+      google.script.run
+        .withSuccessHandler(function () {
+          saving = false;
+          pendingPhoto = null;
+          hideModal();
+          showToast('ট্রির ওপরে নতুন ব্রাঞ্চ যোগ করা হয়েছে।', 'success');
+          loadMembers();
+        })
+        .withFailureHandler(function (err) {
+          saving = false;
+          showToast((err && err.message) || 'সংরক্ষণ ব্যর্থ হয়েছে।', 'danger');
+        })
+        .addAncestorAbove(localStorage.getItem(TOKEN_KEY), m.memberId, newMember);
     }
 
     /* ---------- Delete ---------- */
