@@ -4,6 +4,13 @@
  * (Income / Budget / Expense / Ledger) for Budget_Management.
  * Future months are created by Automation later (Phase 17) using
  * createBudgetMonthTabs() below — safe to call again for any month.
+ *
+ * IMPORTANT: Server_Budget.gs (saveBudgetCategory -> budgetEnsureMonth_,
+ * and every other function that opens/creates a month's tabs) calls
+ * createBudgetMonthTabs() directly, so this file MUST be present in the
+ * Apps Script project (all .gs files share one global scope) — if it is
+ * ever missing, every budget action that needs a month tab fails with:
+ *   ReferenceError: createBudgetMonthTabs is not defined
  */
 function setupBudgetManagement() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.Budget_Management);
