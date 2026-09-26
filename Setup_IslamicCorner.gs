@@ -1,9 +1,33 @@
 /**
  * Setup_IslamicCorner.gs
- * Creates the Preferences, Cache, and Hadiths tabs for Islamic_Corner.
- * Safe to run multiple times — seeding never overwrites hadiths you've
- * already edited or added, it only adds the starter set if the tab is
- * completely empty.
+ * Creates all tabs for Islamic_Corner. Safe to run multiple times — every
+ * seed function below only writes starter rows the FIRST time a tab is
+ * completely empty; it never touches rows you've already added or edited.
+ *
+ * Existing tabs (from earlier phases, UNCHANGED):
+ *   Preferences, Cache, Hadiths (with seeded starter hadiths)
+ *
+ * New tabs for "ইসলামিক কর্নার" (Phase 13):
+ *   Events          - user-maintained Islamic dates (Ramadan start, Eid,
+ *                      Ashura, Shab-e-Barat, ...). Left EMPTY on purpose —
+ *                      these dates depend on moon sighting / government
+ *                      announcement and change every year, so they are not
+ *                      guessed here. Add them from the page each year.
+ *   Packages        - user-maintained Hajj/Umrah cost estimates + source.
+ *                      Left EMPTY on purpose for the same reason (these
+ *                      change every year and need a verified source).
+ *   FastingCalendar - নফল/সুন্নত/ওয়াজিব রোজার তালিকা. Seeded with ONE
+ *                      general, non-date-specific reminder (weekly Monday +
+ *                      Thursday nafl fast) — the only entry here that is not
+ *                      time-sensitive. Everything else (Ayyamul Bid, Arafah,
+ *                      Ashura fast, Shab-e-Barat) is added by the user via
+ *                      the page, same reasoning as Events above.
+ *   QuranProgress   - Key/Value: last-read Surah/Para/Ayat/Page.
+ *   KhatmLog        - one row per completed Khatm.
+ *   ChecklistDone   - which daily checklist items are done, per date.
+ *   Tasbih          - saved counter (Count/Target/Dhikr) so it survives reload.
+ *   LibraryLinks    - the 6 fixed library categories shown on the page;
+ *                      each starts with an empty URL until you add your own.
  */
 function setupIslamicCorner() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_IDS.Islamic_Corner);
@@ -20,6 +44,40 @@ function setupIslamicCorner() {
     'Text', 'Reference'
   ]);
   seedDefaultHadiths_(ss);
+
+  ensureSheetWithHeaders(ss, 'Events', [
+    'EventID', 'Name', 'Date', 'Notes'
+  ]);
+
+  ensureSheetWithHeaders(ss, 'Packages', [
+    'PackageID', 'Type', 'Title', 'AmountText', 'Source', 'UpdatedAt'
+  ]);
+
+  ensureSheetWithHeaders(ss, 'FastingCalendar', [
+    'EntryID', 'Date', 'Recurring', 'Name', 'Type'
+  ]);
+  seedDefaultFasting_(ss);
+
+  ensureSheetWithHeaders(ss, 'QuranProgress', [
+    'Key', 'Value', 'UpdatedAt'
+  ]);
+
+  ensureSheetWithHeaders(ss, 'KhatmLog', [
+    'KhatmID', 'CompletedDate'
+  ]);
+
+  ensureSheetWithHeaders(ss, 'ChecklistDone', [
+    'Date', 'ItemKey'
+  ]);
+
+  ensureSheetWithHeaders(ss, 'Tasbih', [
+    'Key', 'Value', 'UpdatedAt'
+  ]);
+
+  ensureSheetWithHeaders(ss, 'LibraryLinks', [
+    'Key', 'Name', 'Icon', 'Url', 'UpdatedAt'
+  ]);
+  seedDefaultLibraryLinks_(ss);
 
   removeDefaultSheet1(ss);
   Logger.log('Islamic_Corner setup complete.');
@@ -48,8 +106,43 @@ function seedDefaultHadiths_(ss) {
     ['মুমিন ব্যক্তি একই গর্তে দু\'বার দংশিত হয় না।', 'সহীহ বুখারী ও মুসলিম']
   ];
 
-  var now = new Date();
   starterHadiths.forEach(function (row) {
     sheet.appendRow([row[0], row[1]]);
+  });
+}
+
+/**
+ * Seeds ONLY the general weekly-Nafl-fast reminder (Monday + Thursday),
+ * which is not tied to a specific date and so is safe to pre-fill. Runs
+ * once, only if FastingCalendar is completely empty.
+ */
+function seedDefaultFasting_(ss) {
+  var sheet = ss.getSheetByName('FastingCalendar');
+  if (sheet.getLastRow() > 1) return;
+
+  var id = generateUniqueId('FST');
+  sheet.appendRow([id, '', 'Mon,Thu', 'সাপ্তাহিক নফল রোজা (সোম ও বৃহস্পতিবার)', 'নফল রোজা']);
+}
+
+/**
+ * Seeds the 6 fixed library categories shown on the Islamic Corner page,
+ * each with an empty URL (fill in your own trusted resource link from the
+ * page later). Runs once, only if LibraryLinks is completely empty.
+ */
+function seedDefaultLibraryLinks_(ss) {
+  var sheet = ss.getSheetByName('LibraryLinks');
+  if (sheet.getLastRow() > 1) return;
+
+  var defaults = [
+    ['quran', 'কুরআন মাজিদ', '📗'],
+    ['hadith', 'হাদিস গ্রন্থ', '📘'],
+    ['dua', 'দোয়ার বই', '💧'],
+    ['amol', 'আমলের বই', '📝'],
+    ['app', 'ইসলামিক অ্যাপ', '⚠️'],
+    ['video', 'ভিডিও লেকচার', '🎬']
+  ];
+  var now = new Date();
+  defaults.forEach(function (d) {
+    sheet.appendRow([d[0], d[1], d[2], '', now]);
   });
 }

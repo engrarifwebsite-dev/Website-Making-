@@ -1,5 +1,70 @@
 # CHANGELOG
 
+## 2026-09-24
+
+### ইসলামিক কর্নার (Phase 13) — কাজ শুরু
+- `Page_IslamicCorner.html` প্লেসহোল্ডারের বদলে সম্পূর্ণ ড্যাশবোর্ড, প্রজেক্ট
+  মালিকের দেওয়া রেফারেন্স ছবির লেআউট অনুসরণ করে:
+  - আসন্ন ইসলামিক তারিখ (পরবর্তী রমজান, ঈদুল ফিতর, ঈদুল আজহা, আশুরা) —
+    Aladhan API দিয়ে হিজরি↔গ্রেগরিয়ান রূপান্তর করে বাকি দিন গণনা করে।
+  - হজ ও উমরাহ প্যাকেজ কার্ড (ব্যবহারকারীর নিজের যোগ করা তথ্য — খরচ প্রতি
+    বছর বদলায় বলে কোনো সংখ্যা আগে থেকে বসানো নেই)।
+  - রোজা/ফাস্টিং ক্যালেন্ডার (নফল/সুন্নত/ওয়াজিব; শুধু সাপ্তাহিক নফল রোজা
+    (সোম ও বৃহস্পতিবার) আগে থেকেই সিড করা, কারণ এটিই একমাত্র তারিখ-নির্ভর
+    নয় এমন এন্ট্রি)।
+  - আজকের নামাজের সময় (Aladhan API, Settings > Global-এর লোকেশন থেকে)।
+  - কিবলা নির্দেশনা — কাবা শরীফের সাথে গ্রেট-সার্কেল বিয়ারিং হিসাব করে কম্পাস
+    আঁকা হয়; "কিবলা লোকেট করুন" বাটনে ব্রাউজার জিও-লোকেশন ব্যবহার করে।
+  - দৈনিক হাদিস (বিদ্যমান Hadiths শিট থেকে, তারিখ অনুযায়ী ঘুরে আসে) এবং
+    আজকের সূরা + সূরা নির্বাচন করুন (১১৪টি সূরার নাম/আয়াত সংখ্যা/মাক্কি-মাদানী
+    তথ্যসহ, পৃষ্ঠায় বসানো — Quran.com-এর মতো বাইরের উৎসের প্রয়োজন নেই)।
+  - তাসবিহ কাউন্টার (সার্ভারে সংরক্ষিত, রিসেট করা যায়)।
+  - ইসলামিক ক্যালেন্ডার (গ্রেগরিয়ান/হিজরি ট্যাব)।
+  - কুরআন তিলাওয়াত ও খতম ট্র্যাকার (শেষ পঠিত সূরা/পারা/আয়াত সংরক্ষণ, খতম
+    সম্পন্ন হলে লগে যোগ হয়)।
+  - দৈনিক দোয়া ও আমল চেকলিস্ট (প্রতিদিন রাত ১২টায় নতুন করে শুরু হয়)।
+  - ইসলামিক লাইব্রেরি (৬টি ফিক্সড ক্যাটাগরি — কুরআন, হাদিস, দোয়া, আমল, অ্যাপ,
+    ভিডিও লেকচার — প্রতিটির লিংক ব্যবহারকারী নিজে বসান)।
+  - নিচে "তথ্য উৎস ও আপডেট" বার — কোন তথ্য লাইভ API থেকে আর কোনটা
+    ব্যবহারকারীর নিজের যোগ করা তথ্য, তা স্পষ্ট করে জানায়।
+- নতুন সার্ভার ফাইল `Server_IslamicCorner.gs`: `getIslamicCornerData`,
+  `saveIslamicEvent`/`deleteIslamicEvent`, `saveIslamicPackage`/
+  `deleteIslamicPackage`, `saveFastingEntry`/`deleteFastingEntry`,
+  `saveQuranProgress`, `markKhatmComplete`, `toggleChecklistItem`,
+  `saveTasbih`, `saveLibraryLink`। সবগুলোর জন্য বৈধ সেশন টোকেন প্রয়োজন।
+  নামাজের সময়, হিজরি তারিখ ও ইসলামিক ক্যালেন্ডার সরাসরি ব্রাউজার থেকে
+  Aladhan API কল করে আনা হয় (Page_Home.html-এর প্যাটার্ন অনুসরণ করে), তাই
+  এগুলোর জন্য আলাদা সার্ভার ফাংশন নেই। লোকেশন ও প্রেয়ার মেথড আসে
+  `getHomeConfig()` (Server_Home.gs) থেকে — Settings > Global-এ একবার বদলালে
+  Home ও Islamic Corner দুটোই আপডেট হয়।
+- `Setup_IslamicCorner.gs` আপডেট: নতুন ট্যাব `Events`, `Packages`,
+  `FastingCalendar` (সাপ্তাহিক নফল রোজা সিড করা), `QuranProgress`,
+  `KhatmLog`, `ChecklistDone`, `Tasbih`, `LibraryLinks` (৬টি ফিক্সড
+  ক্যাটাগরি সিড করা, URL ফাঁকা)। পুরনো `Preferences`, `Cache`, `Hadiths`
+  ট্যাব অপরিবর্তিত।
+- **ইচ্ছাকৃতভাবে ফাঁকা রাখা হয়েছে:** Events (রমজান/ঈদ/আশুরার প্রকৃত তারিখ),
+  Packages (হজ/উমরাহ খরচ) এবং নির্দিষ্ট-তারিখের রোজা (আইয়ামে বিজ, আরাফাহ,
+  শবে বরাত) — এগুলো প্রতি বছর বদলায় এবং চাঁদ দেখা/সরকারি ঘোষণার ওপর
+  নির্ভরশীল, তাই কোনো তারিখ অনুমান করে বসানো হয়নি। পেজ থেকেই যোগ করতে হবে।
+
+### Power Grid: Joining Date not saving (bug fix)
+- Fixed: in বেতন ও ভাতা → সেলারি স্টেটমেন্ট card → "✏️ তথ্য সম্পাদনা", changing
+  the Joining Date appeared not to save (it read back blank after a reload).
+- Root cause: `savePowerGridEmployee()` stored Joining Date as a real `Date`
+  object in the `Employment` tab with no explicit cell format. Every other
+  date-like field in the same flow (NextIncrementDate) is deliberately
+  stored as plain text specifically to avoid Google Sheets silently
+  reformatting a Date-typed cell in a way the app's string-based date
+  parser (`pgDateStr_()`) could no longer recognize on read-back.
+- Fix: Joining Date is now stored as plain text (`setNumberFormat('@')` +
+  the `'yyyy-MM-dd'` string) exactly like NextIncrementDate, instead of a
+  `Date` object. Also removed an unnecessary `getLastRow() > 1` guard before
+  reading the cell back in `pgGetEmployee_()`.
+- If a Joining Date was already lost under the old code, no manual sheet
+  repair is needed — re-entering and saving it once through the same edit
+  modal stores it correctly from then on.
+- Files changed: `Server_PowerGrid.gs` only. No HTML or sheet-schema change.
+
 ## 2026-09-23 (Session 15)
 
 ### আমার সম্পদ ও সামগ্রী (Phase 14) — কাজ শুরু
