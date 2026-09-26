@@ -73,7 +73,19 @@ function assetsSheet_() {
   }
   return sheet;
 }
-function categoriesSheet_() { return ensureSheetWithHeaders(assetsSs_(), 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder']); }
+function categoriesSheet_() {
+  var sheet = ensureSheetWithHeaders(assetsSs_(), 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder']);
+  // IconFileID (column 5) — a category can use an uploaded/pasted picture
+  // instead of an emoji. Appended at the end so existing rows are untouched.
+  if (!sheet.getRange(1, 5).getValue()) sheet.getRange(1, 5).setValue('IconFileID').setFontWeight('bold');
+  return sheet;
+}
+function getOrCreateCategoryIconsFolder_() {
+  var parent = DriveApp.getFolderById(DRIVE_FOLDER_IDS.PhotosAndFiles);
+  var existing = parent.getFoldersByName('AssetCategoryIcons');
+  if (existing.hasNext()) return existing.next();
+  return parent.createFolder('AssetCategoryIcons');
+}
 function maintenanceSheet_() { return ensureSheetWithHeaders(assetsSs_(), 'Maintenance', ['MaintID', 'AssetID', 'Date', 'Description', 'Cost', 'CreatedAt']); }
 function assetDocsSheet_() { return ensureSheetWithHeaders(assetsSs_(), 'Documents', ['DocID', 'AssetID', 'DocName', 'FileID', 'UploadedAt']); }
 
@@ -86,13 +98,22 @@ function getAssetCategories() {
   var out = [];
   for (var i = 1; i < data.length; i++) {
     if (!data[i][0]) continue;
-    out.push({ id: String(data[i][0]), name: String(data[i][1] || ''), icon: String(data[i][2] || '📦'), order: assetsNum_(data[i][3]) });
+    out.push({
+      id: String(data[i][0]), name: String(data[i][1] || ''), icon: String(data[i][2] || '📦'),
+      order: assetsNum_(data[i][3]), iconFileId: String(data[i][4] || '')
+    });
   }
   out.sort(function (a, b) { return a.order - b.order; });
   return out;
 }
 
-/** cat = { id (blank for new), name, icon (one emoji) } */
+/**
+ * cat = { id (blank for new), name, icon (one emoji, optional fallback),
+ *   iconBase64, iconMimeType (optional — a pasted/uploaded picture icon;
+ *   replaces any previous picture for this category),
+ *   removeIcon (optional — clears a previously set picture icon, reverting
+ *   to the emoji) }
+ */
 function saveAssetCategory(token, cat) {
   assetsAuth_(token);
   cat = cat || {};
@@ -104,9 +125,25 @@ function saveAssetCategory(token, cat) {
   var data = sheet.getDataRange().getValues();
   var id = cat.id ? String(cat.id) : '';
 
+  var iconFileId = '';
+  if (id) {
+    for (var r = 1; r < data.length; r++) {
+      if (String(data[r][0]) === id) { iconFileId = String(data[r][4] || ''); break; }
+    }
+  }
+  if (cat.removeIcon) {
+    if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
+    iconFileId = '';
+  } else if (cat.iconBase64 && cat.iconMimeType) {
+    if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
+    var folder = getOrCreateCategoryIconsFolder_();
+    iconFileId = uploadFileToFolder_(folder.getId(), cat.iconBase64, cat.iconMimeType, 'category-icon-' + (id || 'new') + '-' + name);
+  }
+
   for (var i = 1; i < data.length; i++) {
     if (id && String(data[i][0]) === id) {
       sheet.getRange(i + 1, 2, 1, 2).setValues([[name, icon]]);
+      sheet.getRange(i + 1, 5).setValue(iconFileId);
       return id;
     }
     if (String(data[i][1]).trim().toLowerCase() === name.toLowerCase() && String(data[i][0]) !== id) {
@@ -116,7 +153,7 @@ function saveAssetCategory(token, cat) {
 
   id = generateUniqueId('CAT');
   var order = data.length;
-  sheet.appendRow([id, name, icon, order]);
+  sheet.appendRow([id, name, icon, order, iconFileId]);
   return id;
 }
 
@@ -130,6 +167,8 @@ function deleteAssetCategory(token, id) {
 
   var used = assetsReadAll_().some(function (a) { return a.category === target.name; });
   if (used) throw new Error('এই ক্যাটাগরিতে সম্পদ আছে — আগে সেগুলোর ক্যাটাগরি বদলান বা মুছুন।');
+
+  if (target.iconFileId) { try { DriveApp.getFileById(target.iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
 
   var sheet = categoriesSheet_();
   var data = sheet.getDataRange().getValues();

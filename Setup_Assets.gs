@@ -28,7 +28,10 @@ function setupAssetsItems() {
     if (!firstRow[i]) sheet.getRange(1, 14 + i).setValue(extraHeaders[i]).setFontWeight('bold');
   }
 
-  ensureSheetWithHeaders(ss, 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder']);
+  var catSheet = ensureSheetWithHeaders(ss, 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder']);
+  // Phase 14b addition — lets a category use an uploaded picture instead of
+  // (or alongside) an emoji, appended at the end so existing rows are untouched.
+  if (!catSheet.getRange(1, 5).getValue()) catSheet.getRange(1, 5).setValue('IconFileID').setFontWeight('bold');
   seedDefaultAssetCategories_(ss);
 
   ensureSheetWithHeaders(ss, 'Maintenance', ['MaintID', 'AssetID', 'Date', 'Description', 'Cost', 'CreatedAt']);
