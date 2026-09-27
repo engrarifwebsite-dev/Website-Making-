@@ -65,6 +65,12 @@
     #page-islamic-corner .ic-fast-name { font-size: 12.5px; font-weight: 700; color: var(--text); }
     #page-islamic-corner .ic-fast-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     #page-islamic-corner .ic-fast-tag { margin-left: auto; padding: 3px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+    #page-islamic-corner .ic-fast-row { align-items: flex-start; }
+    #page-islamic-corner .ic-fast-row.ic-fast-recommended { background: #f0fdf4; border-color: #bbf7d0; }
+    #page-islamic-corner .ic-fast-row.ic-fast-plain { opacity: .7; }
+    #page-islamic-corner .ic-fast-today { color: var(--ic-green); font-weight: 800; }
+    #page-islamic-corner .ic-fast-fazilat { margin-top: 5px; font-size: 11px; color: var(--text); line-height: 1.6; background: #ffffffb0; border-radius: 8px; padding: 6px 8px; }
+    #page-islamic-corner .ic-week-head { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; }
     #page-islamic-corner .ic-tag-nafl { background: #dcfce7; color: #15803d; }
     #page-islamic-corner .ic-tag-sunnah { background: #dbeafe; color: #1d4ed8; }
     #page-islamic-corner .ic-tag-wajib { background: #fee2e2; color: #dc2626; }
@@ -189,9 +195,9 @@
           <h3 class="ic-title">🗓️ রোজা/ফাস্টিং ক্যালেন্ডার</h3>
         </div>
         <div id="icFasting"></div>
+        <div id="icFastingSpecial"></div>
         <div style="display:flex;gap:8px;margin-top:10px;">
-          <button type="button" class="btn btn-outline" style="flex:1;font-size:12.5px;padding:8px;" data-act="add-fasting">＋ নতুন রোজা যোগ করুন</button>
-          <button type="button" class="btn btn-outline" style="flex:1;font-size:12.5px;padding:8px;" data-act="all-fasting">সম্পূর্ণ তালিকা →</button>
+          <button type="button" class="btn btn-outline" style="flex:1;font-size:12.5px;padding:8px;" data-act="add-fasting">＋ বিশেষ রোজা যোগ করুন (আরাফাহ, আশুরা...)</button>
         </div>
       </div>
 
@@ -562,11 +568,54 @@
           '</div>';
       }
 
+      /**
+       * সপ্তাহের কোন কোন দিন রোজা রাখা ভালো — সম্পূর্ণ স্বয়ংক্রিয়ভাবে হিসাব হয়,
+       * কোনো এন্ট্রি/শিট লাগে না। বার (সোম/বৃহস্পতি) অনুযায়ী চিরকালীন ফজিলত, তাই
+       * চান্দ্র (হিজরি) তারিখ জানার দরকার নেই — সপ্তাহের বার-ই যথেষ্ট।
+       * সপ্তাহ শনিবার থেকে শুক্রবার পর্যন্ত গণনা করা হয় (বাংলাদেশের প্রচলিত সপ্তাহ)।
+       */
+      var WEEKLY_FAZILAT = {
+        1: 'সপ্তাহে প্রতি সোম ও বৃহস্পতিবার বান্দার আমল আল্লাহর কাছে পেশ করা হয় — তাই রাসূলুল্লাহ (সা.) এই দুই দিন রোজা রাখতে পছন্দ করতেন। সোমবার তাঁর জন্মদিনও ছিল।',
+        4: 'সপ্তাহে প্রতি সোম ও বৃহস্পতিবার বান্দার আমল আল্লাহর কাছে পেশ করা হয় — তাই রাসূলুল্লাহ (সা.) এই দুই দিন রোজা রাখতে পছন্দ করতেন।'
+      };
+
+      function currentWeekDates() {
+        var today = new Date(todayIso() + 'T00:00:00');
+        var dow = today.getDay(); // 0=রবি ... 6=শনি
+        var sinceSaturday = (dow - 6 + 7) % 7;
+        var saturday = new Date(today.getTime() - sinceSaturday * 86400000);
+        var out = [];
+        for (var i = 0; i < 7; i++) out.push(new Date(saturday.getTime() + i * 86400000));
+        return out;
+      }
+
+      function weekFastRowHtml(dt) {
+        var dow = dt.getDay();
+        var isToday = todayIso() === (dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'));
+        var recommended = WEEKLY_FAZILAT.hasOwnProperty(dow);
+        var dateText = bn(dt.getDate()) + ' ' + BN_MONTHS[dt.getMonth()] + (isToday ? ' <span class="ic-fast-today">(আজ)</span>' : '');
+        var tag = recommended ? '<span class="ic-fast-tag ic-tag-nafl">নফল রোজা</span>' : '<span class="ic-fast-tag" style="background:#f1f5f9;color:#94a3b8;">সাধারণ দিন</span>';
+        return '<div class="ic-fast-row' + (recommended ? ' ic-fast-recommended' : ' ic-fast-plain') + '">' +
+          '<div class="ic-fast-ico" style="background:' + (recommended ? '#dcfce7' : '#f1f5f9') + '">' + (recommended ? '🌙' : '📅') + '</div>' +
+          '<div style="flex:1;min-width:0;"><div class="ic-fast-name">' + BN_WEEKDAYS[dow] + '</div><div class="ic-fast-date">' + dateText + '</div>' +
+          (recommended ? '<div class="ic-fast-fazilat">✨ ফজিলত: ' + WEEKLY_FAZILAT[dow] + '</div>' : '') +
+          '</div>' + tag +
+          '</div>';
+      }
+
       function renderFasting(d) {
         var host = el('icFasting');
+        var week = currentWeekDates();
+        host.innerHTML =
+          '<div class="ic-week-head"><span>শনিবার থেকে শুক্রবার — এই সপ্তাহ</span><span>সোম ও বৃহস্পতি রোজার জন্য উত্তম</span></div>' +
+          week.map(weekFastRowHtml).join('');
+
+        // ব্যবহারকারীর নিজের যোগ করা বিশেষ রোজা (আরাফাহ, আশুরা ইত্যাদি) থাকলে নিচে আলাদাভাবে দেখানো হয়
+        var specialHost = el('icFastingSpecial');
         var list = (d.fasting || []).slice().sort(function (a, b) { return (a.date || '9999') < (b.date || '9999') ? -1 : 1; });
-        if (!list.length) { host.innerHTML = '<div class="ic-empty">এখনো কোনো রোজা যোগ করা হয়নি।</div>'; return; }
-        host.innerHTML = list.slice(0, 5).map(fastRowHtml).join('');
+        if (!list.length) { specialHost.innerHTML = ''; return; }
+        specialHost.innerHTML = '<div class="ic-week-head" style="margin-top:12px;"><span>আপনার যোগ করা বিশেষ রোজা</span></div>' +
+          list.slice(0, 5).map(fastRowHtml).join('');
       }
 
       function openAllFastingModal(d) {
