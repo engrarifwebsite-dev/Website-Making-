@@ -14,6 +14,12 @@
  * data) but the new page does not read/write them. Revisit later if the
  * ID/password vault idea is still wanted as a separate feature.
  *
+ * NOTE (2026-09-24): Categories and Documents each gained an IconFileID
+ * column (appended at the end of their header lists) so a category, and
+ * each individual document, can use a pasted/uploaded picture as its icon
+ * instead of the plain emoji. Existing rows are unaffected — the emoji
+ * column stays as the fallback whenever no picture is set.
+ *
  * Safe to run multiple times — ensureSheetWithHeaders() never touches
  * existing rows, and the default categories are only seeded once.
  */
@@ -30,12 +36,12 @@ function setupEmergencyDocuments() {
   ensureSheetWithHeaders(ss, 'Official', legacyColumns);
 
   // ---- New tabs for the category-based document library (Phase 12 design) ----
-  ensureSheetWithHeaders(ss, 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder']);
+  ensureSheetWithHeaders(ss, 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder', 'IconFileID']);
   seedDefaultDocumentCategories_(ss);
 
   ensureSheetWithHeaders(ss, 'Documents', [
     'DocID', 'Name', 'CategoryID', 'FileID', 'MimeType', 'SizeBytes',
-    'Important', 'UploadedAt', 'UpdatedAt', 'Notes'
+    'Important', 'UploadedAt', 'UpdatedAt', 'Notes', 'IconFileID'
   ]);
 
   ensureSheetWithHeaders(ss, 'ActivityLog', [

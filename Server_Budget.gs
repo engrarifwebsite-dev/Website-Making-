@@ -12,24 +12,8 @@
  * One extra tab is created automatically on first use:
  *   "SavingsGoals" : MonthLabel, GoalAmount, UpdatedAt
  *
- * ------------------------------------------------------------------
- * 2026-09-27: "মোট আয়" now includes the month's "হাতে প্রাপ্ত বেতন" (net pay)
- * taken automatically from Power Grid > SalaryStatements (same month key
- * "yyyy-MM"). Net pay = total earnings − total deductions, exactly the
- * formula Page_PowerGrid.html uses (see BUDGET_SAL_EARN_ / BUDGET_SAL_DEDUCT_).
- * It is added as one read-only income row (id "SAL-yyyy-MM", auto:true) on
- * top of any income entries typed in on the budget page, so other income
- * sources still work. It is NOT written to the Income tab or the Ledger tab,
- * so it can never be duplicated or go stale — edit the salary statement in
- * Power Grid and the budget page follows on the next load.
- * If a salary was previously typed in manually as an income entry, delete
- * that entry, otherwise it will be counted twice.
- * ------------------------------------------------------------------
- *
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs (generateUniqueId),
- * Utils_Sheets.gs (ensureSheetWithHeaders), Setup_Budget.gs (createBudgetMonthTabs)
- * and Server_PowerGrid.gs (pgStatementSheet_, pgMonthKey_, pgNum_, PG_FIELDS,
- * PG_EXTRA_FIELDS, PG_EXTRA_COL).
+ * Utils_Sheets.gs (ensureSheetWithHeaders) and Setup_Budget.gs (createBudgetMonthTabs).
  *
  * Every function needs a valid session token — budget data is financial.
  */
@@ -41,20 +25,6 @@ var BUDGET_MONTHS_BN = [
 ];
 var BUDGET_DEFAULT_WARN = 80;   // % used -> amber
 var BUDGET_DEFAULT_CRIT = 95;   // % used -> orange (100% and above is red)
-
-/** Same earning / deduction lines as Page_PowerGrid.html (EARN / DEDUCT). */
-var BUDGET_SAL_EARN_ = [
-  'basic', 'educationAllowance', 'incrementArrear', 'houseRent', 'officerMedical', 'medicalAllowance',
-  'conveyanceAllowance', 'shiftAllowance', 'responsibilityAllowance', 'specialAllowance',
-  'employerCpfEarning', 'residentElectricity', 'chargeAllowance', 'tiffinBill', 'taDa', 'honorarium',
-  'incentiveBonus', 'wppwfmProfit', 'festivalBonus', 'leaveEncashment', 'banglaNoboborsha',
-  'localTraining', 'trainingBill'
-];
-var BUDGET_SAL_DEDUCT_ = [
-  'houseRentDeduction', 'cpfDeduction', 'incomeTax', 'cpfAdvance', 'revenueDeduction',
-  'othersDeduction', 'donation', 'taxWppwfm'
-];
-var BUDGET_SALARY_LABEL = 'বেতন (পাওয়ার গ্রিড)';
 
 /* ============================================================
  * Small helpers
@@ -114,42 +84,8 @@ function budgetEnsureMonth_(ss, p) {
   return label;
 }
 
-/**
- * Net pay ("হাতে প্রাপ্ত বেতন") for every month that has a Power Grid salary
- * statement: { 'yyyy-MM': net }. One sheet read per call. If Power Grid
- * data cannot be read, returns {} so the budget page keeps working.
- */
-function budgetSalaryByMonth_() {
-  var map = {};
-  try {
-    var data = pgStatementSheet_().getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
-      var key = pgMonthKey_(row[1]);
-      if (!row[0] || !key) continue;
-
-      var st = {};
-      for (var f = 0; f < PG_FIELDS.length; f++) st[PG_FIELDS[f]] = pgNum_(row[2 + f]);
-      for (var x = 0; x < PG_EXTRA_FIELDS.length; x++) st[PG_EXTRA_FIELDS[x]] = pgNum_(row[PG_EXTRA_COL - 1 + x]);
-
-      var gross = 0, ded = 0, k;
-      for (k = 0; k < BUDGET_SAL_EARN_.length; k++) gross += st[BUDGET_SAL_EARN_[k]] || 0;
-      for (k = 0; k < BUDGET_SAL_DEDUCT_.length; k++) ded += st[BUDGET_SAL_DEDUCT_[k]] || 0;
-
-      var net = Math.round((gross - ded) * 100) / 100;
-      if (net > 0) map[key] = net;
-    }
-  } catch (e) {
-    return {};
-  }
-  return map;
-}
-
-/**
- * Reads one month's categories, income and expenses. Missing tabs give empty lists.
- * salaryMap (optional, from budgetSalaryByMonth_) adds the automatic salary income row.
- */
-function budgetReadMonth_(ss, p, salaryMap) {
+/** Reads one month's categories, income and expenses. Missing tabs give empty lists. */
+function budgetReadMonth_(ss, p) {
   var label = budgetMonthLabel_(p.y, p.m);
   var out = { label: label, categories: [], income: [], expenses: [] };
   var data, i, row;
@@ -182,26 +118,9 @@ function budgetReadMonth_(ss, p, salaryMap) {
         time: budgetTimeStr_(row[2]),
         source: String(row[3] || ''),
         amount: budgetNum_(row[4]),
-        notes: String(row[6] || ''),
-        auto: false
+        notes: String(row[6] || '')
       });
     }
-  }
-
-  // Automatic salary income from Power Grid (হাতে প্রাপ্ত বেতন) for this month
-  var monthKey = budgetKey_(p.y, p.m);
-  var salary = salaryMap && salaryMap[monthKey] ? salaryMap[monthKey] : 0;
-  out.salary = salary;
-  if (salary > 0) {
-    out.income.push({
-      id: 'SAL-' + monthKey,
-      date: monthKey + '-01',
-      time: '',
-      source: BUDGET_SALARY_LABEL,
-      amount: salary,
-      notes: 'পাওয়ার গ্রিডের বেতন স্টেটমেন্ট থেকে স্বয়ংক্রিয়',
-      auto: true
-    });
   }
 
   var es = ss.getSheetByName(label + ' - Expense');
@@ -254,12 +173,10 @@ function getBudgetDashboard(token, monthKey, trendMonths) {
   var cur = budgetParseKey_(monthKey);
   var n = Math.max(2, Math.min(12, parseInt(trendMonths, 10) || 5));
 
-  var salaryMap = budgetSalaryByMonth_();
-
   var cache = {};
   function get(p) {
     var k = budgetKey_(p.y, p.m);
-    if (!cache[k]) cache[k] = budgetReadMonth_(ss, p, salaryMap);
+    if (!cache[k]) cache[k] = budgetReadMonth_(ss, p);
     return cache[k];
   }
 
@@ -306,13 +223,13 @@ function getBudgetDashboard(token, monthKey, trendMonths) {
     transactions.push({
       id: e.id, type: 'expense', date: e.date, time: e.time, amount: e.amount,
       title: e.description || catName[e.categoryId] || 'ব্যয়',
-      categoryId: e.categoryId, categoryName: catName[e.categoryId] || '', auto: false
+      categoryId: e.categoryId, categoryName: catName[e.categoryId] || ''
     });
   });
   data.income.forEach(function (r) {
     transactions.push({
       id: r.id, type: 'income', date: r.date, time: r.time, amount: r.amount,
-      title: r.source || 'আয়', categoryId: '', categoryName: '', auto: !!r.auto
+      title: r.source || 'আয়', categoryId: '', categoryName: ''
     });
   });
   transactions.sort(function (a, b) {
@@ -340,7 +257,6 @@ function getBudgetDashboard(token, monthKey, trendMonths) {
     year: cur.y,
     month: cur.m,
     income: income,
-    salary: data.salary || 0,          // এর মধ্যে পাওয়ার গ্রিডের হাতে প্রাপ্ত বেতন
     expense: expense,
     savings: income - expense,
     budgetTotal: budgetTotal,
@@ -531,11 +447,6 @@ function addBudgetTransaction(token, txn) {
 
 function deleteBudgetTransaction(token, monthKey, type, txnId) {
   budgetAuth_(token);
-
-  // The automatic salary row (id "SAL-yyyy-MM") lives in Power Grid, not here.
-  if (String(txnId).indexOf('SAL-') === 0) {
-    throw new Error('এটি পাওয়ার গ্রিডের বেতন থেকে স্বয়ংক্রিয়ভাবে আসে — পাওয়ার গ্রিড পেজে বেতন এন্ট্রি সম্পাদনা করুন।');
-  }
 
   var ss = budgetSs_();
   var p = budgetParseKey_(monthKey);

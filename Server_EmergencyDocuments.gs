@@ -5,15 +5,19 @@
  * Tabs used in the Emergency_Documents spreadsheet (created/extended by
  * Setup_EmergencyDocuments.gs — run setupEmergencyDocuments() or
  * setupAllSpreadsheets() once after adding this file):
- *   "Categories"  : CategoryID, Name, Icon, DisplayOrder — user-managed
+ *   "Categories"  : CategoryID, Name, Icon, DisplayOrder, IconFileID
  *   "Documents"   : DocID, Name, CategoryID, FileID, MimeType, SizeBytes,
- *                   Important (TRUE/FALSE), UploadedAt, UpdatedAt, Notes
+ *                   Important (TRUE/FALSE), UploadedAt, UpdatedAt, Notes,
+ *                   IconFileID
  *   "ActivityLog" : LogID, DocID, DocName, Action, Timestamp
  *                   (Action: 'uploaded' | 'updated' | 'downloaded' | 'deleted')
  *
- * Files are stored in Drive under Photos and Files > EmergencyDocuments
- * (a dedicated subfolder, separate from other modules' uploads, so this
- * page's storage stats stay accurate to this feature only).
+ * A category or an individual document can use a pasted/uploaded picture
+ * as its icon (IconFileID) instead of the plain emoji (Icon) — the emoji
+ * stays as the fallback whenever no picture is set. Icon pictures are
+ * stored in Photos and Files > EmergencyDocumentIcons, separate from the
+ * documents themselves (Photos and Files > EmergencyDocuments), so the
+ * storage stats on the dashboard reflect real document sizes only.
  *
  * Requires: Config.gs, Auth.gs (validateSession), Utils_ID.gs
  * (generateUniqueId), Utils_Sheets.gs (ensureSheetWithHeaders),
@@ -48,12 +52,18 @@ function edocDateStr_(v) {
   return m ? m[1] : String(v).trim();
 }
 
-function categoriesSheet_edoc_() { return ensureSheetWithHeaders(edocSs_(), 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder']); }
+function categoriesSheet_edoc_() {
+  var sheet = ensureSheetWithHeaders(edocSs_(), 'Categories', ['CategoryID', 'Name', 'Icon', 'DisplayOrder', 'IconFileID']);
+  if (!sheet.getRange(1, 5).getValue()) sheet.getRange(1, 5).setValue('IconFileID').setFontWeight('bold');
+  return sheet;
+}
 function documentsSheet_() {
-  return ensureSheetWithHeaders(edocSs_(), 'Documents', [
+  var sheet = ensureSheetWithHeaders(edocSs_(), 'Documents', [
     'DocID', 'Name', 'CategoryID', 'FileID', 'MimeType', 'SizeBytes',
-    'Important', 'UploadedAt', 'UpdatedAt', 'Notes'
+    'Important', 'UploadedAt', 'UpdatedAt', 'Notes', 'IconFileID'
   ]);
+  if (!sheet.getRange(1, 11).getValue()) sheet.getRange(1, 11).setValue('IconFileID').setFontWeight('bold');
+  return sheet;
 }
 function activitySheet_() { return ensureSheetWithHeaders(edocSs_(), 'ActivityLog', ['LogID', 'DocID', 'DocName', 'Action', 'Timestamp']); }
 
@@ -62,6 +72,14 @@ function getOrCreateEmergencyDocsFolder_() {
   var existing = parent.getFoldersByName('EmergencyDocuments');
   if (existing.hasNext()) return existing.next();
   return parent.createFolder('EmergencyDocuments');
+}
+
+/** Separate folder for custom category/document icon pictures — kept out of the document storage stats. */
+function getOrCreateEmergencyIconsFolder_() {
+  var parent = DriveApp.getFolderById(DRIVE_FOLDER_IDS.PhotosAndFiles);
+  var existing = parent.getFoldersByName('EmergencyDocumentIcons');
+  if (existing.hasNext()) return existing.next();
+  return parent.createFolder('EmergencyDocumentIcons');
 }
 
 function edocLogActivity_(docId, docName, action) {
@@ -78,13 +96,22 @@ function getDocumentCategories() {
   var out = [];
   for (var i = 1; i < data.length; i++) {
     if (!data[i][0]) continue;
-    out.push({ id: String(data[i][0]), name: String(data[i][1] || ''), icon: String(data[i][2] || '📁'), order: edocNum_(data[i][3]) });
+    out.push({
+      id: String(data[i][0]), name: String(data[i][1] || ''), icon: String(data[i][2] || '📁'),
+      order: edocNum_(data[i][3]), iconFileId: String(data[i][4] || '')
+    });
   }
   out.sort(function (a, b) { return a.order - b.order; });
   return out;
 }
 
-/** cat = { id (blank for new), name, icon (one emoji) } */
+/**
+ * cat = { id (blank for new), name, icon (one emoji, optional fallback),
+ *   iconBase64, iconMimeType (optional — a pasted/uploaded picture icon;
+ *   replaces any previous picture for this category),
+ *   removeIcon (optional — clears a previously set picture icon, reverting
+ *   to the emoji) }
+ */
 function saveDocumentCategory(token, cat) {
   edocAuth_(token);
   cat = cat || {};
@@ -96,9 +123,25 @@ function saveDocumentCategory(token, cat) {
   var data = sheet.getDataRange().getValues();
   var id = cat.id ? String(cat.id) : '';
 
+  var iconFileId = '';
+  if (id) {
+    for (var r = 1; r < data.length; r++) {
+      if (String(data[r][0]) === id) { iconFileId = String(data[r][4] || ''); break; }
+    }
+  }
+  if (cat.removeIcon) {
+    if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
+    iconFileId = '';
+  } else if (cat.iconBase64 && cat.iconMimeType) {
+    if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
+    var folder = getOrCreateEmergencyIconsFolder_();
+    iconFileId = uploadFileToFolder_(folder.getId(), cat.iconBase64, cat.iconMimeType, 'category-icon-' + (id || 'new') + '-' + name);
+  }
+
   for (var i = 1; i < data.length; i++) {
     if (id && String(data[i][0]) === id) {
       sheet.getRange(i + 1, 2, 1, 2).setValues([[name, icon]]);
+      sheet.getRange(i + 1, 5).setValue(iconFileId);
       return id;
     }
     if (String(data[i][1]).trim().toLowerCase() === name.toLowerCase() && String(data[i][0]) !== id) {
@@ -108,7 +151,7 @@ function saveDocumentCategory(token, cat) {
 
   id = generateUniqueId('DCAT');
   var order = data.length;
-  sheet.appendRow([id, name, icon, order]);
+  sheet.appendRow([id, name, icon, order, iconFileId]);
   return id;
 }
 
@@ -122,6 +165,8 @@ function deleteDocumentCategory(token, id) {
 
   var used = edocReadDocuments_().some(function (d) { return d.categoryId === id; });
   if (used) throw new Error('এই ক্যাটাগরিতে ডকুমেন্ট আছে — আগে সেগুলোর ক্যাটাগরি বদলান বা মুছুন।');
+
+  if (target.iconFileId) { try { DriveApp.getFileById(target.iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
 
   var sheet = categoriesSheet_edoc_();
   var data = sheet.getDataRange().getValues();
@@ -141,7 +186,7 @@ function edocReadDocuments_() {
   var out = [];
   if (lastRow < 2) return out;
 
-  var data = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
   for (var i = 0; i < data.length; i++) {
     var row = data[i];
     if (!row[0]) continue;
@@ -155,7 +200,8 @@ function edocReadDocuments_() {
       important: edocBool_(row[6]),
       uploadedAt: edocDateStr_(row[7]),
       updatedAt: edocDateStr_(row[8]),
-      notes: String(row[9] || '')
+      notes: String(row[9] || ''),
+      iconFileId: String(row[10] || '')
     });
   }
   return out;
@@ -163,12 +209,20 @@ function edocReadDocuments_() {
 
 function edocFormatLabel_(mimeType, name) {
   var n = String(name || '').toLowerCase();
-  if (/\.pdf$/.test(n) || mimeType === 'application/pdf') return 'PDF';
-  if (/\.(jpg|jpeg)$/.test(n) || mimeType === 'image/jpeg') return 'JPG';
-  if (/\.png$/.test(n) || mimeType === 'image/png') return 'PNG';
-  if (/\.docx$/.test(n) || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'DOCX';
-  if (/\.doc$/.test(n) || mimeType === 'application/msword') return 'DOC';
-  if (mimeType && mimeType.indexOf('image/') === 0) return 'IMG';
+  var m = String(mimeType || '');
+  if (/\.pdf$/.test(n) || m === 'application/pdf') return 'PDF';
+  if (/\.(jpg|jpeg)$/.test(n) || m === 'image/jpeg') return 'JPG';
+  if (/\.png$/.test(n) || m === 'image/png') return 'PNG';
+  if (/\.docx$/.test(n) || m === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'DOCX';
+  if (/\.doc$/.test(n) || m === 'application/msword') return 'DOC';
+  // Excel / Google Sheets (exported as .xlsx) / CSV
+  if (/\.xlsx$/.test(n) || m === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') return 'XLSX';
+  if (/\.xls$/.test(n) || m === 'application/vnd.ms-excel') return 'XLS';
+  if (/\.csv$/.test(n) || m === 'text/csv') return 'CSV';
+  // PowerPoint / Google Slides (exported as .pptx)
+  if (/\.pptx$/.test(n) || m === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') return 'PPTX';
+  if (/\.ppt$/.test(n) || m === 'application/vnd.ms-powerpoint') return 'PPT';
+  if (m.indexOf('image/') === 0) return 'IMG';
   return 'ফাইল';
 }
 
@@ -199,7 +253,7 @@ function getEmergencyDocumentsData(token) {
       id: d.id, name: d.name, categoryId: d.categoryId,
       categoryName: cat ? cat.name : 'অন্যান্য', categoryIcon: cat ? cat.icon : '📁',
       fileId: d.fileId, mimeType: d.mimeType, format: edocFormatLabel_(d.mimeType, d.name),
-      sizeBytes: d.sizeBytes, important: d.important,
+      sizeBytes: d.sizeBytes, important: d.important, iconFileId: d.iconFileId,
       uploadedAt: d.uploadedAt, updatedAt: d.updatedAt, notes: d.notes
     };
   });
@@ -225,7 +279,7 @@ function getEmergencyDocumentsData(token) {
   var folder = getOrCreateEmergencyDocsFolder_();
 
   return {
-    categories: categories.map(function (c) { return { id: c.id, name: c.name, icon: c.icon, count: catCount[c.id] || 0 }; }),
+    categories: categories.map(function (c) { return { id: c.id, name: c.name, icon: c.icon, iconFileId: c.iconFileId, count: catCount[c.id] || 0 }; }),
     documents: enriched.slice(0, EDOC_RECENT_LIMIT),
     documentsAll: enriched,
     important: important,
@@ -240,7 +294,9 @@ function getEmergencyDocumentsData(token) {
 }
 
 /**
- * doc = { name, categoryId, base64, mimeType, fileName, important (bool) }
+ * doc = { name, categoryId, base64, mimeType, fileName, important (bool),
+ *   iconBase64, iconMimeType (optional — a custom picture icon for this
+ *   document, chosen at upload time instead of the auto format icon) }
  * Uploads the file to the dedicated Drive folder and records it.
  * Returns the refreshed getEmergencyDocumentsData() payload.
  */
@@ -257,12 +313,18 @@ function uploadEmergencyDocument(token, doc) {
   var sizeBytes = 0;
   try { sizeBytes = DriveApp.getFileById(fileId).getSize(); } catch (e) { /* ignore */ }
 
+  var iconFileId = '';
+  if (doc.iconBase64 && doc.iconMimeType) {
+    var iconFolder = getOrCreateEmergencyIconsFolder_();
+    iconFileId = uploadFileToFolder_(iconFolder.getId(), doc.iconBase64, doc.iconMimeType, 'doc-icon-new-' + name);
+  }
+
   var sheet = documentsSheet_();
   var id = generateUniqueId('DOC');
   var now = new Date();
   sheet.appendRow([
     id, name, String(doc.categoryId || ''), fileId, String(doc.mimeType || ''), sizeBytes,
-    doc.important ? true : false, now, now, String(doc.notes || '').substring(0, 500)
+    doc.important ? true : false, now, now, String(doc.notes || '').substring(0, 500), iconFileId
   ]);
 
   edocLogActivity_(id, name, 'uploaded');
@@ -270,9 +332,12 @@ function uploadEmergencyDocument(token, doc) {
 }
 
 /**
- * d = { id, name, categoryId, important, notes }
- * Renames / moves category / toggles important / edits notes. Does not
- * replace the underlying file — delete and re-upload for that.
+ * d = { id, name, categoryId, important, notes, iconBase64, iconMimeType
+ *   (optional — sets/replaces this document's custom picture icon),
+ *   removeIcon (optional — clears a previously set picture icon, reverting
+ *   to the auto format icon) }
+ * Renames / moves category / toggles important / edits notes / edits icon.
+ * Does not replace the underlying file itself — delete and re-upload for that.
  */
 function updateEmergencyDocument(token, d) {
   edocAuth_(token);
@@ -287,11 +352,22 @@ function updateEmergencyDocument(token, d) {
   var data = sheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]) === id) {
+      var iconFileId = String(data[i][10] || '');
+      if (d.removeIcon) {
+        if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
+        iconFileId = '';
+      } else if (d.iconBase64 && d.iconMimeType) {
+        if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
+        var iconFolder = getOrCreateEmergencyIconsFolder_();
+        iconFileId = uploadFileToFolder_(iconFolder.getId(), d.iconBase64, d.iconMimeType, 'doc-icon-' + id + '-' + name);
+      }
+
       sheet.getRange(i + 1, 2).setValue(name);
       sheet.getRange(i + 1, 3).setValue(String(d.categoryId || ''));
       sheet.getRange(i + 1, 7).setValue(d.important ? true : false);
       sheet.getRange(i + 1, 9).setValue(new Date());
       sheet.getRange(i + 1, 10).setValue(String(d.notes || '').substring(0, 500));
+      sheet.getRange(i + 1, 11).setValue(iconFileId);
       edocLogActivity_(id, name, 'updated');
       return getEmergencyDocumentsData(token);
     }
@@ -322,9 +398,11 @@ function deleteEmergencyDocument(token, docId) {
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(docId)) {
       var fileId = data[i][3];
+      var iconFileId = data[i][10];
       var name = data[i][1];
       sheet.deleteRow(i + 1);
       if (fileId) { try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) { /* ignore */ } }
+      if (iconFileId) { try { DriveApp.getFileById(iconFileId).setTrashed(true); } catch (e) { /* ignore */ } }
       edocLogActivity_(docId, name, 'deleted');
       return getEmergencyDocumentsData(token);
     }
