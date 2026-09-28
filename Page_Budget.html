@@ -471,11 +471,11 @@
         el('bmKpis').innerHTML =
           kpi('bm-ico-green', SVG.income, 'মোট আয়', money(d.income), 'এই মাসের মোট আয়', deltaHtml(d.income, d.prev.income, true)) +
           kpi('bm-ico-teal', SVG.budgetPlan, 'এই মাসের বাজেট', money(d.budgetTotal), 'এই মাসের ব্যয়ের জন্য নির্ধারিত বাজেট', budgetExtra) +
+          kpi('bm-ico-amber', SVG.coins, 'অবশিষ্ট বাজেট', money(remaining),
+            d.budgetTotal > 0 ? (remaining >= 0 ? 'মোট বাজেটের অবশিষ্ট' : 'মোট বাজেট ছাড়িয়ে গেছে') : 'বাজেট সেট করা হয়নি') +
           kpi('bm-ico-red', SVG.expense, 'মোট ব্যয়', money(d.expense), 'এই মাসের মোট ব্যয়', deltaHtml(d.expense, d.prev.expense, false)) +
           kpi('bm-ico-blue', SVG.savings, 'মোট সঞ্চয়', money(d.savings), 'এই মাসের সঞ্চয়', deltaHtml(d.savings, d.prev.savings, true)) +
-          kpi('bm-ico-purple', SVG.goal, 'সঞ্চয় লক্ষ্য', money(d.goal), 'এই মাসের সঞ্চয়ের লক্ষ্য', goalExtra) +
-          kpi('bm-ico-amber', SVG.coins, 'অবশিষ্ট বাজেট', money(remaining),
-            d.budgetTotal > 0 ? (remaining >= 0 ? 'মোট বাজেটের অবশিষ্ট' : 'মোট বাজেট ছাড়িয়ে গেছে') : 'বাজেট সেট করা হয়নি');
+          kpi('bm-ico-purple', SVG.goal, 'সঞ্চয় লক্ষ্য', money(d.goal), 'এই মাসের সঞ্চয়ের লক্ষ্য', goalExtra);
       }
 
       /* ---------- আয় বনাম ব্যয় চার্ট ---------- */

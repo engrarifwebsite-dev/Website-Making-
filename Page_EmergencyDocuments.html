@@ -57,7 +57,8 @@
     #page-emergency-documents .ed-cat { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--ed-line); border-radius: 12px; background: #fff; cursor: pointer; font-family: inherit; text-align: left; }
     #page-emergency-documents .ed-cat:hover { background: #f8fafc; }
     #page-emergency-documents .ed-cat.active { border-color: var(--ed-blue); background: #eef4ff; }
-    #page-emergency-documents .ed-cat-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; color: var(--ed-blue); display: grid; place-items: center; font-size: 19px; flex-shrink: 0; }
+    #page-emergency-documents .ed-cat-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; color: var(--ed-blue); display: grid; place-items: center; font-size: 19px; flex-shrink: 0; overflow: hidden; }
+    #page-emergency-documents .ed-cat-ico img { width: 100%; height: 100%; object-fit: cover; }
     #page-emergency-documents .ed-cat-name { font-size: 13px; font-weight: 700; color: var(--text); }
     #page-emergency-documents .ed-cat-count { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
     #page-emergency-documents .ed-cat-add { border-style: dashed; }
@@ -90,7 +91,8 @@
     #page-emergency-documents .ed-table td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--ed-line); color: var(--text); font-weight: 600; white-space: nowrap; }
     #page-emergency-documents .ed-table tr:last-child td { border-bottom: 0; }
     #page-emergency-documents .ed-doc { display: flex; align-items: center; gap: 9px; }
-    #page-emergency-documents .ed-doc-ico { font-size: 17px; flex-shrink: 0; }
+    #page-emergency-documents .ed-doc-ico { font-size: 17px; flex-shrink: 0; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; overflow: hidden; }
+    #page-emergency-documents .ed-doc-ico img { width: 100%; height: 100%; object-fit: cover; }
     #page-emergency-documents .ed-doc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
     #page-emergency-documents .ed-actcol { display: inline-flex; gap: 6px; }
     #page-emergency-documents .ed-iconbtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; display: inline-grid; place-items: center; background: #f8fafc; color: var(--text-muted); }
@@ -110,7 +112,8 @@
     #page-emergency-documents .ed-imp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
     #page-emergency-documents .ed-imp-card { position: relative; padding: 14px 12px; border-radius: 13px; color: #fff; }
     #page-emergency-documents .ed-imp-star { position: absolute; top: 8px; right: 8px; font-size: 13px; }
-    #page-emergency-documents .ed-imp-ico { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.25); display: grid; place-items: center; font-size: 16px; margin-bottom: 10px; }
+    #page-emergency-documents .ed-imp-ico { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.25); display: grid; place-items: center; font-size: 16px; margin-bottom: 10px; overflow: hidden; }
+    #page-emergency-documents .ed-imp-ico img { width: 100%; height: 100%; object-fit: cover; }
     #page-emergency-documents .ed-imp-name { font-size: 13px; font-weight: 800; line-height: 1.3; }
     #page-emergency-documents .ed-imp-cat { font-size: 11px; font-weight: 700; opacity: .92; margin-top: 4px; }
     #page-emergency-documents .ed-imp-date { font-size: 10.5px; opacity: .85; margin-top: 8px; }
@@ -139,6 +142,15 @@
     .ed-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 5px 10px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
     .ed-m-mini.danger { color: var(--danger); }
     .ed-m-check { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 13.5px; font-weight: 600; color: var(--text); }
+
+    /* ---------- আইকন এডিটর (ছবি পেস্ট/আপলোড — ক্যাটাগরি ও ডকুমেন্ট উভয়ের জন্য) ---------- */
+    .ed-icon-editor { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 4px; }
+    .ed-icon-preview { width: 64px; height: 64px; border-radius: 12px; background: var(--accent-soft); color: var(--navy); display: flex; align-items: center; justify-content: center; font-size: 28px; overflow: hidden; border: 2px solid var(--border); flex-shrink: 0; }
+    .ed-icon-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .ed-icon-controls { flex: 1; min-width: 0; }
+    .ed-icon-paste { border: 2px dashed var(--ed-line); border-radius: 10px; padding: 14px 10px; text-align: center; font-size: 12px; line-height: 1.6; color: var(--text-muted); cursor: text; background: #f8fafc; }
+    .ed-icon-paste:focus { outline: 2px solid var(--ed-blue); background: #eef2ff; }
+    .ed-icon-file-row { margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
     /* ---------- রেসপনসিভ ---------- */
     @media (max-width: 1180px) {
@@ -177,8 +189,8 @@
         <div class="ed-drop" id="edDrop">
           <div class="ed-drop-ico">☁️</div>
           <div class="ed-drop-text">ফাইল এখানে ড্র্যাগ করুন অথবা ক্লিক করে আপলোড করুন</div>
-          <div class="ed-drop-sub">সর্বোচ্চ সাইজ: ২৫ MB<br>সমর্থিত ফরম্যাট: PDF, JPG, PNG, DOC, DOCX<br>একবারে একটি ফাইল</div>
-          <input type="file" id="edFileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,application/pdf,image/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <div class="ed-drop-sub">সর্বোচ্চ সাইজ: ২৫ MB<br>সমর্থিত ফরম্যাট: PDF, ছবি, Word (DOC/DOCX), Excel/Sheets (XLS/XLSX/CSV), PowerPoint/Slides (PPT/PPTX)<br>একবারে একটি ফাইল</div>
+          <input type="file" id="edFileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,application/pdf,image/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation">
         </div>
         <div class="ed-upload-progress" id="edUploadProgress">
           <div class="ed-upload-row"><span class="ed-upload-name" id="edUploadName">—</span><span id="edUploadPct">০%</span></div>
@@ -199,6 +211,12 @@
             <option value="PNG">PNG</option>
             <option value="DOC">DOC</option>
             <option value="DOCX">DOCX</option>
+            <option value="XLS">XLS</option>
+            <option value="XLSX">XLSX</option>
+            <option value="CSV">CSV</option>
+            <option value="PPT">PPT</option>
+            <option value="PPTX">PPTX</option>
+            <option value="IMG">অন্যান্য ছবি</option>
           </select>
           <input type="date" class="ed-select" id="edFilterDate" title="এই তারিখ থেকে">
         </div>
@@ -253,7 +271,8 @@
       var ACTION_ICON = { uploaded: ['⬆️', '#dbeafe', '#1d4ed8'], updated: ['✏️', '#e3f6e8', '#15803d'], downloaded: ['⬇️', '#eef2ff', '#7c3aed'], deleted: ['🗑️', '#fee2e2', '#dc2626'] };
 
       var state = { data: null, reqId: 0, loadedAt: 0, everLoaded: false, catFilter: '', formatFilter: '', dateFilter: '', search: '', showAll: false };
-      var pendingUpload = null; // { base64, mimeType, fileName }
+      var pendingUpload = null;   // { base64, mimeType, fileName } — the file itself, chosen from the dropzone
+      var pendingIconEdit = null; // { base64, mime } | 'remove' | null — a custom picture icon being set in whichever modal is open
 
       /* ---------- helpers ---------- */
       function el(id) { return document.getElementById(id); }
@@ -343,11 +362,37 @@
         el('edDriveLink').href = d.storage.folderUrl || '#';
       }
 
+      /* ---------- আইকন হেল্পার (ছবি থাকলে ছবি, না থাকলে ইমোজি) ---------- */
+      /** ক্যাটাগরির আইকন — id দিয়ে খুঁজে ছবি/ইমোজি HTML দেয়। */
+      function catIconHtml(categoryId) {
+        var c = findCat(categoryId);
+        if (c && c.iconFileId) return '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(c.iconFileId) + '&sz=w100" alt="">';
+        return esc((c && c.icon) || '📁');
+      }
+      /** শুধু ইমোজি — ফিল্টার ড্রপডাউনের <option>-এর মতো জায়গায়, যেখানে ছবি দেখানো যায় না। */
+      function catEmoji(categoryId) {
+        var c = findCat(categoryId);
+        return (c && c.icon) || '📁';
+      }
+      function docIcon(format) {
+        if (format === 'PDF') return '📕';
+        if (format === 'JPG' || format === 'PNG' || format === 'IMG') return '🖼️';
+        if (format === 'DOC' || format === 'DOCX') return '📘';
+        if (format === 'XLS' || format === 'XLSX' || format === 'CSV') return '📗';
+        if (format === 'PPT' || format === 'PPTX') return '📙';
+        return '📄';
+      }
+      /** একটি ডকুমেন্টের আইকন — কাস্টম ছবি থাকলে সেটি, না থাকলে ফরম্যাট অনুযায়ী ইমোজি। */
+      function docIconHtml(doc) {
+        if (doc.iconFileId) return '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(doc.iconFileId) + '&sz=w80" alt="">';
+        return docIcon(doc.format);
+      }
+
       /* ---------- ক্যাটাগরি গ্রিড ---------- */
       function renderCats(d) {
         var html = d.categories.map(function (c) {
           return '<button type="button" class="ed-cat' + (state.catFilter === c.id ? ' active' : '') + '" data-cat="' + esc(c.id) + '">' +
-            '<div class="ed-cat-ico">' + c.icon + '</div><div><div class="ed-cat-name">' + esc(c.name) + '</div>' +
+            '<div class="ed-cat-ico">' + catIconHtml(c.id) + '</div><div><div class="ed-cat-name">' + esc(c.name) + '</div>' +
             '<div class="ed-cat-count">' + bn(c.count) + 'টি ডকুমেন্ট</div></div></button>';
         }).join('');
         html += '<button type="button" class="ed-cat ed-cat-add" data-act="add-cat"><div class="ed-cat-ico">＋</div><div class="ed-cat-name">নতুন ক্যাটাগরি</div></button>';
@@ -375,13 +420,6 @@
         });
       }
 
-      function docIcon(format) {
-        if (format === 'PDF') return '📕';
-        if (format === 'JPG' || format === 'PNG' || format === 'IMG') return '🖼️';
-        if (format === 'DOC' || format === 'DOCX') return '📘';
-        return '📄';
-      }
-
       function renderTable(d) {
         var list = filteredDocs(d);
         var host = el('edTable');
@@ -395,7 +433,7 @@
         var shown = state.showAll ? list : list.slice(0, 8);
         var rows = shown.map(function (doc) {
           return '<tr>' +
-            '<td><div class="ed-doc"><span class="ed-doc-ico">' + docIcon(doc.format) + '</span><span class="ed-doc-name" title="' + esc(doc.name) + '">' + esc(doc.name) + '</span></div></td>' +
+            '<td><div class="ed-doc"><span class="ed-doc-ico">' + docIconHtml(doc) + '</span><span class="ed-doc-name" title="' + esc(doc.name) + '">' + esc(doc.name) + '</span></div></td>' +
             '<td>' + esc(doc.categoryName) + '</td>' +
             '<td>' + bnDate(doc.uploadedAt) + '</td>' +
             '<td>' + humanSize(doc.sizeBytes) + '</td>' +
@@ -424,7 +462,7 @@
           var color = colorFor(doc.categoryName);
           return '<div class="ed-imp-card" style="background:' + color + '">' +
             '<span class="ed-imp-star">⭐</span>' +
-            '<div class="ed-imp-ico">' + docIcon(doc.format) + '</div>' +
+            '<div class="ed-imp-ico">' + docIconHtml(doc) + '</div>' +
             '<div class="ed-imp-name" title="' + esc(doc.name) + '">' + esc(doc.name) + '</div>' +
             '<div class="ed-imp-cat">' + esc(doc.categoryName) + '</div>' +
             '<div class="ed-imp-date">' + bnDate(doc.uploadedAt) + '</div>' +
@@ -466,6 +504,71 @@
       }
 
       /* =====================================================
+         আইকন এডিটর (ছবি পেস্ট/আপলোড) — ক্যাটাগরি ও ডকুমেন্ট উভয় মোডালে ব্যবহৃত
+         ===================================================== */
+      function iconEditorHtml_(existingIconFileId, fallbackText, removable) {
+        var preview = existingIconFileId
+          ? '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(existingIconFileId) + '&sz=w150" alt="">'
+          : esc(fallbackText || '📁');
+        return '' +
+          '<div class="ed-icon-editor">' +
+            '<div class="ed-icon-preview" id="edIconPreview">' + preview + '</div>' +
+            '<div class="ed-icon-controls">' +
+              '<div class="ed-icon-paste" id="edIconPaste" tabindex="0">🖼️ এখানে ক্লিক করে ছবি পেস্ট করুন (Ctrl+V)<br>— যে কোনো জায়গা থেকে কপি করা ছবি —</div>' +
+              '<div class="ed-icon-file-row">' +
+                '<input type="file" class="form-input" id="edIconFile" accept="image/*" style="max-width:220px;">' +
+                (removable ? '<button type="button" class="ed-m-mini danger" id="edIconRemove">ছবি সরান</button>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      }
+
+      /** কল করার পর pendingIconEdit-এ ইউজারের বাছাই করা ছবি (বা 'remove') জমা হবে। */
+      function wireIconEditor_(fallbackText) {
+        pendingIconEdit = null;
+        var pasteBox = el('edIconPaste');
+        var fileInput = el('edIconFile');
+        var preview = el('edIconPreview');
+        var removeBtn = el('edIconRemove');
+
+        function handleFile(file) {
+          if (!file || !/^image\//.test(file.type)) { showToast('শুধু ছবি ফাইল পেস্ট/আপলোড করুন।', 'warning'); return; }
+          var reader = new FileReader();
+          reader.onload = function () {
+            pendingIconEdit = { base64: String(reader.result).split(',')[1] || '', mime: file.type };
+            preview.innerHTML = '<img src="' + reader.result + '" alt="">';
+          };
+          reader.onerror = function () { showToast('ছবিটি পড়া যায়নি।', 'danger'); };
+          reader.readAsDataURL(file);
+        }
+
+        pasteBox.addEventListener('paste', function (e) {
+          var items = (e.clipboardData && e.clipboardData.items) || [];
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].type && items[i].type.indexOf('image/') === 0) {
+              handleFile(items[i].getAsFile());
+              e.preventDefault();
+              return;
+            }
+          }
+          showToast('ক্লিপবোর্ডে কোনো ছবি পাওয়া যায়নি — আগে ছবিটি কপি করুন।', 'warning');
+        });
+
+        fileInput.addEventListener('change', function () {
+          var file = this.files && this.files[0];
+          if (file) handleFile(file);
+        });
+
+        if (removeBtn) {
+          removeBtn.addEventListener('click', function () {
+            pendingIconEdit = 'remove';
+            preview.innerHTML = esc(fallbackText || '📁');
+            removeBtn.remove();
+          });
+        }
+      }
+
+      /* =====================================================
          আপলোড: ড্রপজোন + মোডাল
          ===================================================== */
       var dropEl, fileInput;
@@ -493,11 +596,23 @@
         });
       }
 
+      /** কিছু ব্রাউজার Office ফাইলের type ফাঁকা দেয় — তখন এক্সটেনশন দেখে ধরন ঠিক করা হয়। */
+      function mimeFromName_(name) {
+        var ext = (String(name || '').split('.').pop() || '').toLowerCase();
+        var map = {
+          pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif',
+          doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv',
+          ppt: 'application/vnd.ms-powerpoint', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        };
+        return map[ext] || 'application/octet-stream';
+      }
+
       function handlePickedFile(file) {
         if (file.size > 25 * 1024 * 1024) { showToast('ফাইলের সাইজ ২৫ MB-এর বেশি হতে পারবে না।', 'warning'); return; }
         var reader = new FileReader();
         reader.onload = function () {
-          pendingUpload = { base64: String(reader.result).split(',')[1] || '', mimeType: file.type || 'application/octet-stream', fileName: file.name };
+          pendingUpload = { base64: String(reader.result).split(',')[1] || '', mimeType: file.type || mimeFromName_(file.name), fileName: file.name };
           openUploadDetailsModal();
         };
         reader.onerror = function () { showToast('ফাইলটি পড়া যায়নি।', 'danger'); };
@@ -512,6 +627,8 @@
         }).join('');
 
         var body =
+          iconEditorHtml_('', '📄', false) +
+          '<div class="ed-m-note" style="margin-top:6px;">চাইলে এই ডকুমেন্টের জন্য নিজের পছন্দের একটি আইকন/থাম্বনেইল ছবি বসাতে পারেন — না দিলে ফাইলের ধরন অনুযায়ী একটি ডিফল্ট আইকন দেখাবে।</div>' +
           '<div class="form-row"><label>ডকুমেন্টের নাম *</label><input type="text" class="form-input" id="eduName" value="' + esc(pendingUpload.fileName) + '"></div>' +
           '<div class="form-row"><label>ক্যাটাগরি</label><select class="form-input" id="eduCategory">' + opts + '</select></div>' +
           '<div class="ed-m-check"><input type="checkbox" id="eduImportant"> <label for="eduImportant" style="margin:0;">⭐ গুরুত্বপূর্ণ হিসেবে চিহ্নিত করুন</label></div>' +
@@ -521,6 +638,7 @@
           { label: 'বাতিল', className: 'btn-outline', onClick: function () { pendingUpload = null; hideModal(); } },
           { label: 'আপলোড করুন', className: 'btn-primary', onClick: submitUpload }
         ]);
+        wireIconEditor_('📄');
       }
 
       function submitUpload() {
@@ -532,6 +650,10 @@
           name: name, categoryId: el('eduCategory').value, important: el('eduImportant').checked,
           notes: el('eduNotes').value, base64: pendingUpload.base64, mimeType: pendingUpload.mimeType, fileName: pendingUpload.fileName
         };
+        if (pendingIconEdit && pendingIconEdit !== 'remove') {
+          payload.iconBase64 = pendingIconEdit.base64;
+          payload.iconMimeType = pendingIconEdit.mime;
+        }
         hideModal();
         showUploadProgress(name);
 
@@ -571,29 +693,38 @@
          ===================================================== */
       function openCategoryModal(cat) {
         var edit = !!cat;
-        var c = cat || { id: '', name: '', icon: '📁' };
+        var c = cat || { id: '', name: '', icon: '📁', iconFileId: '' };
+
         var body =
-          '<div class="form-grid">' +
-            '<div class="form-row"><label>ইমোজি আইকন</label><input type="text" class="form-input" id="edcIcon" value="' + esc(c.icon) + '" maxlength="4"></div>' +
-            '<div class="form-row"><label>ক্যাটাগরির নাম *</label><input type="text" class="form-input" id="edcName" value="' + esc(c.name) + '"></div>' +
-          '</div>';
+          iconEditorHtml_(c.iconFileId, c.icon, !!c.iconFileId) +
+          '<div class="form-row" style="margin-top:12px;"><label>ইমোজি আইকন (ছবি না থাকলে এটি দেখানো হবে)</label><input type="text" class="form-input" id="edcIcon" value="' + esc(c.icon) + '" maxlength="4"></div>' +
+          '<div class="form-row"><label>ক্যাটাগরির নাম *</label><input type="text" class="form-input" id="edcName" value="' + esc(c.name) + '"></div>' +
+          '<div class="ed-m-note">ছবি পেস্ট/আপলোড করলে সেটিই ক্যাটাগরির আইকন হিসেবে দেখাবে — তখন ইমোজিটা শুধু ব্যাকআপ হিসেবে থাকে।</div>';
+
         showModal(edit ? 'ক্যাটাগরি সম্পাদনা' : 'নতুন ক্যাটাগরি', body, [
           { label: 'বাতিল', className: 'btn-outline', onClick: openManageCatsModal },
           { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
               var name = el('edcName').value.trim();
               if (!name) { showToast('ক্যাটাগরির নাম লিখুন।', 'warning'); return; }
-              call('saveDocumentCategory', [getToken(), { id: c.id, name: name, icon: el('edcIcon').value }], function () {
+              var payload = { id: c.id, name: name, icon: el('edcIcon').value };
+              if (pendingIconEdit === 'remove') payload.removeIcon = true;
+              else if (pendingIconEdit) { payload.iconBase64 = pendingIconEdit.base64; payload.iconMimeType = pendingIconEdit.mime; }
+              call('saveDocumentCategory', [getToken(), payload], function () {
                 showToast('ক্যাটাগরি সংরক্ষণ হয়েছে।', 'success');
                 load(openManageCatsModal);
               });
           } }
         ]);
+        wireIconEditor_(c.icon);
       }
 
       function openManageCatsModal() {
         var cats = (state.data && state.data.categories) || [];
         var rows = cats.length ? cats.map(function (c) {
-          return '<div class="ed-m-list-row"><span style="font-size:18px;">' + c.icon + '</span><span class="ed-m-grow">' + esc(c.name) + '</span><span style="color:var(--text-muted);font-size:12px;">' + bn(c.count) + ' টি</span>' +
+          var thumb = c.iconFileId
+            ? '<span style="width:22px;height:22px;border-radius:6px;overflow:hidden;display:inline-flex;flex-shrink:0;"><img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(c.iconFileId) + '&sz=w60" alt="" style="width:100%;height:100%;object-fit:cover;"></span>'
+            : '<span style="font-size:18px;">' + esc(c.icon || '📁') + '</span>';
+          return '<div class="ed-m-list-row">' + thumb + '<span class="ed-m-grow">' + esc(c.name) + '</span><span style="color:var(--text-muted);font-size:12px;">' + bn(c.count) + ' টি</span>' +
             '<button type="button" class="ed-m-mini" data-mc-edit="' + esc(c.id) + '">সম্পাদনা</button>' +
             '<button type="button" class="ed-m-mini danger" data-mc-del="' + esc(c.id) + '">মুছুন</button></div>';
         }).join('') : '<div class="ed-empty">কোনো ক্যাটাগরি নেই।</div>';
@@ -616,7 +747,7 @@
       }
 
       /* =====================================================
-         ডকুমেন্ট: দেখুন / ডাউনলোড / আরও (সম্পাদনা, ⭐, মুছুন)
+         ডকুমেন্ট: দেখুন / ডাউনলোড / আরও (সম্পাদনা, আইকন, ⭐, মুছুন)
          ===================================================== */
       function findDoc(id) {
         var l = (state.data && state.data.documentsAll) || [];
@@ -646,6 +777,8 @@
         }).join('');
 
         var body =
+          iconEditorHtml_(doc.iconFileId, docIcon(doc.format), !!doc.iconFileId) +
+          '<div class="ed-m-note" style="margin-top:6px;">নিজের পছন্দের ছবি না দিলে ফাইলের ধরন অনুযায়ী ডিফল্ট আইকন দেখানো হয়।</div>' +
           '<div class="form-row"><label>ডকুমেন্টের নাম *</label><input type="text" class="form-input" id="edmName" value="' + esc(doc.name) + '"></div>' +
           '<div class="form-row"><label>ক্যাটাগরি</label><select class="form-input" id="edmCategory">' + opts + '</select></div>' +
           '<div class="ed-m-check"><input type="checkbox" id="edmImportant"' + (doc.important ? ' checked' : '') + '> <label for="edmImportant" style="margin:0;">⭐ গুরুত্বপূর্ণ হিসেবে চিহ্নিত</label></div>' +
@@ -657,14 +790,19 @@
           { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
           { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () { submitDocEdit(id); } }
         ]);
+        wireIconEditor_(docIcon(doc.format));
       }
 
       function submitDocEdit(id) {
         var name = el('edmName').value.trim();
         if (!name) { showToast('ডকুমেন্টের নাম লিখুন।', 'warning'); return; }
-        call('updateEmergencyDocument', [getToken(), {
+        var payload = {
           id: id, name: name, categoryId: el('edmCategory').value, important: el('edmImportant').checked, notes: el('edmNotes').value
-        }], function (d) {
+        };
+        if (pendingIconEdit === 'remove') payload.removeIcon = true;
+        else if (pendingIconEdit) { payload.iconBase64 = pendingIconEdit.base64; payload.iconMimeType = pendingIconEdit.mime; }
+
+        call('updateEmergencyDocument', [getToken(), payload], function (d) {
           hideModal();
           showToast('পরিবর্তন সংরক্ষণ হয়েছে।', 'success');
           applyData(d);
@@ -680,12 +818,6 @@
             showToast('ডকুমেন্ট মুছে ফেলা হয়েছে।', 'success');
             applyData(d);
           });
-        });
-      }
-
-      function toggleImportant(id) {
-        call('toggleDocumentImportant', [getToken(), id], function (d) {
-          applyData(d);
         });
       }
 
@@ -737,8 +869,6 @@
         else if (act === 'dl-doc') downloadDoc(b.getAttribute('data-id'));
         else if (act === 'more-doc') openDocMenuModal(b.getAttribute('data-id'));
         else if (act === 'toggle-all') { state.showAll = !state.showAll; renderTable(state.data); }
-        else if (act === 'scroll-important') el('edImportantSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        else if (act === 'scroll-storage') el('edStorageSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         else if (act === 'backup') exportBackup();
       });
 
