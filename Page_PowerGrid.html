@@ -172,6 +172,16 @@
     #page-power-grid .pg-leave-track { height: 8px; background: #e6eaf0; border-radius: 99px; overflow: hidden; margin-top: 8px; }
     #page-power-grid .pg-leave-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f59e0b, #dc2626); }
 
+    /* ছুটির এন্ট্রি — অফিস আদেশ কাগজপত্র (আপলোড/ডাউনলোড/মুছুন) */
+    #page-power-grid .pg-leave-docs { display: flex; flex-direction: column; gap: 5px; }
+    #page-power-grid .pg-leave-doc-row { display: flex; align-items: center; gap: 6px; font-size: 12px; background: #f8fafc; border: 1px solid var(--pg-line); border-radius: 7px; padding: 4px 8px; white-space: normal; }
+    #page-power-grid .pg-leave-doc-name { flex: 1; min-width: 0; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 600; }
+    #page-power-grid .pg-leave-doc-dl { color: var(--pg-blue); font-weight: 700; text-decoration: none; font-size: 12px; flex-shrink: 0; }
+    #page-power-grid .pg-leave-doc-dl:hover { text-decoration: underline; }
+    #page-power-grid .pg-leave-doc-del { background: none; border: none; cursor: pointer; color: var(--pg-red); font-size: 13px; padding: 0 2px; flex-shrink: 0; }
+    #page-power-grid .pg-leave-doc-add { align-self: flex-start; background: none; border: 1px dashed var(--pg-blue); border-radius: 7px; color: var(--pg-blue); font-size: 11.5px; font-weight: 700; padding: 4px 10px; cursor: pointer; font-family: inherit; margin-top: 2px; white-space: nowrap; }
+    #page-power-grid .pg-leave-doc-add:hover { background: #eaf1ff; }
+
     /* ---------- মোডালের ভেতরের অংশ ---------- */
     .pg-m-sec { margin: 14px 0 6px; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; }
     .pg-m-sec:first-child { margin-top: 0; }
@@ -460,7 +470,7 @@
       var CPF_RULE_NOTE = "Employee = CPF Deduction − Employer's Contribution to CPF; Company = Employer's Contribution to CPF; মোট CPF = CPF Deduction।";
 
       var state = { data: null, sel: '', cpfYear: '', reqId: 0, loadedAt: 0, everLoaded: false };
-      var leaveState = { data: null, loadedAt: 0, everLoaded: false };
+      var leaveState = { data: null, docs: {}, loadedAt: 0, everLoaded: false };
 
       /* ---------- helpers ---------- */
       function el(id) { return document.getElementById(id); }
@@ -939,7 +949,12 @@
          যোগদানের তারিখ থেকে প্রতি accrualDays দিনে ১ দিন অর্জিত ছুটি যোগ হয়
          (Server_PowerGrid.gs > getLeaveData লাইভ হিসাব করে পাঠায়)। ভোগ ও
          নগদায়ন এন্ট্রি হিসেবে সংরক্ষিত হয়; প্রতিটির পরের "স্থিতি" সার্ভারেই
-         রিক্যালকুলেট হয় (Ledger-এর মতো)।
+         রিক্যালকুলেট হয় (Ledger-এর মতো) — এই মানটি ডেটা মডেলে থাকে, কিন্তু
+         (২০২৬-০৯-২৭ থেকে) এন্ট্রি তালিকায় আর আলাদা কলাম হিসেবে দেখানো হয় না।
+         প্রতিটি এন্ট্রির নিজস্ব "কাগজপত্র" (অফিস আদেশ ইত্যাদি) আপলোড/ডাউনলোড/
+         মুছার ব্যবস্থা Education Documents-এর প্যাটার্ন অনুসরণ করে যোগ করা —
+         getLeaveDocumentsMap() / uploadLeaveDocument() / deleteLeaveDocument()
+         (Server_Leave.gs, আগে থেকেই বিদ্যমান, অপরিবর্তিত) ব্যবহার করে।
          ===================================================== */
 
       function loadLeave(cb) {
@@ -952,17 +967,34 @@
         google.script.run
           .withSuccessHandler(function (d) {
             leaveState.data = d;
-            leaveState.loadedAt = Date.now();
-            leaveState.everLoaded = true;
-            el('pgLeaveBody').classList.remove('busy');
-            renderLeaveTab();
-            if (typeof cb === 'function') cb();
+            loadLeaveDocs_(function () {
+              leaveState.loadedAt = Date.now();
+              leaveState.everLoaded = true;
+              el('pgLeaveBody').classList.remove('busy');
+              renderLeaveTab();
+              if (typeof cb === 'function') cb();
+            });
           })
           .withFailureHandler(function (err) {
             el('pgLeaveBody').classList.remove('busy');
             showLeaveError((err && err.message) || 'ছুটির তথ্য লোড করা যায়নি।');
           })
           .getLeaveData(token);
+      }
+
+      /** getLeaveData()-এর সাথে সাথেই ছুটির কাগজপত্রের ম্যাপ লোড করা — একটির জন্য অপেক্ষা করতে হয় না, রেন্ডার একবারই হয়। */
+      function loadLeaveDocs_(done) {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) { leaveState.docs = {}; done(); return; }
+        google.script.run
+          .withSuccessHandler(function (map) {
+            leaveState.docs = map || {};
+            done();
+          })
+          .withFailureHandler(function () {
+            leaveState.docs = {};
+            done();
+          })
+          .getLeaveDocumentsMap();
       }
 
       function showLeaveError(msg) {
@@ -1012,6 +1044,21 @@
         return type === 'Taken' ? '<span class="pg-tag taken">ভোগ</span>' : '<span class="pg-tag encash">নগদায়ন</span>';
       }
 
+      /** একটি এন্ট্রির সংযুক্ত কাগজপত্র (অফিস আদেশ ইত্যাদি) তালিকা + "যোগ করুন" বাটন — leaveState.docs[entryId] থেকে। */
+      function leaveDocsHtml_(entryId) {
+        var docs = leaveState.docs[entryId] || [];
+        var rows = docs.map(function (dd) {
+          return '<div class="pg-leave-doc-row" data-doc-id="' + esc(dd.docId) + '">' +
+            '<span class="pg-leave-doc-name" title="' + esc(dd.fileName) + '">📄 ' + esc(dd.fileName) + '</span>' +
+            '<a class="pg-leave-doc-dl" href="https://drive.google.com/uc?export=download&id=' + encodeURIComponent(dd.fileId) + '" target="_blank" rel="noopener" title="ডাউনলোড">⬇</a>' +
+            '<button type="button" class="pg-leave-doc-del" data-doc-del="' + esc(dd.docId) + '" title="মুছুন">✕</button>' +
+            '</div>';
+        }).join('');
+        return '<div class="pg-leave-docs">' + rows +
+          '<button type="button" class="pg-leave-doc-add" data-doc-add="' + esc(entryId) + '">📎 আদেশ যোগ করুন</button>' +
+          '</div>';
+      }
+
       function renderLeaveTable(d) {
         var host = el('pgLeaveTable');
         var rows = d.entries || [];
@@ -1024,8 +1071,9 @@
         }
 
         var body = rows.slice().reverse().map(function (r) {
-          return '<tr><td>' + dispShort(r.date) + '</td><td>' + leaveTypeTag(r.type) + '</td><td>' + num(r.days) + '</td><td>' + num(r.balance) + '</td>' +
+          return '<tr><td>' + dispShort(r.date) + '</td><td>' + leaveTypeTag(r.type) + '</td><td>' + num(r.days) + '</td>' +
             '<td style="text-align:left;white-space:normal">' + esc(r.notes || '') + '</td>' +
+            '<td style="text-align:left;white-space:normal">' + leaveDocsHtml_(r.id) + '</td>' +
             '<td><span class="pg-actcol">' +
               '<button type="button" class="pg-iconbtn" data-act="leave-edit" data-id="' + esc(r.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
               '<button type="button" class="pg-iconbtn del" data-act="leave-del" data-id="' + esc(r.id) + '" title="মুছুন">' + ICON_DEL + '</button>' +
@@ -1033,7 +1081,7 @@
         }).join('');
 
         host.innerHTML = '<div class="pg-table-wrap"><table class="pg-table"><thead><tr>' +
-          '<th style="text-align:left">তারিখ</th><th>ধরন</th><th>দিন</th><th>স্থিতি (দিন)</th><th style="text-align:left">নোট</th><th>অ্যাকশন</th>' +
+          '<th style="text-align:left">তারিখ</th><th>ধরন</th><th>দিন</th><th style="text-align:left">নোট</th><th style="text-align:left">কাগজপত্র (অফিস আদেশ)</th><th>অ্যাকশন</th>' +
           '</tr></thead><tbody>' + body + '</tbody></table></div>';
       }
 
@@ -1053,6 +1101,42 @@
           '<div class="pg-leave-track"><div class="pg-leave-fill" style="width:' + usedPct + '%"></div></div>' +
           '<div class="pg-m-note" style="margin:8px 0 0">ব্যবহৃত (ভোগ + নগদায়ন) মোট অর্জিতের ' + usedPct.toFixed(1) + '%।</div>';
       }
+
+      /* ---------- ছুটির কাগজপত্র আপলোড (হিডেন ফাইল ইনপুট, Education Documents-এর প্যাটার্ন) ---------- */
+      var leaveDocFileInput = document.createElement('input');
+      leaveDocFileInput.type = 'file';
+      leaveDocFileInput.accept = '.pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*';
+      leaveDocFileInput.style.display = 'none';
+      document.body.appendChild(leaveDocFileInput);
+
+      var pendingLeaveUploadEntryId = null;
+
+      leaveDocFileInput.addEventListener('change', function () {
+        var file = leaveDocFileInput.files[0];
+        var entryId = pendingLeaveUploadEntryId;
+        pendingLeaveUploadEntryId = null;
+        if (!file || !entryId) return;
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          var base64 = String(reader.result).split(',')[1] || '';
+          showToast('কাগজপত্র আপলোড হচ্ছে...', 'default');
+          google.script.run
+            .withSuccessHandler(function (doc) {
+              if (!leaveState.docs[entryId]) leaveState.docs[entryId] = [];
+              leaveState.docs[entryId].push(doc);
+              renderLeaveTable(leaveState.data);
+              showToast('কাগজপত্র আপলোড হয়েছে।', 'success');
+            })
+            .withFailureHandler(function (err) {
+              showToast((err && err.message) || 'আপলোড ব্যর্থ হয়েছে।', 'danger');
+            })
+            .uploadLeaveDocument(getToken(), entryId, base64, file.type, file.name);
+        };
+        reader.onerror = function () { showToast('ফাইলটি পড়া যায়নি।', 'danger'); };
+        reader.readAsDataURL(file);
+        leaveDocFileInput.value = '';
+      });
 
       /* ---------- মোডাল: ছুটির এন্ট্রি (নতুন / সম্পাদনা) ---------- */
 
@@ -1115,7 +1199,7 @@
       function confirmDeleteLeave(id) {
         var e = findLeaveEntry(id);
         if (!e) return;
-        confirmDialog(esc(dispShort(e.date)) + ' তারিখের এন্ট্রিটি মুছে ফেলবেন?', function () {
+        confirmDialog(esc(dispShort(e.date)) + ' তারিখের এন্ট্রিটি মুছে ফেলবেন? এর সাথে সংযুক্ত কাগজপত্রও মুছে যাবে।', function () {
           call('deleteLeaveEntry', [getToken(), id], function () {
             showToast('এন্ট্রি মুছে ফেলা হয়েছে।', 'success');
             loadLeave();
@@ -1131,7 +1215,7 @@
 
         var rows = (d.entries || []).slice().reverse();
         var trs = rows.map(function (r) {
-          return '<tr><td>' + dispShort(r.date) + '</td><td>' + (r.type === 'Taken' ? 'ভোগ' : 'নগদায়ন') + '</td><td>' + num(r.days) + '</td><td>' + num(r.balance) + '</td><td>' + esc(r.notes || '') + '</td></tr>';
+          return '<tr><td>' + dispShort(r.date) + '</td><td>' + (r.type === 'Taken' ? 'ভোগ' : 'নগদায়ন') + '</td><td>' + num(r.days) + '</td><td>' + esc(r.notes || '') + '</td></tr>';
         }).join('');
 
         printHtml('ছুটির হিসাব',
@@ -1141,8 +1225,8 @@
           '<div>ভোগকৃত<b>' + num(d.totalUsed) + ' দিন</b></div>' +
           '<div>নগদায়নকৃত<b>' + num(d.totalEncashed) + ' দিন</b></div>' +
           '<div>বর্তমান স্থিতি<b>' + num(d.balance) + ' দিন</b></div></div>' +
-          '<h2>এন্ট্রি তালিকা</h2><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>দিন</th><th>স্থিতি</th><th>নোট</th></tr></thead><tbody>' +
-          (trs || '<tr><td colspan="5">কোনো এন্ট্রি নেই</td></tr>') + '</tbody></table>' +
+          '<h2>এন্ট্রি তালিকা</h2><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>দিন</th><th>নোট</th></tr></thead><tbody>' +
+          (trs || '<tr><td colspan="4">কোনো এন্ট্রি নেই</td></tr>') + '</tbody></table>' +
           '<div class="sub">নিয়ম: প্রতি ' + num(d.accrualDays) + ' দিনের চাকরির মেয়াদে ১ দিন অর্জিত ছুটি যোগ হয়।</div>');
       }
 
@@ -1151,9 +1235,9 @@
         var rows = (d && d.entries) || [];
         if (!rows.length) { showToast('এক্সপোর্ট করার মতো কোনো এন্ট্রি নেই।', 'warning'); return; }
 
-        var lines = [['Date', 'Type', 'Days', 'Balance', 'Notes'].map(csvCell).join(',')];
+        var lines = [['Date', 'Type', 'Days', 'Notes'].map(csvCell).join(',')];
         rows.forEach(function (r) {
-          lines.push([csvCell(r.date), csvCell(r.type === 'Taken' ? 'Taken' : 'Encashed'), r.days, r.balance, csvCell(r.notes)].join(','));
+          lines.push([csvCell(r.date), csvCell(r.type === 'Taken' ? 'Taken' : 'Encashed'), r.days, csvCell(r.notes)].join(','));
         });
         downloadCsv('power-grid-leave.csv', lines);
       }
@@ -1625,6 +1709,32 @@
       }
 
       root().addEventListener('click', function (e) {
+        var docAddBtn = e.target.closest('[data-doc-add]');
+        if (docAddBtn) {
+          pendingLeaveUploadEntryId = docAddBtn.getAttribute('data-doc-add');
+          leaveDocFileInput.click();
+          return;
+        }
+        var docDelBtn = e.target.closest('[data-doc-del]');
+        if (docDelBtn) {
+          var docId = docDelBtn.getAttribute('data-doc-del');
+          confirmDialog('এই অফিস আদেশ/কাগজপত্র ফাইলটি মুছে ফেলতে চান?', function () {
+            google.script.run
+              .withSuccessHandler(function () {
+                Object.keys(leaveState.docs).forEach(function (eid) {
+                  leaveState.docs[eid] = (leaveState.docs[eid] || []).filter(function (dd) { return dd.docId !== docId; });
+                });
+                renderLeaveTable(leaveState.data);
+                showToast('মুছে ফেলা হয়েছে।', 'success');
+              })
+              .withFailureHandler(function (err) {
+                showToast((err && err.message) || 'মুছে ফেলা যায়নি।', 'danger');
+              })
+              .deleteLeaveDocument(getToken(), docId);
+          });
+          return;
+        }
+
         var b = e.target.closest('[data-act]');
         if (!b || b.disabled) return;
         var act = b.getAttribute('data-act');

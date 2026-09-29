@@ -468,8 +468,13 @@
             '<div class="bm-track"><div class="bm-fill st-' + bst + '" style="width:' + Math.max(0, Math.min(budgetPct, 100)) + '%"></div></div>';
         }
 
+        // মোট আয়ের সাব-টেক্সট: পাওয়ার গ্রিডের বেতন (আগের মাসের) যোগ হলে সেটা জানিয়ে দেয়
+        var incomeSub = (d.salary > 0)
+          ? ('এর মধ্যে ' + money(d.salary) + ' — ' + esc(d.salaryFromLabel) + ' মাসের বেতন (পাওয়ার গ্রিড)')
+          : 'এই মাসের মোট আয়';
+
         el('bmKpis').innerHTML =
-          kpi('bm-ico-green', SVG.income, 'মোট আয়', money(d.income), 'এই মাসের মোট আয়', deltaHtml(d.income, d.prev.income, true)) +
+          kpi('bm-ico-green', SVG.income, 'মোট আয়', money(d.income), incomeSub, deltaHtml(d.income, d.prev.income, true)) +
           kpi('bm-ico-teal', SVG.budgetPlan, 'এই মাসের বাজেট', money(d.budgetTotal), 'এই মাসের ব্যয়ের জন্য নির্ধারিত বাজেট', budgetExtra) +
           kpi('bm-ico-amber', SVG.coins, 'অবশিষ্ট বাজেট', money(remaining),
             d.budgetTotal > 0 ? (remaining >= 0 ? 'মোট বাজেটের অবশিষ্ট' : 'মোট বাজেট ছাড়িয়ে গেছে') : 'বাজেট সেট করা হয়নি') +
@@ -639,14 +644,21 @@
       function txnRowHtml(t, withDelete) {
         var isIn = t.type === 'income';
         var ic = isIn ? { e: '💰', bg: '#dcfce7' } : catIcon(t.categoryName || t.title);
+        var title = esc(t.title) + (t.auto ? ' <span class="bm-m-muted">(স্বয়ংক্রিয়)</span>' : '');
+        var actionHtml;
+        if (t.auto) {
+          actionHtml = '<span title="পাওয়ার গ্রিড থেকে স্বয়ংক্রিয় — এখান থেকে মোছা যাবে না">🔒</span>';
+        } else if (withDelete) {
+          actionHtml = '<button type="button" class="bm-m-mini danger" data-del-txn="' + esc(t.id) + '" data-type="' + t.type + '" title="মুছুন">✕</button>';
+        } else {
+          actionHtml = '<span class="bm-act-arrow ' + (isIn ? 'in' : 'out') + '">' + (isIn ? '↑' : '↓') + '</span>';
+        }
         return '<div class="bm-act">' +
           '<span class="bm-act-ico" style="background:' + ic.bg + '">' + ic.e + '</span>' +
-          '<span class="bm-act-title" title="' + esc(t.title) + '">' + esc(t.title) + '</span>' +
+          '<span class="bm-act-title" title="' + esc(t.title) + '">' + title + '</span>' +
           '<span class="bm-act-amt">' + money(t.amount) + '</span>' +
           '<span class="bm-act-date">' + dispDate(t.date) + '</span>' +
-          (withDelete
-            ? '<button type="button" class="bm-m-mini danger" data-del-txn="' + esc(t.id) + '" data-type="' + t.type + '" title="মুছুন">✕</button>'
-            : '<span class="bm-act-arrow ' + (isIn ? 'in' : 'out') + '">' + (isIn ? '↑' : '↓') + '</span>') +
+          actionHtml +
           '</div>';
       }
 
