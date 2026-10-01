@@ -156,6 +156,11 @@
     .bm-m-muted { color: var(--text-muted); font-size: 12.5px; }
     .bm-m-mini { border: 1px solid var(--border); background: #f8fafc; border-radius: 8px; padding: 5px 10px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
     .bm-m-mini.danger { color: var(--danger); }
+    .bm-m-order { display: inline-flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+    .bm-m-arrow { border: 1px solid var(--border); background: #f8fafc; border-radius: 6px; padding: 1px 7px; font-family: inherit; font-size: 10px; line-height: 1.5; cursor: pointer; color: var(--text); }
+    .bm-m-arrow:hover { background: var(--accent-soft); }
+    .bm-m-arrow:disabled { opacity: .3; cursor: default; }
+    .bm-m-arrow:disabled:hover { background: #f8fafc; }
     .bm-m-note { font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; }
     .bm-m-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     .bm-m-table th, .bm-m-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: right; }
@@ -381,7 +386,7 @@
       function hideError() { el('bmError').classList.remove('show'); }
 
       /* ---------- data load ---------- */
-      function load() {
+      function load(cb) {
         var token = getToken();
         if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
 
@@ -398,6 +403,7 @@
             state.everLoaded = true;
             setBusy(false);
             render();
+            if (typeof cb === 'function') cb();
           })
           .withFailureHandler(function (err) {
             if (id !== state.reqId) return;
@@ -479,7 +485,7 @@
           kpi('bm-ico-amber', SVG.coins, 'অবশিষ্ট বাজেট', money(remaining),
             d.budgetTotal > 0 ? (remaining >= 0 ? 'মোট বাজেটের অবশিষ্ট' : 'মোট বাজেট ছাড়িয়ে গেছে') : 'বাজেট সেট করা হয়নি') +
           kpi('bm-ico-red', SVG.expense, 'মোট ব্যয়', money(d.expense), 'এই মাসের মোট ব্যয়', deltaHtml(d.expense, d.prev.expense, false)) +
-          kpi('bm-ico-blue', SVG.savings, 'মোট সঞ্চয়', money(d.savings), 'এই মাসের সঞ্চয়', deltaHtml(d.savings, d.prev.savings, true)) +
+          kpi('bm-ico-blue', SVG.savings, 'ব্যাংকের মোট ব্যালেন্স', money(d.savings), 'এই মাসের সঞ্চয়', deltaHtml(d.savings, d.prev.savings, true)) +
           kpi('bm-ico-purple', SVG.goal, 'সঞ্চয় লক্ষ্য', money(d.goal), 'এই মাসের সঞ্চয়ের লক্ষ্য', goalExtra);
       }
 
@@ -711,26 +717,52 @@
 
       function openManageModal() {
         var cats = ((state.data && state.data.categories) || []).filter(function (c) { return !c.uncat; });
-        var rows = cats.length ? cats.map(function (c) {
+        var rows = cats.length ? cats.map(function (c, i) {
           var ic = catIcon(c.name);
-          return '<div class="bm-m-list-row"><span class="bm-cat-ico" style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:' + ic.bg + '">' + ic.e + '</span>' +
+          return '<div class="bm-m-list-row">' +
+            '<span class="bm-m-order">' +
+              '<button type="button" class="bm-m-arrow" data-m-up="' + esc(c.id) + '"' + (i === 0 ? ' disabled' : '') + ' title="ওপরে সরান">▲</button>' +
+              '<button type="button" class="bm-m-arrow" data-m-down="' + esc(c.id) + '"' + (i === cats.length - 1 ? ' disabled' : '') + ' title="নিচে সরান">▼</button>' +
+            '</span>' +
+            '<span class="bm-cat-ico" style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:' + ic.bg + '">' + ic.e + '</span>' +
             '<span class="bm-m-grow">' + esc(c.name) + '</span><span class="bm-m-muted">' + money(c.budget) + '</span>' +
             '<button type="button" class="bm-m-mini" data-m-edit="' + esc(c.id) + '">সম্পাদনা</button>' +
             '<button type="button" class="bm-m-mini danger" data-m-del="' + esc(c.id) + '">মুছুন</button></div>';
         }).join('') : '<div class="bm-empty">এই মাসে কোনো ক্যাটাগরি নেই।</div>';
 
-        showModal('ক্যাটাগরি ব্যবস্থাপনা', rows, [
+        showModal('ক্যাটাগরি ব্যবস্থাপনা', (cats.length ? '<div class="bm-m-note" style="margin-top:0">▲ ▼ চেপে ক্যাটাগরির ক্রম বদলান — এই ক্রমই তালিকা ও রিপোর্টে দেখানো হবে।</div>' : '') + rows, [
           { label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal },
           { label: '＋ নতুন ক্যাটাগরি', className: 'btn-primary', onClick: function () { openCategoryModal(null); } }
         ]);
 
         var body = el('modalBody');
         body.onclick = function (e) {
+          var up = e.target.closest('[data-m-up]');
+          if (up) { moveCategory(up.getAttribute('data-m-up'), -1); return; }
+          var down = e.target.closest('[data-m-down]');
+          if (down) { moveCategory(down.getAttribute('data-m-down'), 1); return; }
           var ed = e.target.closest('[data-m-edit]');
           if (ed) { openCategoryModal(findCat(ed.getAttribute('data-m-edit'))); return; }
           var dl = e.target.closest('[data-m-del]');
           if (dl) confirmDeleteCategory(dl.getAttribute('data-m-del'));
         };
+      }
+
+      /** delta: -1 = ওপরে সরান, +1 = নিচে সরান। নতুন ক্রম সার্ভারে সংরক্ষণ করে মোডাল আবার (রিফ্রেশড ডেটা নিয়ে) খুলে দেয়। */
+      function moveCategory(id, delta) {
+        var cats = ((state.data && state.data.categories) || []).filter(function (c) { return !c.uncat; });
+        var ids = cats.map(function (c) { return c.id; });
+        var idx = ids.indexOf(id);
+        var newIdx = idx + delta;
+        if (idx < 0 || newIdx < 0 || newIdx >= ids.length) return;
+
+        var tmp = ids[idx];
+        ids[idx] = ids[newIdx];
+        ids[newIdx] = tmp;
+
+        call('reorderBudgetCategories', [getToken(), state.monthKey, ids], function () {
+          load(openManageModal);
+        });
       }
 
       function confirmDeleteCategory(id) {
@@ -752,7 +784,7 @@
         var cur = (state.data && state.data.goal) || '';
         var body = '<div class="form-row"><label>' + esc(monthTitle(state.monthKey)) + ' মাসের সঞ্চয়ের লক্ষ্য (৳)</label>' +
           '<input type="number" min="0" step="any" class="form-input" id="bmgAmount" value="' + esc(cur) + '"></div>' +
-          '<div class="bm-m-note">মোট সঞ্চয় = মোট আয় − মোট ব্যয়। এই লক্ষ্যের সাথে তুলনা করে অর্জন দেখানো হয়।</div>';
+          '<div class="bm-m-note">ব্যাংকের মোট ব্যালেন্স = মোট আয় − মোট ব্যয়। এই লক্ষ্যের সাথে তুলনা করে অর্জন দেখানো হয়।</div>';
 
         showModal('সঞ্চয় লক্ষ্য সেট করুন', body, [
           { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
@@ -891,7 +923,7 @@
           '.sum{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.sum div{border:1px solid #d7dde8;border-radius:8px;padding:10px 14px;min-width:150px}.sum b{display:block;font-size:16px;margin-top:3px}' +
           'table{width:100%;border-collapse:collapse}th,td{border:1px solid #d7dde8;padding:7px 9px;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f1f5fb}</style></head><body>' +
           '<h1>বাজেট রিপোর্ট — ' + esc(monthTitle(d.monthKey)) + '</h1>' +
-          '<div class="sum"><div>মোট আয়<b>' + money(d.income) + '</b></div><div>মোট ব্যয়<b>' + money(d.expense) + '</b></div><div>মোট সঞ্চয়<b>' + money(d.savings) + '</b></div>' +
+          '<div class="sum"><div>মোট আয়<b>' + money(d.income) + '</b></div><div>মোট ব্যয়<b>' + money(d.expense) + '</b></div><div>ব্যাংকের মোট ব্যালেন্স<b>' + money(d.savings) + '</b></div>' +
           '<div>সঞ্চয় লক্ষ্য<b>' + money(d.goal) + '</b></div><div>মোট বাজেট<b>' + money(d.budgetTotal) + '</b></div></div>' +
           '<h2>বাজেট ক্যাটাগরি</h2><table><thead><tr><th>ক্যাটাগরি</th><th>বাজেট</th><th>ব্যয়</th><th>অবশিষ্ট</th><th>ব্যবহার</th></tr></thead><tbody>' + trs + '</tbody></table>' +
           '<h2>আয়-ব্যয়ের তালিকা</h2><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>বিবরণ</th><th>পরিমাণ</th></tr></thead><tbody>' + (tx || '<tr><td colspan="4">কোনো এন্ট্রি নেই</td></tr>') + '</tbody></table>' +
@@ -918,7 +950,7 @@
         lines.push([csvCell('বাজেট রিপোর্ট'), csvCell(monthTitle(d.monthKey))].join(','));
         lines.push([csvCell('মোট আয়'), d.income].join(','));
         lines.push([csvCell('মোট ব্যয়'), d.expense].join(','));
-        lines.push([csvCell('মোট সঞ্চয়'), d.savings].join(','));
+        lines.push([csvCell('ব্যাংকের মোট ব্যালেন্স'), d.savings].join(','));
         lines.push([csvCell('সঞ্চয় লক্ষ্য'), d.goal].join(','));
         lines.push('');
         lines.push(['ক্যাটাগরি', 'বাজেট', 'ব্যয়', 'অবশিষ্ট', 'ব্যবহার (%)'].map(csvCell).join(','));
