@@ -453,6 +453,58 @@ function deleteBudgetCategory(token, monthKey, categoryId) {
   return false;
 }
 
+/**
+ * Persists a manually-chosen display order for this month's budget
+ * categories. There is no separate "DisplayOrder" column — the category
+ * list is always read top-to-bottom from the sheet (budgetReadMonth_),
+ * so reordering means physically rewriting the rows in the new order.
+ *
+ * orderedIds = the full list of CategoryIDs in the order the page wants
+ * them shown. Any row whose ID isn't in orderedIds (e.g. a category added
+ * by another tab a moment earlier) is kept, appended after the ordered
+ * ones in its original relative order, so nothing is ever silently lost.
+ */
+function reorderBudgetCategories(token, monthKey, orderedIds) {
+  budgetAuth_(token);
+  orderedIds = orderedIds || [];
+
+  var ss = budgetSs_();
+  var p = budgetParseKey_(monthKey);
+  var sheet = ss.getSheetByName(budgetMonthLabel_(p.y, p.m) + ' - Budget');
+  if (!sheet) return true;
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return true;
+
+  var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  var byId = {};
+  data.forEach(function (row) {
+    if (row[0]) byId[String(row[0])] = row;
+  });
+
+  var newRows = [];
+  var used = {};
+  orderedIds.forEach(function (id) {
+    id = String(id);
+    if (byId.hasOwnProperty(id) && !used[id]) {
+      newRows.push(byId[id]);
+      used[id] = true;
+    }
+  });
+  data.forEach(function (row) {
+    var id = row[0] ? String(row[0]) : '';
+    if (id && !used[id]) {
+      newRows.push(row);
+      used[id] = true;
+    }
+  });
+
+  if (newRows.length) {
+    sheet.getRange(2, 1, newRows.length, 5).setValues(newRows);
+  }
+  return true;
+}
+
 /** Copies the previous month's categories into an EMPTY month. Returns how many were copied. */
 function copyBudgetFromPreviousMonth(token, monthKey) {
   budgetAuth_(token);
@@ -620,4 +672,48 @@ function budgetRecalcLedger_(sheet) {
     return [balance];
   });
   sheet.getRange(2, 7, out.length, 1).setValues(out);
+}
+
+/**
+ * ম্যানুয়ালি ক্যাটাগরির প্রদর্শনের ক্রম বদলানোর জন্য।
+ * orderedIds = এই মাসের সবগুলো CategoryID কাঙ্ক্ষিত ক্রমে। Budget শিটের
+ * সারিগুলো সেই ক্রমে পুনর্লিখে দেয়। orderedIds-এ বাদ পড়া কোনো ID থাকলে
+ * (যেমন ঠিক এই মুহূর্তে অন্য কেউ নতুন ক্যাটাগরি যোগ করে থাকলে) সেগুলো
+ * শেষে তাদের আগের আপেক্ষিক ক্রম বজায় রেখে যোগ হয় — কোনো ক্যাটাগরি হারায় না।
+ */
+function reorderBudgetCategories(token, monthKey, orderedIds) {
+  budgetAuth_(token);
+
+  var ss = budgetSs_();
+  var p = budgetParseKey_(monthKey);
+  var label = budgetMonthLabel_(p.y, p.m);
+  var sheet = ss.getSheetByName(label + ' - Budget');
+  if (!sheet) return true;
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return true;
+
+  var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  var byId = {};
+  var rowOrder = [];
+  data.forEach(function (row) {
+    if (!row[0]) return;
+    var id = String(row[0]);
+    byId[id] = row;
+    rowOrder.push(id);
+  });
+
+  var seen = {};
+  var finalOrder = [];
+  (orderedIds || []).forEach(function (id) {
+    id = String(id);
+    if (byId.hasOwnProperty(id) && !seen[id]) { finalOrder.push(id); seen[id] = true; }
+  });
+  rowOrder.forEach(function (id) {
+    if (!seen[id]) { finalOrder.push(id); seen[id] = true; }
+  });
+
+  var out = finalOrder.map(function (id) { return byId[id]; });
+  sheet.getRange(2, 1, out.length, 5).setValues(out);
+  return true;
 }

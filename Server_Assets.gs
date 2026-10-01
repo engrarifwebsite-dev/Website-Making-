@@ -338,7 +338,7 @@ function getAssetsData(token) {
       totalMaintenance: totalMaintenance,
       thisMonthMaintenance: thisMonthMaintenance
     },
-    categories: categories.map(function (c) { return { id: c.id, name: c.name, icon: c.icon, count: catCount[c.name] || 0 }; }),
+    categories: categories.map(function (c) { return { id: c.id, name: c.name, icon: c.icon, iconFileId: c.iconFileId, count: catCount[c.name] || 0 }; }),
     assets: enriched,
     depreciationByCategory: Object.keys(depByCat).map(function (k) { return { name: k, value: depByCat[k] }; }).filter(function (r) { return r.value > 0; }),
     locationBreakdown: Object.keys(locCount).map(function (k) { return { name: k, count: locCount[k] }; }),
