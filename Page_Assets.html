@@ -345,6 +345,11 @@
         if (c && c.iconFileId) return '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(c.iconFileId) + '&sz=w100" alt="">';
         return esc((c && c.icon) || '📦');
       }
+      /** Safe HTML for an asset's own small icon box — its own uploaded photo if it has one, else the category's icon/picture. */
+      function assetIconHtml(a) {
+        if (a && a.photoFileId) return '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(a.photoFileId) + '&sz=w100" alt="">';
+        return catIconHtml(a && a.category);
+      }
 
       /* ---------- load ---------- */
       function load(cb) {
@@ -465,7 +470,7 @@
         var shown = state.showAll ? list : list.slice(0, 7);
         var rows = shown.map(function (a) {
           return '<tr>' +
-            '<td><div class="as-item"><span class="as-item-ico">' + catIconHtml(a.category) + '</span>' + esc(a.name) + '</div></td>' +
+            '<td><div class="as-item"><span class="as-item-ico">' + assetIconHtml(a) + '</span>' + esc(a.name) + '</div></td>' +
             '<td>' + esc(a.category || '—') + '</td>' +
             '<td>' + esc([a.brand, a.model].filter(Boolean).join(' / ') || '—') + '</td>' +
             '<td>' + dispShort(a.purchaseDate) + '</td>' +
@@ -558,7 +563,7 @@
         var m = sp.main;
         var photo = m.photoFileId ? '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(m.photoFileId) + '&sz=w200" alt="">' : catIconHtml(m.category);
         var subs = sp.subs.map(function (s) {
-          return '<div class="as-sub-row"><span class="as-sub-ico">' + catIconHtml(s.category) + '</span><span class="as-sub-name">' + esc(s.name) + '</span><span class="as-sub-price">' + money(s.purchasePrice) + '</span></div>';
+          return '<div class="as-sub-row"><span class="as-sub-ico">' + assetIconHtml(s) + '</span><span class="as-sub-name">' + esc(s.name) + '</span><span class="as-sub-price">' + money(s.purchasePrice) + '</span></div>';
         }).join('');
         host.innerHTML = '<div class="as-spot"><div class="as-spot-photo">' + photo + '</div><div><div class="as-spot-name">' + esc(m.name) + '</div>' +
           '<div class="as-spot-meta">ক্রয় তারিখ: ' + dispShort(m.purchaseDate) + '<br>ক্রয়মূল্য: ' + money(m.purchasePrice) + '<br>বর্তমান মূল্য: ' + money(m.currentValue) + '</div></div></div>' +
