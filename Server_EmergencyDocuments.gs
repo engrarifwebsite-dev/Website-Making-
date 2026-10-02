@@ -207,9 +207,20 @@ function edocReadDocuments_() {
   return out;
 }
 
+/** The proper edit/view link for a file, native-Google-type aware. */
+function edocOpenUrl_(fileId, mimeType) {
+  if (mimeType === 'application/vnd.google-apps.spreadsheet') return 'https://docs.google.com/spreadsheets/d/' + fileId + '/edit';
+  if (mimeType === 'application/vnd.google-apps.document') return 'https://docs.google.com/document/d/' + fileId + '/edit';
+  if (mimeType === 'application/vnd.google-apps.presentation') return 'https://docs.google.com/presentation/d/' + fileId + '/edit';
+  return 'https://drive.google.com/file/d/' + fileId + '/view';
+}
+
 function edocFormatLabel_(mimeType, name) {
-  var n = String(name || '').toLowerCase();
   var m = String(mimeType || '');
+  if (m === 'application/vnd.google-apps.spreadsheet') return 'GSHEET';
+  if (m === 'application/vnd.google-apps.document') return 'GDOC';
+  if (m === 'application/vnd.google-apps.presentation') return 'GSLIDE';
+  var n = String(name || '').toLowerCase();
   if (/\.pdf$/.test(n) || m === 'application/pdf') return 'PDF';
   if (/\.(jpg|jpeg)$/.test(n) || m === 'image/jpeg') return 'JPG';
   if (/\.png$/.test(n) || m === 'image/png') return 'PNG';
@@ -222,8 +233,68 @@ function edocFormatLabel_(mimeType, name) {
   // PowerPoint / Google Slides (exported as .pptx)
   if (/\.pptx$/.test(n) || m === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') return 'PPTX';
   if (/\.ppt$/.test(n) || m === 'application/vnd.ms-powerpoint') return 'PPT';
+  if (m === 'application/vnd.google-apps.spreadsheet') return 'GSHEET';
+  if (m === 'application/vnd.google-apps.document') return 'GDOC';
+  if (m === 'application/vnd.google-apps.presentation') return 'GSLIDE';
   if (m.indexOf('image/') === 0) return 'IMG';
   return 'ফাইল';
+}
+
+/**
+ * Creates a brand-new native Google Sheet / Doc / Slides file straight
+ * inside the dedicated EmergencyDocuments Drive folder and records it as a
+ * document under the chosen category — for when the user wants to START a
+ * new file here rather than upload an existing one.
+ * opts = { type: 'sheet' | 'doc' | 'slides', name, categoryId, important,
+ *   iconBase64, iconMimeType (optional — a custom picture icon) }
+ * Returns the refreshed getEmergencyDocumentsData() payload.
+ */
+function createEmergencyGoogleFile(token, opts) {
+  edocAuth_(token);
+  opts = opts || {};
+
+  var type = String(opts.type || '').trim();
+  var name = String(opts.name || '').trim();
+  if (!name) throw new Error('ফাইলের নাম আবশ্যক।');
+
+  var file, mimeType;
+  if (type === 'sheet') {
+    file = SpreadsheetApp.create(name);
+    mimeType = 'application/vnd.google-apps.spreadsheet';
+  } else if (type === 'doc') {
+    file = DocumentApp.create(name);
+    mimeType = 'application/vnd.google-apps.document';
+  } else if (type === 'slides') {
+    file = SlidesApp.create(name);
+    mimeType = 'application/vnd.google-apps.presentation';
+  } else {
+    throw new Error('সঠিক ফাইলের ধরন নির্বাচন করুন।');
+  }
+
+  var fileId = file.getId();
+  var driveFile = DriveApp.getFileById(fileId);
+  var folder = getOrCreateEmergencyDocsFolder_();
+  folder.addFile(driveFile);
+  try { DriveApp.getRootFolder().removeFile(driveFile); } catch (e) { /* ignore — harmless if already out of root */ }
+
+  var iconFileId = '';
+  if (opts.iconBase64 && opts.iconMimeType) {
+    var iconFolder = getOrCreateEmergencyIconsFolder_();
+    iconFileId = uploadFileToFolder_(iconFolder.getId(), opts.iconBase64, opts.iconMimeType, 'doc-icon-new-' + name);
+  }
+
+  var sheet = documentsSheet_();
+  var id = generateUniqueId('DOC');
+  var now = new Date();
+  sheet.appendRow([
+    id, name, String(opts.categoryId || ''), fileId, mimeType, 0,
+    opts.important ? true : false, now, now, String(opts.notes || '').substring(0, 500), iconFileId
+  ]);
+
+  edocLogActivity_(id, name, 'uploaded');
+  var data = getEmergencyDocumentsData(token);
+  data.newFileEditUrl = driveFile.getUrl();
+  return data;
 }
 
 /**
@@ -253,6 +324,9 @@ function getEmergencyDocumentsData(token) {
       id: d.id, name: d.name, categoryId: d.categoryId,
       categoryName: cat ? cat.name : 'অন্যান্য', categoryIcon: cat ? cat.icon : '📁',
       fileId: d.fileId, mimeType: d.mimeType, format: edocFormatLabel_(d.mimeType, d.name),
+      viewUrl: edocOpenUrl_(d.fileId, d.mimeType),
+      downloadUrl: String(d.mimeType || '').indexOf('application/vnd.google-apps.') === 0
+        ? edocOpenUrl_(d.fileId, d.mimeType) : ('https://drive.google.com/uc?export=download&id=' + d.fileId),
       sizeBytes: d.sizeBytes, important: d.important, iconFileId: d.iconFileId,
       uploadedAt: d.uploadedAt, updatedAt: d.updatedAt, notes: d.notes
     };
@@ -329,6 +403,56 @@ function uploadEmergencyDocument(token, doc) {
 
   edocLogActivity_(id, name, 'uploaded');
   return getEmergencyDocumentsData(token);
+}
+
+/**
+ * opts = { type: 'sheet' | 'doc' | 'slide', name, categoryId, important (bool) }
+ * Creates a brand-new blank Google Sheet / Doc / Slides file directly inside
+ * the EmergencyDocuments Drive folder and records it as a document — the
+ * category-level "শীট/ডক তৈরি করুন" option, no upload needed. Returns the
+ * refreshed getEmergencyDocumentsData() payload plus createdEditUrl so the
+ * client can open the new file for editing right away.
+ */
+function createGoogleDocument(token, opts) {
+  edocAuth_(token);
+  opts = opts || {};
+
+  var type = String(opts.type || '').trim();
+  var name = String(opts.name || '').trim();
+  if (!name) throw new Error('নাম আবশ্যক।');
+
+  var file, mimeType;
+  if (type === 'sheet') {
+    file = SpreadsheetApp.create(name);
+    mimeType = 'application/vnd.google-apps.spreadsheet';
+  } else if (type === 'doc') {
+    file = DocumentApp.create(name);
+    mimeType = 'application/vnd.google-apps.document';
+  } else if (type === 'slide') {
+    file = SlidesApp.create(name);
+    mimeType = 'application/vnd.google-apps.presentation';
+  } else {
+    throw new Error('সঠিক ধরন নির্বাচন করুন।');
+  }
+
+  var fileId = file.getId();
+  var driveFile = DriveApp.getFileById(fileId);
+  var folder = getOrCreateEmergencyDocsFolder_();
+  folder.addFile(driveFile);
+  try { DriveApp.getRootFolder().removeFile(driveFile); } catch (e) { /* some accounts place new files outside root already — ignore */ }
+
+  var sheet = documentsSheet_();
+  var id = generateUniqueId('DOC');
+  var now = new Date();
+  sheet.appendRow([
+    id, name, String(opts.categoryId || ''), fileId, mimeType, 0,
+    opts.important ? true : false, now, now, '', ''
+  ]);
+
+  edocLogActivity_(id, name, 'uploaded');
+  var data = getEmergencyDocumentsData(token);
+  data.createdEditUrl = edocOpenUrl_(fileId, mimeType);
+  return data;
 }
 
 /**

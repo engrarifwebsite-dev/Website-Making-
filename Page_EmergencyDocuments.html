@@ -78,6 +78,11 @@
     #page-emergency-documents .ed-upload-x { background: none; border: 0; cursor: pointer; color: var(--text-muted); font-size: 13px; }
     #page-emergency-documents .ed-ptrack { height: 6px; background: #e6eaf0; border-radius: 99px; overflow: hidden; }
     #page-emergency-documents .ed-pfill { height: 100%; width: 0%; background: linear-gradient(90deg, #1d4ed8, #3b82f6); border-radius: 99px; transition: width .25s ease; }
+    #page-emergency-documents .ed-create-row { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--ed-line); }
+    #page-emergency-documents .ed-create-label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+    #page-emergency-documents .ed-create-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    #page-emergency-documents .ed-create-btn { flex: 1 1 auto; border: 1px solid var(--ed-line); background: #fff; border-radius: 9px; padding: 8px 10px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text); cursor: pointer; white-space: nowrap; }
+    #page-emergency-documents .ed-create-btn:hover { background: #f4f7fc; }
 
     /* ---------- ফিল্টার ---------- */
     #page-emergency-documents .ed-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -196,6 +201,14 @@
           <div class="ed-upload-row"><span class="ed-upload-name" id="edUploadName">—</span><span id="edUploadPct">০%</span></div>
           <div class="ed-ptrack"><div class="ed-pfill" id="edUploadFill"></div></div>
         </div>
+        <div class="ed-create-row">
+          <div class="ed-create-label">অথবা ক্যাটাগরিতে সরাসরি নতুন ফাইল তৈরি করুন:</div>
+          <div class="ed-create-btns">
+            <button type="button" class="ed-create-btn" data-create="sheet">📗 Google শীট</button>
+            <button type="button" class="ed-create-btn" data-create="doc">📘 Google ডক্স</button>
+            <button type="button" class="ed-create-btn" data-create="slides">📙 Google স্লাইড</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -217,6 +230,9 @@
             <option value="PPT">PPT</option>
             <option value="PPTX">PPTX</option>
             <option value="IMG">অন্যান্য ছবি</option>
+            <option value="GSHEET">Google শীট</option>
+            <option value="GDOC">Google ডক্স</option>
+            <option value="GSLIDE">Google স্লাইড</option>
           </select>
           <input type="date" class="ed-select" id="edFilterDate" title="এই তারিখ থেকে">
         </div>
@@ -377,9 +393,9 @@
       function docIcon(format) {
         if (format === 'PDF') return '📕';
         if (format === 'JPG' || format === 'PNG' || format === 'IMG') return '🖼️';
-        if (format === 'DOC' || format === 'DOCX') return '📘';
-        if (format === 'XLS' || format === 'XLSX' || format === 'CSV') return '📗';
-        if (format === 'PPT' || format === 'PPTX') return '📙';
+        if (format === 'DOC' || format === 'DOCX' || format === 'GDOC') return '📘';
+        if (format === 'XLS' || format === 'XLSX' || format === 'CSV' || format === 'GSHEET') return '📗';
+        if (format === 'PPT' || format === 'PPTX' || format === 'GSLIDE') return '📙';
         return '📄';
       }
       /** একটি ডকুমেন্টের আইকন — কাস্টম ছবি থাকলে সেটি, না থাকলে ফরম্যাট অনুযায়ী ইমোজি। */
@@ -689,6 +705,56 @@
       }
 
       /* =====================================================
+         নতুন Google শীট/ডক্স/স্লাইড তৈরি করা (আপলোড নয় — সরাসরি তৈরি)
+         ===================================================== */
+      var CREATE_TYPE_LABEL = { sheet: 'Google শীট', doc: 'Google ডক্স', slides: 'Google স্লাইড' };
+      var pendingCreateType = null;
+
+      function openCreateFileModal(type) {
+        pendingCreateType = type;
+        pendingIconEdit = null;
+        var cats = (state.data && state.data.categories) || [];
+        var opts = '<option value="">নির্বাচন করুন</option>' + cats.map(function (c) {
+          return '<option value="' + esc(c.id) + '">' + esc(c.icon) + ' ' + esc(c.name) + '</option>';
+        }).join('');
+
+        var body =
+          iconEditorHtml_('', docIcon(type === 'sheet' ? 'GSHEET' : type === 'doc' ? 'GDOC' : 'GSLIDE'), false) +
+          '<div class="ed-m-note" style="margin-top:6px;">ফাঁকা একটি ' + CREATE_TYPE_LABEL[type] + ' তৈরি হবে এবং এখানেই তালিকায় যোগ হবে — সংরক্ষণের পর সম্পাদনার জন্য নতুন ট্যাবে খুলে যাবে।</div>' +
+          '<div class="form-row"><label>ফাইলের নাম *</label><input type="text" class="form-input" id="edgName" value=""></div>' +
+          '<div class="form-row"><label>ক্যাটাগরি</label><select class="form-input" id="edgCategory">' + opts + '</select></div>' +
+          '<div class="ed-m-check"><input type="checkbox" id="edgImportant"> <label for="edgImportant" style="margin:0;">⭐ গুরুত্বপূর্ণ হিসেবে চিহ্নিত করুন</label></div>';
+
+        showModal('নতুন ' + CREATE_TYPE_LABEL[type] + ' তৈরি করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: function () { pendingCreateType = null; hideModal(); } },
+          { label: 'তৈরি করুন', className: 'btn-primary', onClick: submitCreateFile }
+        ]);
+        wireIconEditor_(docIcon(type === 'sheet' ? 'GSHEET' : type === 'doc' ? 'GDOC' : 'GSLIDE'));
+      }
+
+      function submitCreateFile() {
+        var name = el('edgName').value.trim();
+        if (!name) { showToast('ফাইলের নাম লিখুন।', 'warning'); return; }
+        var type = pendingCreateType;
+
+        var payload = { type: type, name: name, categoryId: el('edgCategory').value, important: el('edgImportant').checked };
+        if (pendingIconEdit && pendingIconEdit !== 'remove') {
+          payload.iconBase64 = pendingIconEdit.base64;
+          payload.iconMimeType = pendingIconEdit.mime;
+        }
+        hideModal();
+        showToast(CREATE_TYPE_LABEL[type] + ' তৈরি হচ্ছে...', 'default');
+
+        call('createEmergencyGoogleFile', [getToken(), payload], function (d) {
+          pendingCreateType = null;
+          showToast(CREATE_TYPE_LABEL[type] + ' তৈরি হয়েছে।', 'success');
+          var editUrl = d.newFileEditUrl;
+          applyData(d);
+          if (editUrl) window.open(editUrl, '_blank');
+        });
+      }
+
+      /* =====================================================
          মোডাল: ক্যাটাগরি ব্যবস্থাপনা
          ===================================================== */
       function openCategoryModal(cat) {
@@ -755,16 +821,27 @@
         return null;
       }
 
+      var GOOGLE_NATIVE_PATH = { GSHEET: 'spreadsheets', GDOC: 'document', GSLIDE: 'presentation' };
+      var GOOGLE_NATIVE_EXPORT = { GSHEET: 'xlsx', GDOC: 'docx', GSLIDE: 'pptx' };
+
       function viewDoc(id) {
         var doc = findDoc(id);
         if (!doc) return;
-        window.open('https://drive.google.com/file/d/' + encodeURIComponent(doc.fileId) + '/view', '_blank');
+        var path = GOOGLE_NATIVE_PATH[doc.format];
+        var url = path
+          ? 'https://docs.google.com/' + path + '/d/' + encodeURIComponent(doc.fileId) + '/edit'
+          : 'https://drive.google.com/file/d/' + encodeURIComponent(doc.fileId) + '/view';
+        window.open(url, '_blank');
       }
 
       function downloadDoc(id) {
         var doc = findDoc(id);
         if (!doc) return;
-        window.open('https://drive.google.com/uc?export=download&id=' + encodeURIComponent(doc.fileId), '_blank');
+        var path = GOOGLE_NATIVE_PATH[doc.format];
+        var url = path
+          ? 'https://docs.google.com/' + path + '/d/' + encodeURIComponent(doc.fileId) + '/export?format=' + GOOGLE_NATIVE_EXPORT[doc.format]
+          : 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(doc.fileId);
+        window.open(url, '_blank');
         call('logDocumentDownload', [getToken(), id], function () {}); // fire-and-forget activity log
       }
 
@@ -856,6 +933,9 @@
           renderTable(state.data);
           return;
         }
+
+        var createBtn = e.target.closest('[data-create]');
+        if (createBtn) { openCreateFileModal(createBtn.getAttribute('data-create')); return; }
 
         var b = e.target.closest('[data-act]');
         if (!b) return;
