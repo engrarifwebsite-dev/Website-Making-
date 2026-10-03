@@ -1,6 +1,750 @@
 <section id="page-zakat" class="page">
-  <div class="page-placeholder">
-    <h2>যাকাত ও ফিতরা</h2>
-    <p>এই পেজের কন্টেন্ট Phase 10-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       যাকাত ও ফিতরা (Phase 10) — সব ক্লাস zk- দিয়ে শুরু
+       ========================================================= */
+    #page-zakat {
+      --zk-green: #0f6b3a;
+      --zk-green-dark: #0a4d2a;
+      --zk-gold: #c69b3d;
+      --zk-blue: #1d4ed8;
+      --zk-purple: #7c3aed;
+      --zk-red: #dc2626;
+      --zk-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-zakat * { box-sizing: border-box; }
+
+    #page-zakat .zk-card {
+      background: #fff;
+      border: 1px solid var(--zk-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-zakat .zk-card-title { font-size: 15.5px; font-weight: 800; color: var(--navy); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+    #page-zakat .zk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    #page-zakat .zk-head-title { font-size: 19px; font-weight: 800; color: var(--navy); }
+    #page-zakat .zk-head-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+    #page-zakat .zk-head-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #page-zakat .zk-hijri-badge { background: linear-gradient(135deg, #0f6b3a, #0a4d2a); color: #fff; border-radius: 10px; padding: 9px 16px; font-size: 13px; font-weight: 700; text-align: center; }
+    #page-zakat .zk-hijri-badge small { display: block; font-size: 10px; font-weight: 600; opacity: .85; margin-bottom: 2px; }
+    #page-zakat .zk-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--zk-line); background: #fff; border-radius: 9px; padding: 9px 16px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); cursor: pointer; white-space: nowrap; }
+    #page-zakat .zk-btn:hover { background: #f4f7fc; }
+    #page-zakat .zk-btn-primary { background: var(--zk-green); border-color: var(--zk-green); color: #fff; }
+    #page-zakat .zk-btn-primary:hover { background: var(--zk-green-dark); }
+    #page-zakat .zk-btn-outline-sm { border: 1px solid var(--zk-line); background: #fff; border-radius: 7px; padding: 5px 10px; font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+    #page-zakat .zk-btn-outline-sm:hover { background: var(--accent-soft); color: var(--navy); }
+
+    #page-zakat .zk-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-zakat .zk-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-zakat .zk-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+    #page-zakat .zk-body { transition: opacity .15s ease; }
+    #page-zakat .zk-body.busy { opacity: .5; pointer-events: none; }
+    #page-zakat .zk-empty { text-align: center; color: var(--text-muted); font-size: 12.5px; padding: 18px 10px; }
+
+    /* ---------- KPI সারি ---------- */
+    #page-zakat .zk-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+    #page-zakat .zk-kpi { display: flex; align-items: center; gap: 10px; padding: 14px; }
+    #page-zakat .zk-kpi-ico { width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 19px; }
+    #page-zakat .zk-ico-gold { background: var(--accent-soft); color: var(--zk-gold); }
+    #page-zakat .zk-ico-green { background: #dcfce7; color: var(--zk-green); }
+    #page-zakat .zk-ico-blue { background: #e8effd; color: var(--zk-blue); }
+    #page-zakat .zk-ico-purple { background: #ede9fe; color: var(--zk-purple); }
+    #page-zakat .zk-ico-red { background: #fee2e2; color: var(--zk-red); }
+    #page-zakat .zk-kpi-label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); line-height: 1.3; }
+    #page-zakat .zk-kpi-value { margin-top: 3px; font-size: 17px; font-weight: 800; color: var(--navy); line-height: 1.25; }
+    #page-zakat .zk-kpi-value.danger { color: var(--zk-red); }
+
+    /* ---------- গ্রিড সারি ---------- */
+    #page-zakat .zk-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; align-items: start; }
+
+    /* ---------- সম্পদ টেবিল ---------- */
+    #page-zakat .zk-table-wrap { overflow-x: auto; border: 1px solid var(--zk-line); border-radius: 10px; margin-bottom: 12px; }
+    #page-zakat table.zk-table { width: 100%; min-width: 280px; border-collapse: collapse; font-size: 12.5px; }
+    #page-zakat .zk-table th { background: #f4f7fc; color: var(--text-muted); font-weight: 700; font-size: 11.5px; padding: 9px; text-align: left; border-bottom: 1px solid var(--zk-line); white-space: nowrap; }
+    #page-zakat .zk-table td { padding: 8px 9px; text-align: left; border-bottom: 1px solid var(--zk-line); color: var(--text); font-weight: 600; }
+    #page-zakat .zk-table tr:last-child td { border-bottom: 0; }
+    #page-zakat .zk-table td.num, #page-zakat .zk-table th.num { text-align: right; }
+    #page-zakat .zk-table td.ctr, #page-zakat .zk-table th.ctr { text-align: center; }
+    #page-zakat .zk-row-item { display: flex; align-items: center; gap: 8px; }
+    #page-zakat .zk-row-ico { font-size: 15px; flex-shrink: 0; }
+    #page-zakat .zk-iconbtn { width: 26px; height: 26px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; display: inline-grid; place-items: center; background: #f8fafc; color: var(--text-muted); font-size: 12px; }
+    #page-zakat .zk-iconbtn:hover { background: var(--accent-soft); color: var(--navy); }
+    #page-zakat .zk-iconbtn.danger:hover { background: #fee2e2; color: var(--zk-red); }
+    #page-zakat .zk-foot-total { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 800; color: var(--navy); padding: 10px 2px 0; }
+
+    /* ---------- ক্যালকুলেশন কার্ড ---------- */
+    #page-zakat .zk-calc-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px; font-size: 13px; border-bottom: 1px dashed var(--zk-line); }
+    #page-zakat .zk-calc-row:last-child { border-bottom: 0; }
+    #page-zakat .zk-calc-label { color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    #page-zakat .zk-calc-label button { border: 0; background: none; cursor: pointer; color: var(--text-muted); font-size: 12px; padding: 0; }
+    #page-zakat .zk-calc-value { font-weight: 800; color: var(--navy); }
+    #page-zakat .zk-calc-row.zk-highlight { background: #fef2f2; border-radius: 8px; padding: 10px 10px; margin-top: 8px; border-bottom: 0; }
+    #page-zakat .zk-calc-row.zk-highlight .zk-calc-label, #page-zakat .zk-calc-row.zk-highlight .zk-calc-value { color: var(--zk-red); }
+    #page-zakat .zk-note { margin-top: 12px; font-size: 11.5px; color: var(--text); line-height: 1.7; background: #f8fafc; border-radius: 9px; padding: 10px 12px; }
+    #page-zakat .zk-note b { color: var(--zk-green); }
+
+    /* ---------- ফিতরা ক্যালকুলেটর ---------- */
+    #page-zakat .zk-field { margin-bottom: 12px; }
+    #page-zakat .zk-field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+    #page-zakat .zk-select, #page-zakat .zk-input, #page-zakat textarea.zk-input { width: 100%; border: 1px solid var(--zk-line); background: #fff; border-radius: 9px; padding: 9px 11px; font-family: inherit; font-size: 13px; color: var(--text); }
+    #page-zakat .zk-fitra-result { text-align: center; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    #page-zakat .zk-fitra-result-label { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+    #page-zakat .zk-fitra-result-value { font-size: 26px; font-weight: 800; color: var(--zk-green); margin-top: 4px; }
+
+    /* ---------- ডোনাট ---------- */
+    #page-zakat .zk-donut-wrap { display: flex; align-items: center; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    #page-zakat .zk-donut { width: 130px; height: 130px; flex-shrink: 0; }
+    #page-zakat .zk-donut svg { width: 100%; height: 100%; }
+    #page-zakat .zk-legend { display: flex; flex-direction: column; gap: 8px; }
+    #page-zakat .zk-lg { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    #page-zakat .zk-lg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+    #page-zakat .zk-lg span { color: var(--text-muted); flex: 1; }
+    #page-zakat .zk-lg b { color: var(--navy); }
+
+    /* ---------- বছর শেষে চূড়ান্ত হিসাব ---------- */
+    #page-zakat .zk-close-big { text-align: center; padding: 6px 0 14px; }
+    #page-zakat .zk-close-label { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+    #page-zakat .zk-close-value { font-size: 24px; font-weight: 800; color: var(--zk-red); margin-top: 4px; }
+    #page-zakat .zk-close-hint { margin-top: 10px; font-size: 11.5px; color: var(--text); line-height: 1.7; background: #fffbeb; border: 1px solid #fde68a; border-radius: 9px; padding: 10px 12px; }
+
+    /* ---------- তথ্য স্বয়ংক্রিয়ভাবে আপডেট ---------- */
+    #page-zakat .zk-auto-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--zk-line); font-size: 12.5px; }
+    #page-zakat .zk-auto-row:last-child { border-bottom: 0; }
+    #page-zakat .zk-auto-ico { font-size: 16px; flex-shrink: 0; }
+    #page-zakat .zk-auto-name { font-weight: 700; color: var(--text); }
+    #page-zakat .zk-auto-src { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+    /* ---------- স্ত্রীর যাকাত কার্ড ---------- */
+    #page-zakat .zk-wife-card { margin-bottom: 16px; }
+    #page-zakat .zk-wife-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    #page-zakat .zk-wife-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    #page-zakat .zk-wife-stat { border: 1px solid var(--zk-line); border-radius: 10px; padding: 12px; text-align: center; }
+    #page-zakat .zk-wife-stat-label { font-size: 11.5px; color: var(--text-muted); font-weight: 700; }
+    #page-zakat .zk-wife-stat-value { font-size: 18px; font-weight: 800; color: var(--navy); margin-top: 4px; }
+    #page-zakat .zk-wife-stat-value.danger { color: var(--zk-red); }
+
+    /* ---------- রিসোর্স/টুলস শর্টকাট ---------- */
+    #page-zakat .zk-row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    #page-zakat .zk-shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+    #page-zakat .zk-shortcut { border: 1px solid var(--zk-line); border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; background: #fff; font-family: inherit; }
+    #page-zakat .zk-shortcut:hover { background: var(--accent-soft); border-color: var(--accent); }
+    #page-zakat .zk-shortcut-ico { font-size: 22px; margin-bottom: 6px; }
+    #page-zakat .zk-shortcut-label { font-size: 11.5px; font-weight: 700; color: var(--text); }
+    #page-zakat .zk-link { background: none; border: 0; padding: 0; color: var(--zk-green); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    #page-zakat .zk-link:hover { text-decoration: underline; }
+
+    /* ---------- নিচের উক্তি ব্যানার ---------- */
+    #page-zakat .zk-quote-banner { background: linear-gradient(135deg, #0f6b3a, #0a4d2a); border-radius: 14px; padding: 18px 22px; text-align: center; color: #fff; }
+    #page-zakat .zk-quote-banner div:first-child { font-size: 13.5px; font-weight: 600; line-height: 1.8; }
+    #page-zakat .zk-quote-banner div:last-child { font-size: 12px; opacity: .85; margin-top: 6px; font-weight: 700; }
+
+    /* ---------- মোডালের ভেতরের ছোট ফর্ম/লিস্ট (zk-modal-*) ---------- */
+    #page-zakat .zk-m-field { margin-bottom: 12px; }
+    #page-zakat .zk-m-field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+    #page-zakat .zk-m-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    #page-zakat .zk-m-list { max-height: 180px; overflow-y: auto; border: 1px solid var(--zk-line); border-radius: 9px; margin-bottom: 12px; }
+    #page-zakat .zk-m-list-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid var(--zk-line); font-size: 12.5px; }
+    #page-zakat .zk-m-list-row:last-child { border-bottom: 0; }
+    #page-zakat .zk-m-sub { font-size: 11px; color: var(--text-muted); }
+    #page-zakat .zk-m-tabs { display: flex; gap: 6px; margin-bottom: 12px; border-bottom: 1px solid var(--zk-line); }
+    #page-zakat .zk-m-tab-btn { background: none; border: 0; padding: 7px 10px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    #page-zakat .zk-m-tab-btn.active { color: var(--zk-green); border-bottom-color: var(--zk-green); }
+    #page-zakat .zk-m-panel { display: none; }
+    #page-zakat .zk-m-panel.active { display: block; }
+
+    @media (max-width: 1200px) {
+      #page-zakat .zk-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #page-zakat .zk-row3 { grid-template-columns: 1fr; }
+      #page-zakat .zk-row2 { grid-template-columns: 1fr; }
+      #page-zakat .zk-wife-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      #page-zakat .zk-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+
+  <div class="zk-head">
+    <div>
+      <div class="zk-head-title">🕌 যাকাত ও ফিতরা</div>
+      <div class="zk-head-sub">ইসলামের বিধান অনুযায়ী যাকাত ও ফিতরা হিসাব ও ব্যবস্থাপনা</div>
+    </div>
+    <div class="zk-head-right">
+      <div class="zk-hijri-badge"><small>হিজরি সন</small><span id="zkHijriBadge">—</span></div>
+      <button type="button" class="zk-btn" data-act="refresh">🔄 আপডেট করুন</button>
+    </div>
   </div>
+
+  <div class="zk-error" id="zkError">
+    <span id="zkErrorText"></span>
+    <button type="button" data-act="retry">আবার চেষ্টা করুন</button>
+  </div>
+
+  <div class="zk-body" id="zkBody">
+
+    <div class="zk-kpis" id="zkKpis"></div>
+
+    <div class="zk-row3">
+      <div class="zk-card">
+        <div class="zk-card-title">আমার সম্পদ (নিট হিসাব)</div>
+        <div class="zk-table-wrap">
+          <table class="zk-table">
+            <thead><tr><th>সম্পদের বিবরণ</th><th class="num">পরিমাণ (৳)</th><th class="ctr">অ্যাকশন</th></tr></thead>
+            <tbody id="zkAssetsBody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="zk-btn zk-btn-outline-sm" style="width:100%;justify-content:center;" data-act="add-asset">+ নতুন সম্পদ যোগ করুন</button>
+      </div>
+
+      <div class="zk-card">
+        <div class="zk-card-title">যাকাত ক্যালকুলেশন (২.৫%)</div>
+        <div id="zkCalcBody"></div>
+      </div>
+
+      <div class="zk-card">
+        <div class="zk-card-title">অগ্রিম যাকাত আদায় রেকর্ড</div>
+        <button type="button" class="zk-btn zk-btn-primary" style="margin-bottom:12px;width:100%;justify-content:center;" data-act="add-payment">+ অগ্রিম যাকাত যোগ করুন</button>
+        <div class="zk-table-wrap">
+          <table class="zk-table">
+            <thead><tr><th>তারিখ</th><th class="num">পরিমাণ</th><th>প্রাপক</th><th class="ctr"></th></tr></thead>
+            <tbody id="zkPaymentsBody"></tbody>
+          </table>
+        </div>
+        <div class="zk-foot-total"><span>মোট অগ্রিম আদায়</span><span id="zkPaymentsTotal">৳ ০</span></div>
+      </div>
+    </div>
+
+    <div class="zk-row3">
+      <div class="zk-card">
+        <div class="zk-card-title">ফিতরার পরিমাণ (বাংলাদেশ ইসলামিক ফাউন্ডেশন)</div>
+        <div class="zk-table-wrap">
+          <table class="zk-table">
+            <thead><tr><th>ক্যাটাগরি</th><th class="num">প্রতি ব্যক্তি (৳)</th><th class="ctr"></th></tr></thead>
+            <tbody id="zkRatesBody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+          <span class="zk-m-sub" id="zkRatesUpdated"></span>
+          <button type="button" class="zk-link" data-act="add-rate">+ নতুন রেট</button>
+        </div>
+      </div>
+
+      <div class="zk-card">
+        <div class="zk-card-title">আমার ফিতরা হিসাব</div>
+        <div class="zk-field">
+          <label>প্রতি ব্যক্তি ফিতরা নির্ধারণ করুন</label>
+          <select class="zk-select" id="zkFitraCat"></select>
+        </div>
+        <div class="zk-field">
+          <label>সদস্য সংখ্যা (জন)</label>
+          <input type="number" class="zk-input" id="zkFitraCount" min="1" value="1">
+        </div>
+        <div class="zk-fitra-result">
+          <div class="zk-fitra-result-label">মোট ফিতরা</div>
+          <div class="zk-fitra-result-value" id="zkFitraTotal">৳ ০</div>
+        </div>
+        <button type="button" class="zk-btn zk-btn-primary" style="width:100%;justify-content:center;" data-act="save-fitra">ফিতরা প্রদান রেকর্ড করুন</button>
+      </div>
+
+      <div class="zk-card">
+        <div class="zk-card-title">এই বছরের যাকাত সারসংক্ষেপ</div>
+        <div id="zkSummaryDonut"></div>
+      </div>
+    </div>
+
+    <div class="zk-row3">
+      <div class="zk-card">
+        <div class="zk-card-title">যাকাত আদায়ের ইতিহাস (চলমান বছর)</div>
+        <div class="zk-table-wrap">
+          <table class="zk-table">
+            <thead><tr><th>তারিখ</th><th class="num">পরিমাণ (৳)</th><th>প্রাপক/উদ্দেশ্য</th></tr></thead>
+            <tbody id="zkHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="zk-card">
+        <div class="zk-card-title">বছর শেষে চূড়ান্ত হিসাব</div>
+        <div class="zk-close-big">
+          <div class="zk-close-label">অবশিষ্ট (বাকী দিতে হবে)</div>
+          <div class="zk-close-value" id="zkCloseRemaining">৳ ০</div>
+        </div>
+        <button type="button" class="zk-btn zk-btn-primary" style="width:100%;justify-content:center;" data-act="close-year">বছর শেষের চূড়ান্ত হিসাব সম্পন্ন করুন</button>
+        <div class="zk-close-hint">রমজানের চাঁদ দেখা সাপেক্ষে চূড়ান্ত হিসাব সম্পন্ন করুন এবং বাকী যাকাত আদায় করুন। এই বাটনে চাপলে চলমান বছর বন্ধ হয়ে নতুন একটি যাকাত বছর শুরু হবে।</div>
+      </div>
+
+      <div class="zk-card">
+        <div class="zk-card-title">তথ্য স্বয়ংক্রিয়ভাবে আপডেট হয়</div>
+        <div class="zk-auto-row">
+          <div class="zk-auto-ico">🤝</div>
+          <div><div class="zk-auto-name">দেনা-পাওনা (Net)</div><div class="zk-auto-src">প্রিন্স হিসাব থেকে (Phase 11) — আপাতত এখান থেকেই ব্যবস্থাপনা করুন <button type="button" class="zk-link" data-act="manage-loans">ব্যবস্থাপনা করুন →</button></div></div>
+        </div>
+        <div class="zk-auto-row">
+          <div class="zk-auto-ico">📒</div>
+          <div><div class="zk-auto-name">লেনদেনের তথ্য</div><div class="zk-auto-src">আমার লেনদেন পেজ থেকে (শীঘ্রই)</div></div>
+        </div>
+        <div class="zk-auto-row">
+          <div class="zk-auto-ico">📈</div>
+          <div><div class="zk-auto-name">আয়/ব্যয়</div><div class="zk-auto-src">বাজেট ও লেনদেন থেকে (শীঘ্রই)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="zk-card zk-wife-card">
+      <div class="zk-wife-top">
+        <div class="zk-card-title" style="margin:0;">👰 স্ত্রীর জন্য যাকাত হিসাব (শুধু যাকাত)</div>
+        <button type="button" class="zk-btn" data-act="manage-wife">স্ত্রীর সম্পদ ও যাকাত ব্যবস্থাপনা</button>
+      </div>
+      <div class="zk-wife-stats">
+        <div class="zk-wife-stat"><div class="zk-wife-stat-label">নিট সম্পদ (B)</div><div class="zk-wife-stat-value" id="zkWifeB">৳ ০</div></div>
+        <div class="zk-wife-stat"><div class="zk-wife-stat-label">যাকাতযোগ্য সম্পদ (C)</div><div class="zk-wife-stat-value" id="zkWifeC">৳ ০</div></div>
+        <div class="zk-wife-stat"><div class="zk-wife-stat-label">যাকাত (২.৫%)</div><div class="zk-wife-stat-value" id="zkWifeZakat">৳ ০</div></div>
+        <div class="zk-wife-stat"><div class="zk-wife-stat-label">বাকী যাকাত</div><div class="zk-wife-stat-value danger" id="zkWifeRemaining">৳ ০</div></div>
+      </div>
+    </div>
+
+    <div class="zk-row2">
+      <div class="zk-card">
+        <div class="zk-card-title">📚 ইসলামিক রিসোর্স</div>
+        <div class="zk-shortcuts">
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">📖</div><div class="zk-shortcut-label">কুরআন পাঠ ও শুনুন</div></button>
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">📿</div><div class="zk-shortcut-label">হাদিস সংগ্রহ</div></button>
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">📕</div><div class="zk-shortcut-label">ইসলামিক বই সমূহ</div></button>
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">🎥</div><div class="zk-shortcut-label">ভিডিও লেকচার</div></button>
+        </div>
+        <div style="text-align:center;margin-top:12px;"><button type="button" class="zk-link" data-act="go-islamic">সব রিসোর্স দেখুন →</button></div>
+      </div>
+      <div class="zk-card">
+        <div class="zk-card-title">🧰 ইসলামিক টুলস</div>
+        <div class="zk-shortcuts">
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">📅</div><div class="zk-shortcut-label">হিজরি ক্যালেন্ডার</div></button>
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">🧭</div><div class="zk-shortcut-label">কিবলার দিক নির্ণয়</div></button>
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">🕋</div><div class="zk-shortcut-label">ওমরাহ ক্যালকুলেটর</div></button>
+          <button type="button" class="zk-shortcut" data-act="go-islamic"><div class="zk-shortcut-ico">🧮</div><div class="zk-shortcut-label">যাকাত ক্যালকুলেটর আরবি ও বাংলা</div></button>
+        </div>
+        <div style="text-align:center;margin-top:12px;"><button type="button" class="zk-link" data-act="go-islamic">সব টুলস দেখুন →</button></div>
+      </div>
+    </div>
+
+    <div class="zk-quote-banner">
+      <div>যাকাত ও ফিতরা আল্লাহর ইবাদত, সমাজের দুর্বলদের হক। আদায়ের উত্তম পথ।</div>
+      <div>আল্লাহ আমাদের হক আদায়ের তৌফিক দান করুন। আমিন।</div>
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__zakatInit) return;
+      window.__zakatInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+      var BN_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      var PALETTE = ['#0f6b3a', '#c69b3d', '#1d4ed8', '#dc2626', '#7c3aed', '#0ea5e9'];
+
+      var state = { data: null, reqId: 0, loadedAt: 0, everLoaded: false };
+
+      /* ---------- হেল্পার ---------- */
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-zakat'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function num(n) { return bn((Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })); }
+      function money(n) { return '৳ ' + num(n); }
+      function dispShort(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+        return m ? m[3] + '/' + m[2] + '/' + m[1] : '—';
+      }
+      function todayIso() {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }
+      function call(fnName) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var runner = google.script.run
+          .withSuccessHandler(function (d) { applyData(d); hideModal(); showToast('সংরক্ষণ করা হয়েছে।', 'success'); })
+          .withFailureHandler(function (err) { showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger'); });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('zkBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('zkErrorText').textContent = msg; el('zkError').classList.add('show'); }
+      function hideError() { el('zkError').classList.remove('show'); }
+
+      /* ---------- লোড ---------- */
+      function load() {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+        var id = ++state.reqId;
+        hideError();
+        setBusy(true);
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return;
+            applyData(d);
+            setBusy(false);
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'যাকাতের তথ্য লোড করা যায়নি।');
+          })
+          .getZakatData(token, el('zkHijriBadge').getAttribute('data-hint') || '');
+      }
+
+      function applyData(d) {
+        state.data = d;
+        state.loadedAt = Date.now();
+        state.everLoaded = true;
+        render();
+      }
+
+      function render() {
+        var d = state.data;
+        if (!d) return;
+        el('zkHijriBadge').textContent = d.year.hijriYear || '—';
+        renderKpis(d);
+        renderAssets(d);
+        renderCalc(d);
+        renderPayments(d);
+        renderRates(d);
+        renderFitraCats(d);
+        renderFitraCalc();
+        renderDonut(d);
+        renderHistory(d);
+        el('zkCloseRemaining').textContent = money(d.remaining);
+        renderWife(d);
+      }
+
+      /* ---------- হিজরি সন (Aladhan API, ক্লায়েন্ট-সাইড — Islamic Corner-এর মতো) ---------- */
+      function loadHijriBadge() {
+        fetch('https://api.aladhan.com/v1/gToH?date=' + new Date().toISOString().slice(0, 10).split('-').reverse().join('-'))
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            var y = j && j.data && j.data.hijri && j.data.hijri.year;
+            if (y) {
+              var label = y + '-' + (Number(y) + 1);
+              el('zkHijriBadge').setAttribute('data-hint', label);
+              if (state.data && !state.data.year.hijriYear) el('zkHijriBadge').textContent = label;
+            }
+          })
+          .catch(function () {});
+      }
+
+      /* ---------- KPI ---------- */
+      function kpi(cls, ico, label, value, danger) {
+        return '<div class="zk-card zk-kpi"><div class="zk-kpi-ico ' + cls + '">' + ico + '</div>' +
+          '<div><div class="zk-kpi-label">' + label + '</div><div class="zk-kpi-value' + (danger ? ' danger' : '') + '">' + value + '</div></div></div>';
+      }
+      function renderKpis(d) {
+        el('zkKpis').innerHTML =
+          kpi('zk-ico-gold', '💰', 'মোট সম্পদ (নিট)', money(d.netB)) +
+          kpi('zk-ico-green', '🌱', 'যাকাতযোগ্য সম্পদ', money(d.zakatableC)) +
+          kpi('zk-ico-blue', '🧮', 'মোট যাকাত (বাৎসরিক)', money(d.zakatAmount)) +
+          kpi('zk-ico-purple', '🤝', 'অগ্রিম যাকাত আদায়', money(d.totalPaid)) +
+          kpi('zk-ico-red', '🕌', 'বাকী যাকাত (দিতে হবে)', money(d.remaining), true) +
+          kpi('zk-ico-gold', '👪', 'মোট ফিতরা', money(d.totalFitraThisYear));
+      }
+
+      /* ---------- আমার সম্পদ ---------- */
+      function renderAssets(d) {
+        if (!d.assets.length) {
+          el('zkAssetsBody').innerHTML = '<tr><td colspan="3"><div class="zk-empty">এখনো কোনো সম্পদ যোগ করা হয়নি।</div></td></tr>';
+          return;
+        }
+        el('zkAssetsBody').innerHTML = d.assets.map(function (a) {
+          return '<tr><td><div class="zk-row-item"><span class="zk-row-ico">' + esc(a.icon) + '</span>' + esc(a.categoryName) + '</div></td>' +
+            '<td class="num">' + num(a.value) + '</td>' +
+            '<td class="ctr"><span class="zk-iconbtn" data-act="edit-asset" data-id="' + a.id + '" title="সম্পাদনা">✎</span> ' +
+            '<span class="zk-iconbtn danger" data-act="del-asset" data-id="' + a.id + '" title="মুছুন">🗑</span></td></tr>';
+        }).join('');
+      }
+
+      /* ---------- ক্যালকুলেশন ---------- */
+      function calcRow(label, value, highlight, infoAct) {
+        return '<div class="zk-calc-row' + (highlight ? ' zk-highlight' : '') + '"><span class="zk-calc-label">' + label +
+          (infoAct ? ' <button type="button" data-act="' + infoAct + '" title="বিস্তারিত">ⓘ</button>' : '') +
+          '</span><span class="zk-calc-value">' + value + '</span></div>';
+      }
+      function renderCalc(d) {
+        el('zkCalcBody').innerHTML =
+          calcRow('নিট সম্পদ (B)', money(d.netB)) +
+          calcRow('যাকাতের হার', bn(d.ratePercent) + '%') +
+          calcRow('যাকাতযোগ্য সম্পদ (C)', money(d.zakatableC)) +
+          calcRow('যাকাতের পরিমাণ (C × ' + bn(d.ratePercent) + '%)', money(d.zakatAmount)) +
+          calcRow('দেনা-পাওনা (নেট, ইতিমধ্যে বিয়োগ করা হয়েছে)', money(d.netLiabilities), false, 'manage-loans') +
+          calcRow('এ পর্যন্ত অগ্রিম আদায়', '(-) ' + money(d.totalPaid)) +
+          calcRow('বাকী যাকাত (দিতে হবে)', money(d.remaining), true);
+      }
+
+      /* ---------- অগ্রিম যাকাত আদায় ---------- */
+      function renderPayments(d) {
+        if (!d.payments.length) {
+          el('zkPaymentsBody').innerHTML = '<tr><td colspan="4"><div class="zk-empty">এখনো কোনো আদায় রেকর্ড নেই।</div></td></tr>';
+        } else {
+          el('zkPaymentsBody').innerHTML = d.payments.map(function (p) {
+            return '<tr><td>' + dispShort(p.date) + '</td><td class="num">' + num(p.amount) + '</td><td>' + esc(p.recipient || '—') + '</td>' +
+              '<td class="ctr"><span class="zk-iconbtn danger" data-act="del-payment" data-id="' + p.id + '" title="মুছুন">🗑</span></td></tr>';
+          }).join('');
+        }
+        el('zkPaymentsTotal').textContent = money(d.totalPaid);
+      }
+
+      /* ---------- ফিতরা রেফারেন্স রেট ---------- */
+      function renderRates(d) {
+        if (!d.fitraRates.length) {
+          el('zkRatesBody').innerHTML = '<tr><td colspan="3"><div class="zk-empty">কোনো রেট নেই।</div></td></tr>';
+        } else {
+          el('zkRatesBody').innerHTML = d.fitraRates.map(function (r) {
+            return '<tr><td>' + esc(r.categoryName) + '</td><td class="num">' + num(r.amountPerPerson) + '</td>' +
+              '<td class="ctr"><span class="zk-iconbtn" data-act="edit-rate" data-id="' + r.id + '" title="সম্পাদনা">✎</span> ' +
+              '<span class="zk-iconbtn danger" data-act="del-rate" data-id="' + r.id + '" title="মুছুন">🗑</span></td></tr>';
+          }).join('');
+        }
+        var last = d.fitraRates.reduce(function (m, r) { return r.updatedAt && (!m || new Date(r.updatedAt) > new Date(m)) ? r.updatedAt : m; }, null);
+        el('zkRatesUpdated').textContent = last ? 'আপডেট: ' + dispShort(typeof last === 'string' ? last : new Date(last).toISOString()) : '';
+      }
+
+      /* ---------- ফিতরা ক্যালকুলেটর ---------- */
+      function renderFitraCats(d) {
+        var sel = el('zkFitraCat');
+        var current = sel.value;
+        sel.innerHTML = d.fitraRates.map(function (r) {
+          return '<option value="' + r.id + '" data-amt="' + r.amountPerPerson + '">' + esc(r.categoryName) + ' (৳ ' + num(r.amountPerPerson) + ')</option>';
+        }).join('');
+        if (current) sel.value = current;
+      }
+      function renderFitraCalc() {
+        var sel = el('zkFitraCat');
+        var opt = sel.options[sel.selectedIndex];
+        var amt = opt ? Number(opt.getAttribute('data-amt')) || 0 : 0;
+        var count = Number(el('zkFitraCount').value) || 0;
+        el('zkFitraTotal').textContent = money(amt * count);
+      }
+
+      /* ---------- সারসংক্ষেপ ডোনাট ---------- */
+      function donut(rows, totalLabel, totalValueText, host) {
+        var total = rows.reduce(function (s, r) { return s + r.value; }, 0);
+        if (total <= 0) { host.innerHTML = '<div class="zk-empty">এখনো কোনো তথ্য নেই।</div>'; return; }
+        var r = 48, c = 2 * Math.PI * r, offset = 0;
+        var svg = '<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="' + r + '" fill="none" stroke="#eef1f6" stroke-width="18"/>';
+        var legend = '';
+        rows.forEach(function (row, i) {
+          var frac = row.value / total;
+          var dash = frac * c;
+          var color = PALETTE[i % PALETTE.length];
+          var visible = rows.length > 1 ? Math.max(dash - 1.5, 0.5) : dash;
+          svg += '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="18" stroke-dasharray="' + visible + ' ' + (c - visible) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 60 60)"/>';
+          offset += dash;
+          legend += '<div class="zk-lg"><i style="background:' + color + '"></i><span>' + esc(row.name) + '</span><b>' + bn(Math.round(frac * 100)) + '%</b></div>';
+        });
+        svg += '<text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">' + totalLabel + '</text>' +
+          '<text x="60" y="72" text-anchor="middle" font-size="12" font-weight="800" fill="#10233F">' + totalValueText + '</text></svg>';
+        host.innerHTML = '<div class="zk-donut-wrap"><div class="zk-donut">' + svg + '</div><div class="zk-legend">' + legend + '</div></div>';
+      }
+      function renderDonut(d) {
+        donut([
+          { name: 'আদায়কৃত (অগ্রিম)', value: d.totalPaid },
+          { name: 'অনিষ্পন্ন (বাকী)', value: d.remaining }
+        ], bn(d.percentPaid) + '%', 'আদায় হয়েছে', el('zkSummaryDonut'));
+      }
+
+      /* ---------- ইতিহাস ---------- */
+      function renderHistory(d) {
+        if (!d.payments.length) {
+          el('zkHistoryBody').innerHTML = '<tr><td colspan="3"><div class="zk-empty">এখনো কোনো আদায়ের তথ্য নেই।</div></td></tr>';
+          return;
+        }
+        el('zkHistoryBody').innerHTML = d.payments.map(function (p) {
+          return '<tr><td>' + dispShort(p.date) + '</td><td class="num">' + num(p.amount) + '</td><td>' + esc(p.recipient || p.notes || '—') + '</td></tr>';
+        }).join('');
+      }
+
+      /* ---------- স্ত্রীর যাকাত ---------- */
+      function renderWife(d) {
+        el('zkWifeB').textContent = money(d.wifeTotal);
+        el('zkWifeC').textContent = money(d.wifeZakatable);
+        el('zkWifeZakat').textContent = money(d.wifeZakat);
+        el('zkWifeRemaining').textContent = money(d.wifeRemaining);
+      }
+
+      /* =====================================================
+         মোডাল ফর্মসমূহ
+         ===================================================== */
+      function openAssetModal(id) {
+        var d = state.data;
+        var a = id ? d.assets.filter(function (x) { return x.id === id; })[0] : null;
+        var catOptions = d.categories.map(function (c) {
+          return '<option value="' + c.id + '"' + (a && a.categoryId === c.id ? ' selected' : '') + '>' + esc(c.icon) + ' ' + esc(c.name) + (c.zakatable ? '' : ' (অ-যাকাতযোগ্য)') + '</option>';
+        }).join('');
+        var body =
+          '<div class="zk-m-field"><label>ক্যাটাগরি</label><select class="zk-select" id="mAssetCat">' + catOptions + '</select></div>' +
+          '<div class="zk-m-field"><label>পরিমাণ (৳)</label><input type="number" class="zk-input" id="mAssetValue" value="' + (a ? a.value : '') + '"></div>' +
+          '<div class="zk-m-field"><label>নোট (ঐচ্ছিক)</label><input type="text" class="zk-input" id="mAssetNotes" value="' + esc(a ? a.notes : '') + '"></div>';
+        showModal(a ? 'সম্পদ সম্পাদনা করুন' : 'নতুন সম্পদ যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+            call('saveAsset', getToken(), { id: id || '', categoryId: el('mAssetCat').value, value: el('mAssetValue').value, notes: el('mAssetNotes').value });
+          } }
+        ]);
+      }
+
+      function openPaymentModal() {
+        var body =
+          '<div class="zk-m-field"><label>তারিখ</label><input type="date" class="zk-input" id="mPayDate" value="' + todayIso() + '"></div>' +
+          '<div class="zk-m-field"><label>পরিমাণ (৳)</label><input type="number" class="zk-input" id="mPayAmount"></div>' +
+          '<div class="zk-m-field"><label>প্রাপক / উদ্দেশ্য</label><input type="text" class="zk-input" id="mPayRecipient" placeholder="যেমন: পরিবার পরিজন, মাদ্রাসা"></div>' +
+          '<div class="zk-m-field"><label>নোট (ঐচ্ছিক)</label><input type="text" class="zk-input" id="mPayNotes"></div>';
+        showModal('অগ্রিম যাকাত যোগ করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+            call('savePayment', getToken(), { date: el('mPayDate').value, amount: el('mPayAmount').value, recipient: el('mPayRecipient').value, notes: el('mPayNotes').value });
+          } }
+        ]);
+      }
+
+      function openRateModal(id) {
+        var d = state.data;
+        var r = id ? d.fitraRates.filter(function (x) { return x.id === id; })[0] : null;
+        var body =
+          '<div class="zk-m-field"><label>ক্যাটাগরির নাম</label><input type="text" class="zk-input" id="mRateCat" value="' + esc(r ? r.categoryName : '') + '"></div>' +
+          '<div class="zk-m-field"><label>প্রতি ব্যক্তি পরিমাণ (৳)</label><input type="number" class="zk-input" id="mRateAmt" value="' + (r ? r.amountPerPerson : '') + '"></div>';
+        showModal(r ? 'ফিতরার রেট সম্পাদনা' : 'নতুন ফিতরার রেট', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: function () {
+            call('saveFitraRate', getToken(), { id: id || '', categoryName: el('mRateCat').value, amountPerPerson: el('mRateAmt').value });
+          } }
+        ]);
+      }
+
+      function loanRowHtml(kind, l) {
+        return '<div class="zk-m-list-row"><div><div>' + esc(l.person) + '</div><div class="zk-m-sub">' + dispShort(l.date) + ' · ' + (l.status === 'Paid' ? 'পরিশোধিত' : 'বকেয়া') + '</div></div>' +
+          '<div style="display:flex;align-items:center;gap:8px;"><b>' + num(l.outstanding) + '</b> <span class="zk-iconbtn danger" data-act="del-loan" data-kind="' + kind + '" data-id="' + l.id + '">🗑</span></div></div>';
+      }
+      function openLoanModal() {
+        var d = state.data;
+        var body =
+          '<div class="zk-m-tabs">' +
+          '<button type="button" class="zk-m-tab-btn active" data-mtab="given">আমি পাব (Loans Given)</button>' +
+          '<button type="button" class="zk-m-tab-btn" data-mtab="received">আমাকে দিতে হবে (Loans Received)</button>' +
+          '</div>' +
+          '<div class="zk-m-panel active" id="mPanelGiven">' +
+          '<div class="zk-m-list">' + (d.loansGiven.length ? d.loansGiven.map(function (l) { return loanRowHtml('given', l); }).join('') : '<div class="zk-empty">কোনো তথ্য নেই।</div>') + '</div>' +
+          '<div class="zk-m-row"><input type="text" class="zk-input" id="mLoanGivenPerson" placeholder="ব্যক্তির নাম"><input type="number" class="zk-input" id="mLoanGivenAmount" placeholder="পরিমাণ (৳)"></div>' +
+          '<div style="margin-top:8px;"><input type="date" class="zk-input" id="mLoanGivenDate" value="' + todayIso() + '"></div>' +
+          '<button type="button" class="zk-btn zk-btn-primary" style="width:100%;justify-content:center;margin-top:10px;" id="mLoanGivenAdd">+ যোগ করুন</button>' +
+          '</div>' +
+          '<div class="zk-m-panel" id="mPanelReceived">' +
+          '<div class="zk-m-list">' + (d.loansReceived.length ? d.loansReceived.map(function (l) { return loanRowHtml('received', l); }).join('') : '<div class="zk-empty">কোনো তথ্য নেই।</div>') + '</div>' +
+          '<div class="zk-m-row"><input type="text" class="zk-input" id="mLoanRecvPerson" placeholder="ব্যক্তির নাম"><input type="number" class="zk-input" id="mLoanRecvAmount" placeholder="পরিমাণ (৳)"></div>' +
+          '<div style="margin-top:8px;"><input type="date" class="zk-input" id="mLoanRecvDate" value="' + todayIso() + '"></div>' +
+          '<button type="button" class="zk-btn zk-btn-primary" style="width:100%;justify-content:center;margin-top:10px;" id="mLoanRecvAdd">+ যোগ করুন</button>' +
+          '</div>';
+        showModal('দেনা-পাওনা ব্যবস্থাপনা', body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+
+        document.querySelectorAll('[data-mtab]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('[data-mtab]').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            el('mPanelGiven').classList.toggle('active', btn.getAttribute('data-mtab') === 'given');
+            el('mPanelReceived').classList.toggle('active', btn.getAttribute('data-mtab') === 'received');
+          });
+        });
+        el('mLoanGivenAdd').addEventListener('click', function () {
+          call('saveLoan', getToken(), 'given', { person: el('mLoanGivenPerson').value, amount: el('mLoanGivenAmount').value, date: el('mLoanGivenDate').value, status: 'Active' });
+        });
+        el('mLoanRecvAdd').addEventListener('click', function () {
+          call('saveLoan', getToken(), 'received', { person: el('mLoanRecvPerson').value, amount: el('mLoanRecvAmount').value, date: el('mLoanRecvDate').value, status: 'Active' });
+        });
+      }
+
+      function wifeAssetRowHtml(a) {
+        return '<div class="zk-m-list-row"><div>' + esc(a.assetType) + '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;"><b>' + num(a.value) + '</b> <span class="zk-iconbtn danger" data-act="del-wife-asset" data-id="' + a.id + '">🗑</span></div></div>';
+      }
+      function openWifeModal() {
+        var d = state.data;
+        var body =
+          '<div class="zk-m-field"><label>সম্পদের তালিকা</label></div>' +
+          '<div class="zk-m-list">' + (d.wifeAssets.length ? d.wifeAssets.map(wifeAssetRowHtml).join('') : '<div class="zk-empty">কোনো সম্পদ নেই।</div>') + '</div>' +
+          '<div class="zk-m-row"><input type="text" class="zk-input" id="mWifeType" placeholder="সম্পদের ধরন (যেমন: সোনা, নগদ)"><input type="number" class="zk-input" id="mWifeValue" placeholder="পরিমাণ (৳)"></div>' +
+          '<button type="button" class="zk-btn zk-btn-primary" style="width:100%;justify-content:center;margin-top:10px;margin-bottom:16px;" id="mWifeAddAsset">+ সম্পদ যোগ করুন</button>' +
+          '<hr style="border:0;border-top:1px solid var(--zk-line);margin:14px 0;">' +
+          '<div class="zk-m-field"><label>যাকাত আদায় যোগ করুন</label></div>' +
+          '<div class="zk-m-row"><input type="date" class="zk-input" id="mWifePayDate" value="' + todayIso() + '"><input type="number" class="zk-input" id="mWifePayAmount" placeholder="পরিমাণ (৳)"></div>' +
+          '<button type="button" class="zk-btn zk-btn-outline-sm" style="width:100%;justify-content:center;margin-top:10px;" id="mWifeAddPay">+ আদায় যোগ করুন</button>';
+        showModal('স্ত্রীর সম্পদ ও যাকাত ব্যবস্থাপনা', body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+
+        el('mWifeAddAsset').addEventListener('click', function () {
+          call('saveWifeAsset', getToken(), { assetType: el('mWifeType').value, value: el('mWifeValue').value });
+        });
+        el('mWifeAddPay').addEventListener('click', function () {
+          call('saveWifePayment', getToken(), { date: el('mWifePayDate').value, amount: el('mWifePayAmount').value });
+        });
+      }
+
+      /* =====================================================
+         ইভেন্ট
+         ===================================================== */
+      root().addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+        var id = b.getAttribute('data-id');
+
+        if (act === 'retry' || act === 'refresh') load();
+        else if (act === 'add-asset') openAssetModal('');
+        else if (act === 'edit-asset') openAssetModal(id);
+        else if (act === 'del-asset') confirmDialog('এই সম্পদের তথ্য মুছে ফেলতে চান?', function () { call('deleteAsset', getToken(), id); });
+        else if (act === 'add-payment') openPaymentModal();
+        else if (act === 'del-payment') confirmDialog('এই আদায়ের রেকর্ড মুছে ফেলতে চান?', function () { call('deletePayment', getToken(), id); });
+        else if (act === 'add-rate') openRateModal('');
+        else if (act === 'edit-rate') openRateModal(id);
+        else if (act === 'del-rate') confirmDialog('এই রেট মুছে ফেলতে চান?', function () { call('deleteFitraRate', getToken(), id); });
+        else if (act === 'save-fitra') {
+          var sel = el('zkFitraCat'); var opt = sel.options[sel.selectedIndex];
+          if (!opt) { showToast('আগে একটি ক্যাটাগরি রেট যোগ করুন।', 'warning'); return; }
+          call('saveFitraPayment', getToken(), { categoryName: opt.textContent.replace(/\s*\(.*\)$/, ''), perPersonAmount: Number(opt.getAttribute('data-amt')) || 0, familyMemberCount: el('zkFitraCount').value });
+        }
+        else if (act === 'manage-loans') openLoanModal();
+        else if (act === 'del-loan') confirmDialog('এই তথ্য মুছে ফেলতে চান?', function () { call('deleteLoan', getToken(), b.getAttribute('data-kind'), id); hideModal(); });
+        else if (act === 'manage-wife') openWifeModal();
+        else if (act === 'del-wife-asset') confirmDialog('এই সম্পদ মুছে ফেলতে চান?', function () { call('deleteWifeAsset', getToken(), id); hideModal(); });
+        else if (act === 'close-year') {
+          confirmDialog('বর্তমান যাকাত বছর বন্ধ করে নতুন বছর শুরু করতে চান? নিশ্চিত হয়ে নিন যে বাকী যাকাত আদায় সম্পন্ন হয়েছে।', function () {
+            call('closeZakatYear', getToken(), el('zkHijriBadge').getAttribute('data-hint') || '');
+          });
+        }
+        else if (act === 'go-islamic') {
+          var nav = document.querySelector('.nav-item[data-page="islamic-corner"]');
+          if (nav) nav.click();
+        }
+      });
+
+      el('zkFitraCat').addEventListener('change', renderFitraCalc);
+      el('zkFitraCount').addEventListener('input', renderFitraCalc);
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      loadHijriBadge();
+      maybeLoad();
+    })();
+  </script>
+
 </section>
