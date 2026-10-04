@@ -119,3 +119,7 @@ else was touched this session.
 5. Pick up the next task: Tax (Phase 9), Prince Hisab / My Transactions
    (Phase 11), or Power Grid CPF-Loan/Increment sections, whichever the
    project owner prioritizes next.
+
+
+## Session 17 (2026-10-04)
+- হোম নামাজ কার্ড: ওয়াক্ত/নিষিদ্ধ সময় হিরো কাউন্টডাউন যোগ (Page_Home.html)। Leave ট্যাবের কাজ (১৮০ ক্যাপ, স্থিতি কলাম বাদ, প্রতি রো আপলোড) ইউজারের নির্দেশে থেমে আছে — অসম্পূর্ণ।

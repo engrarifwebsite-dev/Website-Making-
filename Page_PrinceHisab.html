@@ -1,6 +1,737 @@
 <section id="page-prince-hisab" class="page">
-  <div class="page-placeholder">
-    <h2>প্রিন্স হিসাব</h2>
-    <p>এই পেজের কন্টেন্ট Phase 11-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       প্রিন্স হিসাব (Phase 11) — সব ক্লাস ph- দিয়ে শুরু
+       ========================================================= */
+    #page-prince-hisab {
+      --ph-blue: #1d4ed8;
+      --ph-green: #15803d;
+      --ph-red: #dc2626;
+      --ph-amber: #d97706;
+      --ph-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-prince-hisab * { box-sizing: border-box; }
+
+    #page-prince-hisab .ph-card {
+      background: #fff;
+      border: 1px solid var(--ph-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-prince-hisab .ph-card-title { font-size: 15.5px; font-weight: 800; color: var(--navy); margin: 0; display: flex; align-items: center; gap: 8px; }
+    #page-prince-hisab .ph-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    #page-prince-hisab .ph-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-prince-hisab .ph-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-prince-hisab .ph-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    #page-prince-hisab .ph-body { transition: opacity .15s ease; }
+    #page-prince-hisab .ph-body.busy { opacity: .5; pointer-events: none; }
+
+    /* ---------- ৪টি সারসংক্ষেপ কার্ড ---------- */
+    #page-prince-hisab .ph-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+    #page-prince-hisab .ph-kpi { display: flex; align-items: flex-start; gap: 14px; }
+    #page-prince-hisab .ph-kpi-ico { width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 22px; }
+    #page-prince-hisab .ph-kpi-ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-prince-hisab .ph-ico-green { background: #dcfce7; color: var(--ph-green); }
+    #page-prince-hisab .ph-ico-red { background: #fee2e2; color: var(--ph-red); }
+    #page-prince-hisab .ph-ico-blue { background: #dbeafe; color: var(--ph-blue); }
+    #page-prince-hisab .ph-ico-amber { background: #fef3c7; color: var(--ph-amber); }
+    #page-prince-hisab .ph-kpi-label { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.35; }
+    #page-prince-hisab .ph-kpi-value { margin-top: 6px; font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.2; white-space: nowrap; }
+    #page-prince-hisab .ph-kpi-value.green { color: var(--ph-green); }
+    #page-prince-hisab .ph-kpi-value.red { color: var(--ph-red); }
+    #page-prince-hisab .ph-kpi-value.blue { color: var(--ph-blue); }
+    #page-prince-hisab .ph-kpi-sub { margin-top: 4px; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    #page-prince-hisab .ph-kpi-link { margin-top: 6px; background: none; border: 0; padding: 0; color: var(--ph-blue); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    #page-prince-hisab .ph-kpi-link:hover { text-decoration: underline; }
+    #page-prince-hisab .ph-kpi-badge { display: inline-block; margin-top: 6px; padding: 3px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+    #page-prince-hisab .ph-kpi-badge.green { background: #dcfce7; color: var(--ph-green); }
+    #page-prince-hisab .ph-kpi-badge.red { background: #fee2e2; color: var(--ph-red); }
+    #page-prince-hisab .ph-kpi-badge.gray { background: #f1f5f9; color: var(--text-muted); }
+    #page-prince-hisab .ph-kpi-check { margin-top: 6px; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--ph-green); }
+
+    /* ---------- লেআউট: প্রধান + সাইড ---------- */
+    #page-prince-hisab .ph-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+    #page-prince-hisab .ph-main, #page-prince-hisab .ph-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+    /* ---------- টুলবার/ফিল্টার ---------- */
+    #page-prince-hisab .ph-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    #page-prince-hisab .ph-select, #page-prince-hisab .ph-input { border: 1px solid var(--ph-line); background: #fff; border-radius: 9px; padding: 9px 12px; font-family: inherit; font-size: 12.5px; color: var(--text); }
+    #page-prince-hisab .ph-date-wrap { display: flex; align-items: center; gap: 6px; border: 1px solid var(--ph-line); border-radius: 9px; padding: 0 10px; background: #fff; }
+    #page-prince-hisab .ph-date-wrap input { border: 0; padding: 9px 0; font-family: inherit; font-size: 12.5px; color: var(--text); background: transparent; }
+    #page-prince-hisab .ph-search-wrap { flex: 1; min-width: 180px; display: flex; }
+    #page-prince-hisab .ph-search-wrap .ph-input { flex: 1; border-radius: 9px 0 0 9px; }
+    #page-prince-hisab .ph-search-btn { border: 1px solid var(--ph-line); border-left: 0; background: #fff; border-radius: 0 9px 9px 0; padding: 0 14px; cursor: pointer; color: var(--text-muted); }
+    #page-prince-hisab .ph-clear-btn { border: 1px solid var(--ph-line); background: #fff; border-radius: 9px; padding: 8px 12px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+    #page-prince-hisab .ph-clear-btn:hover { background: #f4f7fc; }
+
+    /* ---------- টেবিল ---------- */
+    #page-prince-hisab .ph-table-wrap { overflow-x: auto; border: 1px solid var(--ph-line); border-radius: 10px; }
+    #page-prince-hisab table.ph-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
+    #page-prince-hisab .ph-table th { background: #f4f7fc; color: var(--text-muted); font-weight: 700; font-size: 12px; padding: 11px 10px; text-align: center; border-bottom: 1px solid var(--ph-line); white-space: nowrap; }
+    #page-prince-hisab .ph-table th:first-child, #page-prince-hisab .ph-table td:first-child { text-align: left; }
+    #page-prince-hisab .ph-table td { padding: 10px; text-align: center; border-bottom: 1px solid var(--ph-line); color: var(--text); vertical-align: middle; }
+    #page-prince-hisab .ph-table tr:last-child td { border-bottom: 0; }
+    #page-prince-hisab .ph-type-cell { display: flex; align-items: center; gap: 10px; text-align: left; }
+    #page-prince-hisab .ph-type-ico { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+    #page-prince-hisab .ph-type-text { font-weight: 600; line-height: 1.35; max-width: 190px; }
+    #page-prince-hisab .ph-desc { text-align: left; max-width: 220px; }
+    #page-prince-hisab .ph-desc-main { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+    #page-prince-hisab .ph-desc-note { margin-top: 2px; font-size: 11.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+    #page-prince-hisab .ph-amount { font-weight: 800; white-space: nowrap; }
+    #page-prince-hisab .ph-amount.pos { color: var(--ph-green); }
+    #page-prince-hisab .ph-amount.neg { color: var(--ph-red); }
+    #page-prince-hisab .ph-tag { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+    #page-prince-hisab .ph-tag.green { background: #dcfce7; color: var(--ph-green); }
+    #page-prince-hisab .ph-tag.red { background: #fee2e2; color: var(--ph-red); }
+    #page-prince-hisab .ph-actcol { display: inline-flex; gap: 6px; }
+    #page-prince-hisab .ph-iconbtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; display: inline-grid; place-items: center; background: #eaf1ff; color: #2563eb; }
+    #page-prince-hisab .ph-iconbtn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-prince-hisab .ph-iconbtn:hover { filter: brightness(.96); }
+    #page-prince-hisab .ph-iconbtn.del { background: #fee9e9; color: var(--ph-red); }
+    #page-prince-hisab .ph-empty { text-align: center; color: var(--text-muted); font-size: 13.5px; padding: 30px 10px; }
+
+    /* ---------- টেবিলের নিচে: মোট + পেজিনেশন ---------- */
+    #page-prince-hisab .ph-table-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    #page-prince-hisab .ph-total-txt { font-size: 13px; font-weight: 700; color: var(--text); }
+    #page-prince-hisab .ph-pager { display: inline-flex; align-items: center; gap: 6px; }
+    #page-prince-hisab .ph-pager button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--ph-line); background: #fff; color: var(--navy); font-size: 15px; cursor: pointer; display: grid; place-items: center; }
+    #page-prince-hisab .ph-pager button:disabled { opacity: .35; cursor: default; }
+    #page-prince-hisab .ph-pager button:hover:not(:disabled) { background: #f4f7fc; }
+    #page-prince-hisab .ph-pager .cur { width: 32px; height: 32px; border-radius: 8px; background: var(--ph-blue); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+
+    /* ---------- নতুন/সম্পাদনা এন্ট্রি ফর্ম (ইনলাইন) ---------- */
+    #page-prince-hisab .ph-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    #page-prince-hisab .ph-form-row label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+    #page-prince-hisab .ph-form-row label .req { color: var(--ph-red); }
+    #page-prince-hisab .ph-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+    #page-prince-hisab .ph-form-card.editing { border-color: #c7d5f5; box-shadow: 0 0 0 3px rgba(29,78,216,.08), 0 6px 18px rgba(16,35,63,.06); }
+    #page-prince-hisab .ph-edit-chip { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #dbeafe; color: var(--ph-blue); font-size: 11px; font-weight: 700; vertical-align: middle; }
+
+    /* ---------- সাইডবার ---------- */
+    #page-prince-hisab .ph-add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; border: 0; border-radius: 12px; background: var(--ph-blue); color: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 700; padding: 15px; cursor: pointer;
+    }
+    #page-prince-hisab .ph-add-btn:hover { background: #1638a8; }
+
+    #page-prince-hisab .ph-donut-wrap { display: flex; flex-direction: column; align-items: center; }
+    #page-prince-hisab .ph-donut { width: 170px; height: 170px; }
+    #page-prince-hisab .ph-donut svg { width: 100%; height: 100%; }
+    #page-prince-hisab .ph-donut-legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+    #page-prince-hisab .ph-donut-legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text); }
+    #page-prince-hisab .ph-donut-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    #page-prince-hisab .ph-fact-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--ph-line); font-size: 13px; color: var(--text); }
+    #page-prince-hisab .ph-fact-row:last-child { border-bottom: 0; }
+    #page-prince-hisab .ph-fact-label { display: inline-flex; align-items: center; gap: 7px; }
+    #page-prince-hisab .ph-fact-val { font-weight: 800; color: var(--navy); white-space: nowrap; }
+
+    #page-prince-hisab .ph-pdf-row { display: flex; align-items: center; gap: 14px; }
+    #page-prince-hisab .ph-pdf-ico { width: 44px; height: 44px; border-radius: 10px; background: #fee2e2; color: var(--ph-red); display: grid; place-items: center; font-size: 19px; flex-shrink: 0; }
+    #page-prince-hisab .ph-pdf-text { flex: 1; min-width: 0; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    #page-prince-hisab .ph-pdf-btn { width: 42px; height: 42px; border-radius: 10px; border: 0; background: var(--navy); color: #fff; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
+    #page-prince-hisab .ph-pdf-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #page-prince-hisab .ph-pdf-btn:hover { background: var(--navy-light); }
+    #page-prince-hisab .ph-csv-link { display: block; margin-top: 10px; text-align: center; font-size: 12px; font-weight: 700; color: var(--ph-blue); background: none; border: 0; cursor: pointer; width: 100%; }
+    #page-prince-hisab .ph-csv-link:hover { text-decoration: underline; }
+
+    /* ---------- রেসপনসিভ ---------- */
+    @media (max-width: 1180px) {
+      #page-prince-hisab .ph-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-prince-hisab .ph-layout { grid-template-columns: minmax(0, 1fr); }
+      #page-prince-hisab .ph-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      #page-prince-hisab .ph-kpis { grid-template-columns: 1fr; }
+      #page-prince-hisab .ph-form-grid { grid-template-columns: 1fr; }
+      #page-prince-hisab .ph-toolbar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+
+  <div class="ph-error" id="phError"><span id="phErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+
+  <div class="ph-body" id="phBody">
+
+    <!-- ৪টি সারসংক্ষেপ কার্ড -->
+    <div class="ph-kpis" id="phKpis"></div>
+
+    <div class="ph-layout">
+
+      <div class="ph-main">
+
+        <div class="ph-card">
+          <div class="ph-head">
+            <h3 class="ph-card-title">📋 লেনদেনের তালিকা (<span id="phListScope">সব লেনদেন</span>)</h3>
+          </div>
+
+          <div class="ph-toolbar" style="margin-bottom:14px;">
+            <select class="ph-select" id="phFilterType"><option value="">সব লেনদেন</option></select>
+            <select class="ph-select" id="phFilterGroup">
+              <option value="">সব অবস্থা</option>
+              <option value="receivable">পাওনা সংক্রান্ত</option>
+              <option value="payable">দেনা সংক্রান্ত</option>
+            </select>
+            <div class="ph-date-wrap">📅 <input type="date" id="phFilterDate" title="এই তারিখ থেকে দেখান"></div>
+            <div class="ph-search-wrap">
+              <input type="text" class="ph-input" id="phSearch" placeholder="বিবরণ/নোট খুঁজুন...">
+              <button type="button" class="ph-search-btn" id="phSearchBtn" aria-label="খুঁজুন">🔍</button>
+            </div>
+            <button type="button" class="ph-clear-btn" id="phClearFilters">ফিল্টার মুছুন</button>
+          </div>
+
+          <div id="phTable"><div class="ph-empty">লোড হচ্ছে...</div></div>
+          <div class="ph-table-foot" id="phTableFoot" style="display:none;">
+            <div class="ph-total-txt" id="phTotalTxt"></div>
+            <div class="ph-pager" id="phPager"></div>
+          </div>
+        </div>
+
+        <div class="ph-card ph-form-card" id="phFormCard">
+          <div class="ph-head">
+            <h3 class="ph-card-title">🖊️ <span id="phFormTitle">নতুন লেনদেন যোগ করুন</span><span class="ph-edit-chip" id="phEditChip" style="display:none;">সম্পাদনা মোড</span></h3>
+          </div>
+          <div class="ph-form-grid">
+            <div class="ph-form-row">
+              <label>তারিখ <span class="req">*</span></label>
+              <input type="date" class="form-input" id="phfDate">
+            </div>
+            <div class="ph-form-row">
+              <label>লেনদেনের ধরন <span class="req">*</span></label>
+              <select class="form-input" id="phfType"><option value="">লেনদেনের ধরন নির্বাচন করুন</option></select>
+            </div>
+            <div class="ph-form-row">
+              <label>পরিমাণ (৳) <span class="req">*</span></label>
+              <input type="number" min="0" step="any" class="form-input" id="phfAmount" placeholder="৳ পরিমাণ লিখুন">
+            </div>
+            <div class="ph-form-row">
+              <label>বিবরণ/নোট</label>
+              <input type="text" class="form-input" id="phfNote" placeholder="বিবরণ লিখুন (ঐচ্ছিক)">
+            </div>
+          </div>
+          <div class="ph-form-actions">
+            <button type="button" class="btn btn-outline" id="phfCancel">বাতিল</button>
+            <button type="button" class="btn btn-primary" id="phfSubmit">✓ সংরক্ষণ করুন</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="ph-side">
+
+        <button type="button" class="ph-add-btn" id="phAddBtn">➕ নতুন লেনদেন যোগ করুন</button>
+
+        <div class="ph-card">
+          <div class="ph-head"><h3 class="ph-card-title">📝 হিসাবের সারসংক্ষেপ</h3></div>
+          <div id="phDonut"></div>
+        </div>
+
+        <div class="ph-card">
+          <div class="ph-head"><h3 class="ph-card-title">⚡ দ্রুত তথ্য</h3></div>
+          <div id="phFacts"></div>
+        </div>
+
+        <div class="ph-card">
+          <div class="ph-pdf-row">
+            <div class="ph-pdf-ico">📄</div>
+            <div class="ph-pdf-text"><b style="color:var(--navy);display:block;margin-bottom:2px;">হিসাব রিপোর্ট (PDF)</b>লেনদেনের পূর্ণাঙ্গ রিপোর্ট ডাউনলোড করুন</div>
+            <button type="button" class="ph-pdf-btn" id="phPdfBtn" title="PDF ডাউনলোড করুন">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="ph-csv-link" id="phCsvBtn">📊 এক্সেল (CSV) এক্সপোর্ট</button>
+        </div>
+
+      </div>
+    </div>
+
   </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__princeHisabInit) return;
+      window.__princeHisabInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+      var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      var PAGE_SIZE = 8;
+
+      // ধরন অনুযায়ী আইকন রঙ ও ইমোজি — status 'দেনা' (Borrowed) ছাড়া বাকি সবই সবুজ ট্যাগ পায়,
+      // কারণ Borrowed একমাত্র ঘটনা যেখানে আমার দেনা বেড়ে যাচ্ছে।
+      var TYPE_META = {
+        Lent:       { icon: '🤝', cls: 'ph-ico-blue' },
+        Borrowed:   { icon: '🤲', cls: 'ph-ico-amber' },
+        RepaidToMe: { icon: '💰', cls: 'ph-ico-green' },
+        RepaidByMe: { icon: '✅', cls: 'ph-ico-blue' }
+      };
+      // পাওনা-সংক্রান্ত বনাম দেনা-সংক্রান্ত গ্রুপ (সাইডবার KPI কার্ডের "বিস্তারিত দেখুন" লিংক এটি ব্যবহার করে)
+      var GROUP_TYPES = { receivable: ['Lent', 'RepaidToMe'], payable: ['Borrowed', 'RepaidByMe'] };
+
+      var state = {
+        data: null, reqId: 0, loadedAt: 0, everLoaded: false,
+        filterType: '', filterGroup: '', filterDate: '', search: '',
+        page: 1, editingId: ''
+      };
+
+      /* ---------- helpers ---------- */
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-prince-hisab'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function num(n) { return bn((Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })); }
+      function money(n) { return '৳ ' + num(Math.abs(Number(n) || 0)); }
+      function dispDate(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+        if (!m) return '—';
+        return bn(Number(m[3])) + '/' + bn(Number(m[2])) + '/' + bn(m[1]);
+      }
+      function todayIso() { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka' }).format(new Date()); }
+      function call(fnName, args, ok, fail) {
+        var runner = google.script.run
+          .withSuccessHandler(ok || function () {})
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger');
+            if (fail) fail(err);
+          });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('phBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('phErrorText').textContent = msg; el('phError').classList.add('show'); }
+      function hideError() { el('phError').classList.remove('show'); }
+      function typeMeta(type) { return TYPE_META[type] || { icon: '💱', cls: 'ph-ico-blue' }; }
+      function typeLabelOf(type) {
+        var list = (state.data && state.data.types) || [];
+        for (var i = 0; i < list.length; i++) if (list[i].key === type) return list[i].label;
+        return type;
+      }
+
+      /* ---------- load ---------- */
+      function load(cb) {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+
+        var id = ++state.reqId;
+        hideError();
+        setBusy(true);
+
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return;
+            applyData(d);
+            setBusy(false);
+            if (typeof cb === 'function') cb();
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'হিসাবের তথ্য লোড করা যায়নি।');
+          })
+          .getPrinceHisabData(token);
+      }
+
+      function applyData(d) {
+        state.data = d;
+        state.loadedAt = Date.now();
+        state.everLoaded = true;
+        populateTypeSelects();
+        render();
+      }
+
+      function populateTypeSelects() {
+        var types = (state.data && state.data.types) || [];
+        var filterSel = el('phFilterType');
+        var curFilter = filterSel.value;
+        filterSel.innerHTML = '<option value="">সব লেনদেন</option>' + types.map(function (t) {
+          return '<option value="' + esc(t.key) + '">' + esc(t.label) + '</option>';
+        }).join('');
+        filterSel.value = curFilter;
+
+        var formSel = el('phfType');
+        var curForm = formSel.value;
+        formSel.innerHTML = '<option value="">লেনদেনের ধরন নির্বাচন করুন</option>' + types.map(function (t) {
+          return '<option value="' + esc(t.key) + '">' + esc(t.label) + '</option>';
+        }).join('');
+        formSel.value = curForm;
+      }
+
+      function render() {
+        var d = state.data;
+        if (!d) return;
+        renderKpis(d);
+        renderDonut(d);
+        renderFacts(d);
+        renderTable();
+      }
+
+      /* ---------- ৪টি উপরের কার্ড ---------- */
+      var SVG = {
+        handUp: '<svg viewBox="0 0 24 24"><path d="M11 21v-6M11 15l-3-3m3 3l3-3"/><path d="M5 10a7 7 0 0 1 12.6-4.2M19 10a7 7 0 0 1-1 3.6"/></svg>',
+        handDown: '<svg viewBox="0 0 24 24"><path d="M11 3v6M11 9l-3 3m3-3l3 3"/><path d="M5 14a7 7 0 0 0 12.6 4.2M19 14a7 7 0 0 0-1-3.6"/></svg>',
+        scale: '<svg viewBox="0 0 24 24"><path d="M12 3v18M7 7l-4 8a4 4 0 0 0 8 0zM17 7l-4 8a4 4 0 0 0 8 0z"/><path d="M5 7h14M9 3h6"/></svg>',
+        wallet: '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v3"/><path d="M3 7v11a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5a2 2 0 0 1-2-1z"/><circle cx="16.5" cy="14" r="1.2"/></svg>'
+      };
+
+      function renderKpis(d) {
+        var s = d.summary;
+        var net = Number(s.net) || 0;
+        var netBadge = net > 0 ? ['green', 'আমার পক্ষে'] : (net < 0 ? ['red', 'Prince-এর পক্ষে'] : ['gray', 'সমান']);
+
+        el('phKpis').innerHTML =
+          '<div class="ph-card ph-kpi"><div class="ph-kpi-ico ph-ico-green">' + SVG.handUp + '</div>' +
+            '<div><div class="ph-kpi-label">Prince-এর কাছে<br>আমার পাওনা</div>' +
+            '<div class="ph-kpi-value green">' + money(s.receivable) + '</div>' +
+            '<div class="ph-kpi-sub">মোট ' + bn(s.receivableCount) + 'টি লেনদেন</div>' +
+            '<button type="button" class="ph-kpi-link" data-act="kpi-receivable">বিস্তারিত দেখুন →</button></div></div>' +
+
+          '<div class="ph-card ph-kpi"><div class="ph-kpi-ico ph-ico-red">' + SVG.handDown + '</div>' +
+            '<div><div class="ph-kpi-label">Prince-এর কাছে<br>আমার দেনা</div>' +
+            '<div class="ph-kpi-value red">' + money(s.payable) + '</div>' +
+            '<div class="ph-kpi-sub">মোট ' + bn(s.payableCount) + 'টি লেনদেন</div>' +
+            '<button type="button" class="ph-kpi-link" data-act="kpi-payable">বিস্তারিত দেখুন →</button></div></div>' +
+
+          '<div class="ph-card ph-kpi"><div class="ph-kpi-ico ph-ico-blue">' + SVG.scale + '</div>' +
+            '<div><div class="ph-kpi-label">নিট পাওনা (পাওনা - দেনা)</div>' +
+            '<div class="ph-kpi-value blue">' + money(net) + '</div>' +
+            '<div class="ph-kpi-badge ' + netBadge[0] + '">' + netBadge[1] + '</div><br>' +
+            '<button type="button" class="ph-kpi-link" data-act="kpi-net">বিস্তারিত দেখুন →</button></div></div>' +
+
+          '<div class="ph-card ph-kpi"><div class="ph-kpi-ico ph-ico-amber">' + SVG.wallet + '</div>' +
+            '<div><div class="ph-kpi-label">সর্বশেষ ব্যালেন্স হালনাগাদ</div>' +
+            '<div class="ph-kpi-value" style="font-size:17px;">' + (s.lastDate ? dispDate(s.lastDate) : '—') + '</div>' +
+            '<div class="ph-kpi-check">✅ সবসময় লাইভ হিসাব</div></div></div>';
+      }
+
+      /* ---------- ডোনাট (হিসাবের সারসংক্ষেপ) ---------- */
+      function renderDonut(d) {
+        var s = d.summary;
+        var receivable = Math.max(0, Number(s.receivable) || 0);
+        var payable = Math.max(0, Number(s.payable) || 0);
+        var total = receivable + payable;
+        var net = Number(s.net) || 0;
+        var netLabel = net > 0 ? '(আমার পক্ষে)' : (net < 0 ? '(Prince-এর পক্ষে)' : '(সমান)');
+
+        var host = el('phDonut');
+        if (total <= 0) {
+          host.innerHTML = '<div class="ph-empty">এখনো কোনো লেনদেন নেই।</div>';
+          return;
+        }
+
+        var r = 58, c = 2 * Math.PI * r;
+        var gLen = receivable / total * c;
+        var svg = '<svg viewBox="0 0 150 150" role="img" aria-label="পাওনা বনাম দেনার অনুপাত">' +
+          '<circle cx="75" cy="75" r="' + r + '" fill="none" stroke="#fee2e2" stroke-width="20"/>' +
+          (receivable > 0 ? '<circle cx="75" cy="75" r="' + r + '" fill="none" stroke="#15803d" stroke-width="20" stroke-dasharray="' + gLen + ' ' + (c - gLen) + '" transform="rotate(-90 75 75)"/>' : '') +
+          '<text x="75" y="68" text-anchor="middle" font-size="11" fill="#64748b">নিট পাওনা</text>' +
+          '<text x="75" y="88" text-anchor="middle" font-size="17" font-weight="800" fill="#10233F">' + money(net) + '</text>' +
+          '<text x="75" y="103" text-anchor="middle" font-size="10" fill="#64748b">' + netLabel + '</text>' +
+          '</svg>';
+
+        host.innerHTML = '<div class="ph-donut-wrap"><div class="ph-donut">' + svg + '</div>' +
+          '<div class="ph-donut-legend">' +
+            '<span><i style="background:#15803d"></i>পাওনা ৳ ' + num(receivable) + '</span>' +
+            '<span><i style="background:#dc2626"></i>দেনা ৳ ' + num(payable) + '</span>' +
+          '</div></div>';
+      }
+
+      /* ---------- দ্রুত তথ্য ---------- */
+      function renderFacts(d) {
+        var s = d.summary;
+        function row(icon, label, val) {
+          return '<div class="ph-fact-row"><span class="ph-fact-label">' + icon + ' ' + label + '</span><span class="ph-fact-val">' + val + '</span></div>';
+        }
+        el('phFacts').innerHTML =
+          row('📅', 'প্রথম লেনদেনের তারিখ', s.firstDate ? dispDate(s.firstDate) : '—') +
+          row('📈', 'মোট পাওনা লেনদেন', bn(s.receivableCount) + ' টি') +
+          row('📉', 'মোট দেনা লেনদেন', bn(s.payableCount) + ' টি') +
+          row('🕒', 'সর্বশেষ লেনদেন', s.lastDate ? dispDate(s.lastDate) : '—');
+      }
+
+      /* ---------- টেবিল (ফিল্টার + পেজিনেশন) ---------- */
+      function filteredTransactions() {
+        var list = (state.data && state.data.transactions) || [];
+        var q = state.search.trim().toLowerCase();
+        return list.filter(function (t) {
+          if (state.filterType && t.type !== state.filterType) return false;
+          if (state.filterGroup) {
+            var allowed = GROUP_TYPES[state.filterGroup] || [];
+            if (allowed.indexOf(t.type) === -1) return false;
+          }
+          if (state.filterDate && t.date < state.filterDate) return false;
+          if (q) {
+            var hay = (t.label + ' ' + t.note + ' ' + t.status).toLowerCase();
+            if (hay.indexOf(q) === -1) return false;
+          }
+          return true;
+        });
+      }
+
+      function listScopeText() {
+        if (state.filterGroup === 'receivable') return 'পাওনা সংক্রান্ত';
+        if (state.filterGroup === 'payable') return 'দেনা সংক্রান্ত';
+        if (state.filterType) return typeLabelOf(state.filterType);
+        return 'সব লেনদেন';
+      }
+
+      function typeCellHtml(t) {
+        var meta = typeMeta(t.type);
+        return '<div class="ph-type-cell"><span class="ph-type-ico ' + meta.cls + '">' + meta.icon + '</span>' +
+          '<span class="ph-type-text">' + esc(t.label) + '</span></div>';
+      }
+
+      function descCellHtml(t) {
+        var main = t.note ? esc(t.note) : 'কোনো বিবরণ দেওয়া হয়নি';
+        return '<div class="ph-desc"><div class="ph-desc-main" title="' + esc(t.note || '') + '">' + main + '</div>' +
+          '<div class="ph-desc-note">নোট: ' + (t.note ? esc(t.note) : 'কোনো নোট নেই') + '</div></div>';
+      }
+
+      var ICON_EDIT = '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+      var ICON_DEL = '<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>';
+
+      function renderTable() {
+        var list = filteredTransactions();
+        el('phListScope').textContent = listScopeText();
+        var host = el('phTable');
+
+        if (!list.length) {
+          host.innerHTML = '<div class="ph-empty">এই ফিল্টারে কোনো লেনদেন পাওয়া যায়নি।</div>';
+          el('phTableFoot').style.display = 'none';
+          return;
+        }
+
+        var totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+        if (state.page > totalPages) state.page = totalPages;
+        if (state.page < 1) state.page = 1;
+        var start = (state.page - 1) * PAGE_SIZE;
+        var shown = list.slice(start, start + PAGE_SIZE);
+
+        var rows = shown.map(function (t) {
+          var tagCls = t.type === 'Borrowed' ? 'red' : 'green';
+          var amtCls = t.signedAmount >= 0 ? 'pos' : 'neg';
+          var amtSign = t.signedAmount >= 0 ? '+' : '-';
+          return '<tr>' +
+            '<td>' + dispDate(t.date) + '</td>' +
+            '<td>' + typeCellHtml(t) + '</td>' +
+            '<td>' + descCellHtml(t) + '</td>' +
+            '<td><span class="ph-amount ' + amtCls + '">' + amtSign + num(Math.abs(t.signedAmount)) + '</span></td>' +
+            '<td><span class="ph-tag ' + tagCls + '">' + esc(t.status) + '</span></td>' +
+            '<td><span class="ph-actcol">' +
+              '<button type="button" class="ph-iconbtn" data-act="edit-txn" data-id="' + esc(t.id) + '" title="সম্পাদনা">' + ICON_EDIT + '</button>' +
+              '<button type="button" class="ph-iconbtn del" data-act="del-txn" data-id="' + esc(t.id) + '" title="মুছুন">' + ICON_DEL + '</button>' +
+            '</span></td></tr>';
+        }).join('');
+
+        host.innerHTML = '<div class="ph-table-wrap"><table class="ph-table"><thead><tr>' +
+          '<th>তারিখ</th><th>লেনদেনের ধরন</th><th>বিবরণ</th><th>পরিমাণ (৳)</th><th>অবস্থা</th><th>অ্যাকশন</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+        el('phTableFoot').style.display = 'flex';
+        el('phTotalTxt').textContent = 'মোট লেনদেন: ' + bn(list.length) + 'টি';
+
+        var pagerHtml = '<button type="button" data-act="page-prev" ' + (state.page <= 1 ? 'disabled' : '') + ' aria-label="আগের পাতা">‹</button>' +
+          '<span class="cur">' + bn(state.page) + '</span>' +
+          '<button type="button" data-act="page-next" ' + (state.page >= totalPages ? 'disabled' : '') + ' aria-label="পরের পাতা">›</button>';
+        el('phPager').innerHTML = pagerHtml;
+      }
+
+      /* =====================================================
+         ইনলাইন ফর্ম: যোগ / সম্পাদনা
+         ===================================================== */
+      function findTxn(id) {
+        var list = (state.data && state.data.transactions) || [];
+        for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+        return null;
+      }
+
+      function resetFormToAddMode() {
+        state.editingId = '';
+        el('phFormTitle').textContent = 'নতুন লেনদেন যোগ করুন';
+        el('phEditChip').style.display = 'none';
+        el('phFormCard').classList.remove('editing');
+        el('phfSubmit').textContent = '✓ সংরক্ষণ করুন';
+        el('phfDate').value = todayIso();
+        el('phfType').value = '';
+        el('phfAmount').value = '';
+        el('phfNote').value = '';
+      }
+
+      function enterEditMode(id) {
+        var t = findTxn(id);
+        if (!t) return;
+        state.editingId = id;
+        el('phFormTitle').textContent = 'লেনদেন সম্পাদনা করুন';
+        el('phEditChip').style.display = 'inline-block';
+        el('phFormCard').classList.add('editing');
+        el('phfSubmit').textContent = '✓ আপডেট করুন';
+        el('phfDate').value = t.date;
+        el('phfType').value = t.type;
+        el('phfAmount').value = t.amount;
+        el('phfNote').value = t.note || '';
+        scrollToForm();
+        setTimeout(function () { el('phfDate').focus(); }, 300);
+      }
+
+      function scrollToForm() {
+        var card = el('phFormCard');
+        if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function submitForm() {
+        var date = el('phfDate').value;
+        var type = el('phfType').value;
+        var amount = el('phfAmount').value;
+        var note = el('phfNote').value;
+
+        if (!date) { showToast('তারিখ দিন।', 'warning'); return; }
+        if (!type) { showToast('লেনদেনের ধরন নির্বাচন করুন।', 'warning'); return; }
+        if (!amount || Number(amount) <= 0) { showToast('পরিমাণ ০-র বেশি লিখুন।', 'warning'); return; }
+
+        var payload = { id: state.editingId || '', date: date, type: type, amount: amount, note: note };
+        var wasEditing = !!state.editingId;
+
+        call('savePrinceHisabTransaction', [getToken(), payload], function (freshData) {
+          applyData(freshData);
+          resetFormToAddMode();
+          showToast(wasEditing ? 'লেনদেন আপডেট হয়েছে।' : 'নতুন লেনদেন যোগ হয়েছে।', 'success');
+        });
+      }
+
+      function confirmDeleteTxn(id) {
+        var t = findTxn(id);
+        if (!t) return;
+        confirmDialog('"' + esc(t.label) + '" — ' + dispDate(t.date) + ' তারিখের এই লেনদেনটি মুছে ফেলবেন?', function () {
+          call('deletePrinceHisabTransaction', [getToken(), id], function (freshData) {
+            if (state.editingId === id) resetFormToAddMode();
+            applyData(freshData);
+            showToast('লেনদেন মুছে ফেলা হয়েছে।', 'success');
+          });
+        });
+      }
+
+      /* =====================================================
+         রিপোর্ট: PDF (প্রিন্ট) ও Excel (CSV)
+         ===================================================== */
+      function printHtml(title, inner) {
+        var w = window.open('', '_blank');
+        if (!w) { showToast('পপআপ আটকে গেছে — ব্রাউজারে পপআপ অনুমতি দিন।', 'warning'); return; }
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
+          '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">' +
+          '<style>body{font-family:"Noto Sans Bengali",Arial,sans-serif;color:#10233F;padding:28px;font-size:13px}h1{font-size:20px;margin:0 0 4px}' +
+          '.sum{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.sum div{border:1px solid #d7dde8;border-radius:8px;padding:10px 14px;min-width:150px}.sum b{display:block;font-size:16px;margin-top:3px}' +
+          'table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #d7dde8;padding:7px 9px;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f1f5fb}</style></head><body>' +
+          inner + '</body></html>');
+        w.document.close(); w.focus();
+        setTimeout(function () { w.print(); }, 900);
+        showToast('প্রিন্ট উইন্ডোতে "Save as PDF" নির্বাচন করুন।', 'default');
+      }
+
+      function exportPdf() {
+        var d = state.data;
+        if (!d || !d.transactions.length) { showToast('এক্সপোর্ট করার মতো কোনো লেনদেন নেই।', 'warning'); return; }
+        var s = d.summary;
+        var rows = d.transactions.slice().reverse().map(function (t) {
+          return '<tr><td>' + dispDate(t.date) + '</td><td>' + esc(t.label) + '</td><td>' + esc(t.note || '—') + '</td>' +
+            '<td>' + (t.signedAmount >= 0 ? '+' : '-') + num(Math.abs(t.signedAmount)) + '</td><td>' + esc(t.status) + '</td></tr>';
+        }).join('');
+        printHtml('প্রিন্স হিসাব রিপোর্ট',
+          '<h1>প্রিন্স হিসাব — সম্পূর্ণ রিপোর্ট</h1>' +
+          '<div class="sum"><div>আমার পাওনা<b>' + money(s.receivable) + '</b></div>' +
+          '<div>আমার দেনা<b>' + money(s.payable) + '</b></div>' +
+          '<div>নিট পাওনা<b>' + money(s.net) + (s.net >= 0 ? ' (আমার পক্ষে)' : ' (Prince-এর পক্ষে)') + '</b></div>' +
+          '<div>মোট লেনদেন<b>' + bn(s.totalCount) + ' টি</b></div></div>' +
+          '<table><thead><tr><th>তারিখ</th><th>ধরন</th><th>বিবরণ/নোট</th><th>পরিমাণ (৳)</th><th>অবস্থা</th></tr></thead><tbody>' + rows + '</tbody></table>');
+      }
+
+      function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+
+      function exportCsv() {
+        var d = state.data;
+        if (!d || !d.transactions.length) { showToast('এক্সপোর্ট করার মতো কোনো লেনদেন নেই।', 'warning'); return; }
+        var lines = [['Date', 'Type', 'Status', 'Amount', 'SignedAmount', 'Note'].map(csvCell).join(',')];
+        d.transactions.slice().reverse().forEach(function (t) {
+          lines.push([csvCell(t.date), csvCell(t.label), csvCell(t.status), t.amount, t.signedAmount, csvCell(t.note)].join(','));
+        });
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'prince-hisab.csv';
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast('এক্সেল ফাইল (CSV) ডাউনলোড হচ্ছে।', 'success');
+      }
+
+      /* =====================================================
+         ইভেন্ট
+         ===================================================== */
+      root().addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b || b.disabled) return;
+        var act = b.getAttribute('data-act');
+
+        if (act === 'retry') load();
+        else if (act === 'edit-txn') enterEditMode(b.getAttribute('data-id'));
+        else if (act === 'del-txn') confirmDeleteTxn(b.getAttribute('data-id'));
+        else if (act === 'page-prev') { state.page--; renderTable(); }
+        else if (act === 'page-next') { state.page++; renderTable(); }
+        else if (act === 'kpi-receivable') { state.filterGroup = 'receivable'; state.filterType = ''; el('phFilterGroup').value = 'receivable'; el('phFilterType').value = ''; state.page = 1; renderTable(); scrollToTable(); }
+        else if (act === 'kpi-payable') { state.filterGroup = 'payable'; state.filterType = ''; el('phFilterGroup').value = 'payable'; el('phFilterType').value = ''; state.page = 1; renderTable(); scrollToTable(); }
+        else if (act === 'kpi-net') { clearFilters(); scrollToTable(); }
+      });
+
+      function scrollToTable() {
+        var t = el('phTable');
+        if (t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function clearFilters() {
+        state.filterType = ''; state.filterGroup = ''; state.filterDate = ''; state.search = ''; state.page = 1;
+        el('phFilterType').value = ''; el('phFilterGroup').value = ''; el('phFilterDate').value = ''; el('phSearch').value = '';
+        renderTable();
+      }
+
+      el('phFilterType').addEventListener('change', function () { state.filterType = this.value; state.page = 1; renderTable(); });
+      el('phFilterGroup').addEventListener('change', function () { state.filterGroup = this.value; state.page = 1; renderTable(); });
+      el('phFilterDate').addEventListener('change', function () { state.filterDate = this.value; state.page = 1; renderTable(); });
+      el('phSearchBtn').addEventListener('click', function () { state.search = el('phSearch').value; state.page = 1; renderTable(); });
+      el('phSearch').addEventListener('keydown', function (e) { if (e.key === 'Enter') { state.search = this.value; state.page = 1; renderTable(); } });
+      el('phClearFilters').addEventListener('click', clearFilters);
+
+      el('phAddBtn').addEventListener('click', function () {
+        if (state.editingId) resetFormToAddMode();
+        scrollToForm();
+        setTimeout(function () { el('phfDate').focus(); }, 300);
+      });
+      el('phfCancel').addEventListener('click', resetFormToAddMode);
+      el('phfSubmit').addEventListener('click', submitForm);
+      el('phPdfBtn').addEventListener('click', exportPdf);
+      el('phCsvBtn').addEventListener('click', exportCsv);
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+      el('phfDate').value = todayIso();
+      maybeLoad();
+    })();
+  </script>
+
 </section>

@@ -373,6 +373,15 @@ function saveAsset(token, a) {
   var id = a.id ? String(a.id) : '';
   if (a.parentAssetId && a.parentAssetId === id) throw new Error('একটি সম্পদ নিজেই নিজের প্যারেন্ট হতে পারে না।');
 
+  // সাব-এসেট সবসময় তার প্যারেন্টেরই ক্যাটাগরির অংশ — আলাদা ক্যাটাগরি হতে পারে না,
+  // তাই ক্লায়েন্ট যা-ই পাঠাক, প্যারেন্ট থাকলে তার ক্যাটাগরিই সার্ভারে জোর করে বসানো হয়।
+  var categoryOverride = String(a.category || '');
+  if (a.parentAssetId) {
+    var parentAsset = assetsReadAll_().filter(function (p) { return p.id === String(a.parentAssetId); })[0];
+    if (!parentAsset) throw new Error('প্যারেন্ট সম্পদটি পাওয়া যায়নি।');
+    categoryOverride = parentAsset.category || '';
+  }
+
   var sheet = assetsSheet_();
   var now = new Date();
 
@@ -385,7 +394,7 @@ function saveAsset(token, a) {
     name, purchasePrice, purchaseDate, assetsNum_(a.warrantyMonths),
     String(a.serialNumber || ''), photoFileId, String(a.condition || 'সক্রিয়'), String(a.location || ''),
     assetsNum_(a.salvageValue), assetsNum_(a.usefulLifeYears), String(a.parentAssetId || ''), String(a.notes || '').substring(0, 1000),
-    String(a.category || ''), String(a.brand || ''), String(a.model || '')
+    categoryOverride, String(a.brand || ''), String(a.model || '')
   ];
 
   if (id) {

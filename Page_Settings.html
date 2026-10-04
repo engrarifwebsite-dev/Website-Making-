@@ -1,6 +1,748 @@
 <section id="page-settings" class="page">
-  <div class="page-placeholder">
-    <h2>Settings</h2>
-    <p>এই পেজের কন্টেন্ট Phase 16-এ যুক্ত হবে।</p>
+
+  <style>
+    /* =========================================================
+       সেটিংস (Settings, Phase 16) — সব ক্লাস st- দিয়ে শুরু
+       ========================================================= */
+    #page-settings {
+      --st-blue: #1d4ed8;
+      --st-green: #15803d;
+      --st-purple: #7c3aed;
+      --st-orange: #d97706;
+      --st-red: #dc2626;
+      --st-line: #e6ebf3;
+      width: 100%;
+    }
+    #page-settings * { box-sizing: border-box; }
+
+    #page-settings .st-card {
+      background: #fff;
+      border: 1px solid var(--st-line);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(16, 35, 63, .06);
+      padding: 18px;
+      min-width: 0;
+    }
+    #page-settings .st-card-title { font-size: 15px; font-weight: 800; color: var(--navy); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+    #page-settings .st-soon { font-size: 10.5px; font-weight: 700; color: var(--st-orange); background: #fef3c7; border-radius: 999px; padding: 2px 9px; }
+
+    #page-settings .st-error { display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 10px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13.5px; font-weight: 600; }
+    #page-settings .st-error.show { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    #page-settings .st-error button { border: 1px solid #fecaca; background: #fff; color: #b91c1c; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+
+    #page-settings .st-body { transition: opacity .15s ease; }
+    #page-settings .st-body.busy { opacity: .5; pointer-events: none; }
+
+    /* ---------- প্রোফাইল হেডার ---------- */
+    #page-settings .st-header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 16px; }
+    #page-settings .st-avatar-wrap { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+    #page-settings .st-avatar { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: var(--navy); }
+    #page-settings .st-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    #page-settings .st-name { font-size: 17px; font-weight: 800; color: var(--navy); }
+    #page-settings .st-contact { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+    #page-settings .st-badges { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    #page-settings .st-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    #page-settings .st-badge.verified { background: #dcfce7; color: var(--st-green); }
+    #page-settings .st-badge.role { background: #e8effd; color: var(--st-blue); }
+    #page-settings .st-badge.since { background: #f1f5f9; color: var(--text-muted); }
+
+    #page-settings .st-chips { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+    #page-settings .st-chip { display: flex; align-items: center; gap: 10px; }
+    #page-settings .st-chip-ico { width: 38px; height: 38px; border-radius: 10px; background: #eef2ff; color: var(--st-blue); display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+    #page-settings .st-chip-label { font-size: 10.5px; color: var(--text-muted); font-weight: 700; }
+    #page-settings .st-chip-value { font-size: 13px; font-weight: 700; color: var(--navy); margin-top: 1px; }
+
+    /* ---------- গ্রিড লেআউট ---------- */
+    #page-settings .st-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+
+    /* ---------- অ্যাকশন লিস্ট (একটি কার্ডের ভেতরে বাটনের সারি) ---------- */
+    #page-settings .st-actions { display: flex; flex-direction: column; gap: 4px; }
+    #page-settings .st-act { display: flex; align-items: center; gap: 12px; border: 0; background: none; padding: 10px 4px; font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text); cursor: pointer; text-align: left; border-radius: 9px; width: 100%; }
+    #page-settings .st-act:hover { background: #f4f7fc; }
+    #page-settings .st-act-ico { width: 32px; height: 32px; border-radius: 9px; background: #eef2ff; color: var(--st-blue); display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+    #page-settings .st-act-body { flex: 1; min-width: 0; }
+    #page-settings .st-act-title { color: var(--text); }
+    #page-settings .st-act-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 1px; }
+    #page-settings .st-act-right { font-size: 11px; font-weight: 700; color: var(--st-green); flex-shrink: 0; }
+    #page-settings .st-act.danger .st-act-ico { background: #fee2e2; color: var(--st-red); }
+    #page-settings .st-act.danger .st-act-title { color: var(--st-red); }
+    #page-settings .st-act-chevron { color: var(--text-muted); flex-shrink: 0; }
+
+    /* ---------- ফর্ম (সিলেক্ট/ইনপুট) কার্ড ---------- */
+    #page-settings .st-form-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; }
+    #page-settings .st-form-row label { font-size: 12.5px; font-weight: 600; color: var(--text); flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+    #page-settings .st-form-row select, #page-settings .st-form-row input[type="text"] { border: 1px solid var(--st-line); background: #fff; border-radius: 8px; padding: 7px 9px; font-family: inherit; font-size: 12.5px; color: var(--text); max-width: 160px; }
+    #page-settings .st-save-btn { width: 100%; margin-top: 10px; }
+
+    /* ---------- টগল সুইচ ---------- */
+    #page-settings .st-toggle { position: relative; display: inline-block; width: 42px; height: 23px; flex-shrink: 0; }
+    #page-settings .st-toggle input { opacity: 0; width: 0; height: 0; }
+    #page-settings .st-toggle-slider { position: absolute; inset: 0; cursor: pointer; background: #cbd5e1; border-radius: 999px; transition: .18s; }
+    #page-settings .st-toggle-slider::before { content: ''; position: absolute; height: 17px; width: 17px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .18s; }
+    #page-settings .st-toggle input:checked + .st-toggle-slider { background: var(--navy); }
+    #page-settings .st-toggle input:checked + .st-toggle-slider::before { transform: translateX(19px); }
+    #page-settings .st-toggle input:disabled + .st-toggle-slider { opacity: .45; cursor: default; }
+    #page-settings .st-notif-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--st-line); font-size: 13px; color: var(--text); font-weight: 600; }
+    #page-settings .st-notif-row:last-child { border-bottom: 0; }
+
+    /* ---------- স্টোরেজ বার ---------- */
+    #page-settings .st-store-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    #page-settings .st-store-ico { width: 32px; height: 32px; border-radius: 9px; background: #e8effd; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+    #page-settings .st-store-label { font-size: 13px; font-weight: 700; color: var(--text); }
+    #page-settings .st-store-sub { font-size: 11.5px; color: var(--text-muted); }
+    #page-settings .st-track { height: 8px; background: #e6eaf0; border-radius: 999px; overflow: hidden; margin: 8px 0; }
+    #page-settings .st-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+    /* ---------- দ্রুত অ্যাকশন (নিচের সারি) ---------- */
+    #page-settings .st-quick-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    #page-settings .st-quick-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid var(--st-line); background: #fff; border-radius: 12px; padding: 16px 10px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text); cursor: pointer; text-align: center; }
+    #page-settings .st-quick-btn:hover { background: #f4f7fc; }
+    #page-settings .st-quick-ico { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; }
+
+    /* ---------- মোডাল সহায়ক ---------- */
+    .st-m-note { font-size: 12px; color: var(--text-muted); margin: 6px 0 10px; line-height: 1.7; }
+    .st-m-list-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+    .st-m-list-row:last-child { border-bottom: 0; }
+    .st-m-grow { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .st-danger-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #991b1b; margin-bottom: 12px; line-height: 1.7; }
+
+    /* ---------- রেসপনসিভ ---------- */
+    @media (max-width: 1180px) {
+      #page-settings .st-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #page-settings .st-grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-settings .st-quick-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      #page-settings .st-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-settings .st-grid3 { grid-template-columns: 1fr; }
+      #page-settings .st-quick-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #page-settings .st-form-row { flex-direction: column; align-items: flex-start; }
+      #page-settings .st-form-row select, #page-settings .st-form-row input[type="text"] { max-width: 100%; width: 100%; }
+    }
+  </style>
+
+  <div class="st-error" id="stError"><span id="stErrorText"></span><button type="button" data-act="retry">আবার চেষ্টা করুন</button></div>
+
+  <div class="st-body" id="stBody">
+
+    <!-- প্রোফাইল হেডার -->
+    <div class="st-card">
+      <div class="st-header">
+        <div class="st-avatar-wrap"><div class="st-avatar" id="stAvatar">?</div></div>
+        <div style="flex:1;min-width:200px;">
+          <div class="st-name" id="stName">লোড হচ্ছে...</div>
+          <div class="st-contact" id="stContact"></div>
+          <div class="st-badges">
+            <span class="st-badge verified">✔ ভেরিফাইড</span>
+            <span class="st-badge role">প্রধান ব্যবহারকারী (Owner)</span>
+            <span class="st-badge since" id="stSince"></span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" data-act="go-profile">✏️ প্রোফাইল আপডেট করুন</button>
+      </div>
+
+      <div class="st-chips" id="stChips"></div>
+    </div>
+
+    <!-- সারি ১: অ্যাকাউন্ট / ডিসপ্লে ও ভাষা / ফিনান্স -->
+    <div class="st-grid3">
+
+      <div class="st-card">
+        <div class="st-card-title">👤 অ্যাকাউন্ট সেটিংস</div>
+        <div class="st-actions">
+          <button type="button" class="st-act" data-act="go-profile">
+            <span class="st-act-ico">👤</span><span class="st-act-body"><span class="st-act-title">প্রোফাইল আপডেট</span><div class="st-act-sub">নাম, ছবি, ফোন নম্বর পরিবর্তন</div></span><span class="st-act-chevron">›</span>
+          </button>
+          <button type="button" class="st-act" data-act="change-password">
+            <span class="st-act-ico">🔒</span><span class="st-act-body"><span class="st-act-title">পাসওয়ার্ড পরিবর্তন</span><div class="st-act-sub">আপনার পাসওয়ার্ড নিরাপত্তার জন্য পরিবর্তন করুন</div></span><span class="st-act-chevron">›</span>
+          </button>
+          <button type="button" class="st-act" disabled style="cursor:default;opacity:.75;">
+            <span class="st-act-ico">🛡️</span><span class="st-act-body"><span class="st-act-title">টু-ফ্যাক্টর অথেন্টিকেশন (2FA)</span><div class="st-act-sub">অতিরিক্ত নিরাপত্তার জন্য 2FA চালু করুন</div></span><span class="st-soon">শীঘ্রই আসছে</span>
+          </button>
+          <button type="button" class="st-act" data-act="scroll-notif">
+            <span class="st-act-ico">📩</span><span class="st-act-body"><span class="st-act-title">ইমেইল নোটিফিকেশন সেটিংস</span><div class="st-act-sub">ইমেইল ও অ্যাপ নোটিফিকেশন নিয়ন্ত্রণ</div></span><span class="st-act-chevron">›</span>
+          </button>
+          <button type="button" class="st-act danger" data-act="deactivate">
+            <span class="st-act-ico">🗑️</span><span class="st-act-body"><span class="st-act-title">অ্যাকাউন্ট ডিঅ্যাক্টিভেট বা মুছুন</span><div class="st-act-sub">অ্যাকাউন্ট সাময়িকভাবে নিষ্ক্রিয় করুন</div></span><span class="st-act-chevron">›</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="st-card-title">🖥️ ডিসপ্লে ও ভাষা সেটিংস</div>
+        <div class="st-form-row"><label>🌐 ভাষা (Language)</label><select id="stLanguage"><option value="bn">বাংলা (Bangla)</option><option value="en">English</option></select></div>
+        <div class="st-form-row"><label>🎨 থিম (Theme)</label><select id="stTheme"><option value="default">ডার্ক ব্লু (Default)</option><option value="light">লাইট</option></select></div>
+        <div class="st-form-row"><label>🕒 টাইম জোন</label><select disabled><option>Asia/Dhaka (GMT+6)</option></select></div>
+        <div class="st-form-row"><label>📅 তারিখ ফরম্যাট</label><select id="stDateFormat"><option value="DD MMM YYYY">DD MMM YYYY</option><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option></select></div>
+        <div class="st-form-row"><label>⏰ সময় ফরম্যাট</label><select id="stTimeFormat"><option value="12h">12 ঘণ্টা (AM/PM)</option><option value="24h">24 ঘণ্টা</option></select></div>
+        <button type="button" class="btn btn-primary st-save-btn" data-act="save-display">সংরক্ষণ করুন</button>
+      </div>
+
+      <div class="st-card">
+        <div class="st-card-title">💲 ফিনান্স সেটিংস</div>
+        <div class="st-form-row"><label>💱 কারেন্সি</label><select id="stCurrency"><option value="BDT">BDT (৳)</option></select></div>
+        <div class="st-form-row"><label>. ডেসিমাল পয়েন্ট</label><select id="stDecimalPoint"><option value=".">. (Dot)</option><option value=",">, (Comma)</option></select></div>
+        <div class="st-form-row"><label>🔢 সংখ্যা ফরম্যাট</label><select id="stNumberFormat"><option value="international">1,234,567.00</option><option value="lakh">12,34,567.00</option></select></div>
+        <div class="st-form-row"><label>🏦 ডিফল্ট অ্যাকাউন্ট</label><input type="text" id="stDefaultAccount" placeholder="যেমন: Prince Cash"></div>
+        <button type="button" class="btn btn-primary st-save-btn" data-act="save-finance">সংরক্ষণ করুন</button>
+        <div class="st-m-note" style="margin-bottom:0;">সংখ্যা ফরম্যাট/কারেন্সি এখন শুধু এখানে সংরক্ষিত হয় — প্রতিটি পেজে প্রয়োগ করা একটি পরবর্তী ধাপ।</div>
+      </div>
+
+    </div>
+
+    <!-- সারি ২: স্টোরেজ / নোটিফিকেশন / প্রাইভেসি -->
+    <div class="st-grid3">
+
+      <div class="st-card">
+        <div class="st-card-title">☁️ স্টোরেজ ও ব্যাকআপ সেটিংস</div>
+        <div class="st-store-row">
+          <div class="st-store-ico">🗂️</div>
+          <div><div class="st-store-label">Google Drive স্টোরেজ (এই অ্যাপের ফোল্ডার)</div><div class="st-store-sub" id="stStorageSub">লোড হচ্ছে...</div></div>
+        </div>
+        <div class="st-track"><div class="st-fill" id="stStorageFill" style="width:0%"></div></div>
+        <div class="st-actions" style="margin-top:6px;">
+          <button type="button" class="st-act" data-act="info-schedule"><span class="st-act-ico">🗓️</span><span class="st-act-body"><span class="st-act-title">ব্যাকআপ শিডিউল</span><div class="st-act-sub">এই মুহূর্তে কীভাবে ব্যাকআপ হয়</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="manual-backup"><span class="st-act-ico">🔄</span><span class="st-act-body"><span class="st-act-title">ম্যানুয়াল ব্যাকআপ নিন</span><div class="st-act-sub">সব স্প্রেডশিটের তালিকা (CSV) ডাউনলোড</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="restore-info"><span class="st-act-ico">📜</span><span class="st-act-body"><span class="st-act-title">ব্যাকআপ হিস্ট্রি ও রিস্টোর</span><div class="st-act-sub">পূর্ববর্তী ভার্সনে ফিরে যান</div></span><span class="st-act-chevron">›</span></button>
+        </div>
+      </div>
+
+      <div class="st-card" id="stNotifCard">
+        <div class="st-card-title">🔔 নোটিফিকেশন সেটিংস</div>
+        <div class="st-notif-row"><span>ইমেইল নোটিফিকেশন</span><label class="st-toggle"><input type="checkbox" id="nEmail" data-key="NotifyEmail"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-notif-row"><span>অ্যাপ নোটিফিকেশন</span><label class="st-toggle"><input type="checkbox" id="nApp" data-key="NotifyApp"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-notif-row"><span>বেতন ও পিএফ রিমাইন্ডার</span><label class="st-toggle"><input type="checkbox" id="nSalary" data-key="NotifySalary"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-notif-row"><span>যাকাত ও ফিতরা রিমাইন্ডার</span><label class="st-toggle"><input type="checkbox" id="nZakat" data-key="NotifyZakat"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-notif-row"><span>ইসলামিক কর্নার রিমাইন্ডার</span><label class="st-toggle"><input type="checkbox" id="nIslamic" data-key="NotifyIslamic"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-notif-row"><span>ইনভেস্টমেন্ট আপডেট</span><label class="st-toggle"><input type="checkbox" id="nInvest" data-key="NotifyInvestment"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-notif-row"><span>সিস্টেম ও সিকিউরিটি</span><label class="st-toggle"><input type="checkbox" id="nSystem" data-key="NotifySystem"><span class="st-toggle-slider"></span></label></div>
+        <div class="st-m-note" style="margin-bottom:0;">এই টগলগুলো প্রেফারেন্স হিসেবে এখনই সংরক্ষণ হয় — প্রকৃত ইমেইল/পুশ পাঠানোর অটোমেশন ভবিষ্যতে যোগ হবে।</div>
+      </div>
+
+      <div class="st-card">
+        <div class="st-card-title">🛡️ প্রাইভেসি ও সিকিউরিটি</div>
+        <div class="st-actions">
+          <button type="button" class="st-act" data-act="privacy-info"><span class="st-act-ico">🔏</span><span class="st-act-body"><span class="st-act-title">প্রাইভেসি সেটিংস</span><div class="st-act-sub">কে কি দেখতে পারে সেট করুন</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="policy-info"><span class="st-act-ico">📄</span><span class="st-act-body"><span class="st-act-title">ডাটা প্রসেসিং নীতি</span><div class="st-act-sub">আপনার ডাটা কীভাবে সংরক্ষিত হয়</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="activity-log"><span class="st-act-ico">🕓</span><span class="st-act-body"><span class="st-act-title">অ্যাক্টিভিটি লগ</span><div class="st-act-sub">সাম্প্রতিক লগইন ইতিহাস দেখুন</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act danger" data-act="deactivate"><span class="st-act-ico">🗑️</span><span class="st-act-body"><span class="st-act-title">অ্যাকাউন্ট ডিলিট করুন</span><div class="st-act-sub">আপনার অ্যাকাউন্ট স্থায়ীভাবে মুছুন</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="security-tips"><span class="st-act-ico">💡</span><span class="st-act-body"><span class="st-act-title">সিকিউরিটি টিপস</span><div class="st-act-sub">সম্পূর্ণ নথি ও টিপস দেখুন</div></span><span class="st-act-chevron">›</span></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- সারি ৩: পার্সোনালাইজেশন / রিমাইন্ডার / সাপোর্ট -->
+    <div class="st-grid3">
+
+      <div class="st-card">
+        <div class="st-card-title">🧩 অ্যাপ পার্সোনালাইজেশন</div>
+        <div class="st-actions">
+          <button type="button" class="st-act" data-act="dashboard-customize"><span class="st-act-ico">📊</span><span class="st-act-body"><span class="st-act-title">ড্যাশবোর্ড কাস্টমাইজ করুন</span><div class="st-act-sub">হোমপেজের কার্ড দেখান/লুকান ও ক্রম বদলান</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="soon"><span class="st-act-ico">📋</span><span class="st-act-body"><span class="st-act-title">সাইডবার কাস্টমাইজ করুন</span><div class="st-act-sub">মেনু আইটেম সাজান বা লুকান</div></span><span class="st-soon">শীঘ্রই আসছে</span></button>
+          <button type="button" class="st-act" data-act="soon"><span class="st-act-ico">⌨️</span><span class="st-act-body"><span class="st-act-title">শর্টকাট ও কুইক অ্যাকশন</span><div class="st-act-sub">দ্রুত ব্যবহারের জন্য শর্টকাট সাজান</div></span><span class="st-soon">শীঘ্রই আসছে</span></button>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="st-card-title">⏰ রিমাইন্ডার সেটিংস</div>
+        <div class="st-form-row"><label>বেতন টাইম রিমাইন্ডার</label><select id="stRemSalary"><option value="10_min_before">১০ মিনিট আগে</option><option value="on_day">সেই দিন</option><option value="off">বন্ধ</option></select></div>
+        <div class="st-form-row"><label>বাজেট দিন রিমাইন্ডার</label><select id="stRemBudget"><option value="prev_day">প্রতি ১ দিন আগে</option><option value="on_day">সেই দিন</option><option value="off">বন্ধ</option></select></div>
+        <div class="st-form-row"><label>ইসলামিক তারিখ রিমাইন্ডার</label><select id="stRemIslamic"><option value="daily">প্রতিদিন</option><option value="weekly">সাপ্তাহিক</option><option value="off">বন্ধ</option></select></div>
+        <div class="st-form-row"><label>পেমেন্ট রিমাইন্ডার</label><select id="stRemPayment"><option value="on_due_day">নির্ধারিত দিনে</option><option value="3_days_before">৩ দিন আগে</option><option value="off">বন্ধ</option></select></div>
+        <div class="st-form-row"><label>ইনভেস্টমেন্ট রিমাইন্ডার</label><select id="stRemInvest"><option value="weekly">সাপ্তাহিক</option><option value="monthly">মাসিক</option><option value="off">বন্ধ</option></select></div>
+        <button type="button" class="btn btn-primary st-save-btn" data-act="save-reminders">সংরক্ষণ করুন</button>
+      </div>
+
+      <div class="st-card">
+        <div class="st-card-title">💬 সাপোর্ট ও হেল্প</div>
+        <div class="st-actions">
+          <button type="button" class="st-act" data-act="help-center"><span class="st-act-ico">❓</span><span class="st-act-body"><span class="st-act-title">হেল্প সেন্টার</span><div class="st-act-sub">সাধারণ প্রশ্ন ও উত্তর</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="soon"><span class="st-act-ico">▶️</span><span class="st-act-body"><span class="st-act-title">ভিডিও টিউটোরিয়াল</span><div class="st-act-sub">ব্যবহারের নিয়ম শিখুন</div></span><span class="st-soon">শীঘ্রই আসছে</span></button>
+          <button type="button" class="st-act" data-act="contact-support"><span class="st-act-ico">📞</span><span class="st-act-body"><span class="st-act-title">সাপোর্টে যোগাযোগ করুন</span><div class="st-act-sub">আমাদের সাথে যোগাযোগ করুন</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="feedback"><span class="st-act-ico">📝</span><span class="st-act-body"><span class="st-act-title">ফিডব্যাক দিন</span><div class="st-act-sub">আপনার মতামত আমাদের জানান</div></span><span class="st-act-chevron">›</span></button>
+          <button type="button" class="st-act" data-act="check-update"><span class="st-act-ico">🔄</span><span class="st-act-body"><span class="st-act-title">অ্যাপ ভার্সন</span><div class="st-act-sub" id="stAppVersion">বর্তমান ভার্সন: —</div></span><span class="st-act-right">আপডেট চেক করুন</span></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- দ্রুত অ্যাকশন -->
+    <div class="st-card">
+      <div class="st-card-title" style="margin-bottom:12px;">⚡ দ্রুত অ্যাকশন</div>
+      <div class="st-quick-row">
+        <button type="button" class="st-quick-btn" data-act="export-excel"><span class="st-quick-ico" style="background:#dcfce7;color:#15803d;">📊</span>ডাটা এক্সপোর্ট (Excel)</button>
+        <button type="button" class="st-quick-btn" data-act="export-pdf"><span class="st-quick-ico" style="background:#fee2e2;color:#dc2626;">📄</span>ডাটা এক্সপোর্ট (PDF)</button>
+        <button type="button" class="st-quick-btn" data-act="manual-backup"><span class="st-quick-ico" style="background:#e8effd;color:#1d4ed8;">☁️</span>সম্পূর্ণ ব্যাকআপ নিন</button>
+        <button type="button" class="st-quick-btn" data-act="restore-info"><span class="st-quick-ico" style="background:#ede9fe;color:#7c3aed;">🔍</span>ডাটা রিস্টোর করুন</button>
+        <button type="button" class="st-quick-btn" data-act="clear-cache"><span class="st-quick-ico" style="background:#fef3c7;color:#d97706;">🧹</span>ক্যাশ ক্লিয়ার করুন</button>
+        <button type="button" class="st-quick-btn" data-act="refresh-security"><span class="st-quick-ico" style="background:#e0f2fe;color:#0284c7;">🔁</span>সিকিউরিটি সেটিংস রিফ্রেশ</button>
+      </div>
+    </div>
+
   </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (window.__settingsInit) return;
+      window.__settingsInit = true;
+
+      var TOKEN_KEY = 'personalAppSessionToken';
+      var BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      var DATE_FORMAT_LABEL = { 'DD MMM YYYY': 'DD MMM YYYY', 'DD/MM/YYYY': 'DD/MM/YYYY', 'YYYY-MM-DD': 'YYYY-MM-DD' };
+
+      var state = { data: null, reqId: 0, loadedAt: 0, everLoaded: false };
+
+      function el(id) { return document.getElementById(id); }
+      function root() { return document.getElementById('page-settings'); }
+      function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function bn(v) { return String(v).replace(/[0-9]/g, function (d) { return BN_DIGITS[Number(d)]; }); }
+      function bnDate(iso) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+        if (!m) return '—';
+        var months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+        return bn(Number(m[3])) + ' ' + months[Number(m[2]) - 1] + ' ' + bn(m[1]);
+      }
+      function humanSize(bytes) {
+        bytes = Number(bytes) || 0;
+        if (bytes >= 1073741824) return bn((bytes / 1073741824).toFixed(2)) + ' GB';
+        if (bytes >= 1048576) return bn((bytes / 1048576).toFixed(1)) + ' MB';
+        if (bytes >= 1024) return bn(Math.round(bytes / 1024)) + ' KB';
+        return bn(bytes) + ' B';
+      }
+      function call(fnName, args, ok, fail) {
+        var runner = google.script.run
+          .withSuccessHandler(ok || function () {})
+          .withFailureHandler(function (err) {
+            showToast((err && err.message) || 'কাজটি সম্পন্ন হয়নি।', 'danger');
+            if (fail) fail(err);
+          });
+        runner[fnName].apply(runner, args);
+      }
+      function setBusy(b) { el('stBody').classList.toggle('busy', !!b); }
+      function showError(msg) { el('stErrorText').textContent = msg; el('stError').classList.add('show'); }
+      function hideError() { el('stError').classList.remove('show'); }
+
+      /* ---------- লোড ---------- */
+      function load() {
+        var token = getToken();
+        if (!token || typeof google === 'undefined' || !google.script || !google.script.run) return;
+        var id = ++state.reqId;
+        hideError();
+        setBusy(true);
+        google.script.run
+          .withSuccessHandler(function (d) {
+            if (id !== state.reqId) return;
+            state.data = d;
+            state.loadedAt = Date.now();
+            state.everLoaded = true;
+            setBusy(false);
+            render(d);
+          })
+          .withFailureHandler(function (err) {
+            if (id !== state.reqId) return;
+            setBusy(false);
+            showError((err && err.message) || 'সেটিংসের তথ্য লোড করা যায়নি।');
+          })
+          .getSettingsData(token);
+      }
+
+      function render(d) {
+        renderHeader(d);
+        renderChips(d);
+        renderFormValues(d);
+        renderStorage(d);
+        el('stAppVersion').textContent = 'বর্তমান ভার্সন: ' + esc(d.appVersion || '—');
+      }
+
+      function renderHeader(d) {
+        var u = d.user;
+        var initial = (u.name || '?').trim().charAt(0) || '?';
+        var avatar = el('stAvatar');
+        if (u.photoFileId) {
+          avatar.innerHTML = '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(u.photoFileId) + '&sz=w200" alt="">';
+        } else {
+          avatar.textContent = initial;
+        }
+        el('stName').textContent = u.name || '—';
+        var contactParts = [];
+        if (u.email) contactParts.push(u.email);
+        if (u.phone) contactParts.push(u.phone);
+        el('stContact').textContent = contactParts.join(' · ');
+        el('stSince').textContent = u.memberSince ? ('সদস্য since: ' + bnDate(u.memberSince)) : '';
+      }
+
+      function renderChips(d) {
+        var s = d.settings;
+        var timeFmtLabel = s.timeFormat === '24h' ? '24 ঘণ্টা' : '12 ঘণ্টা (AM/PM)';
+        var langLabel = s.language === 'en' ? 'English' : 'বাংলা (Bangla)';
+        var themeLabel = s.theme === 'light' ? 'লাইট' : 'ডার্ক ব্লু (Default)';
+        function chip(ico, label, value) {
+          return '<div class="st-chip"><div class="st-chip-ico">' + ico + '</div><div><div class="st-chip-label">' + label + '</div><div class="st-chip-value">' + esc(value) + '</div></div></div>';
+        }
+        el('stChips').innerHTML =
+          chip('🌐', 'ভাষা', langLabel) +
+          chip('🕒', 'টাইম জোন', 'Asia/Dhaka (GMT+6)') +
+          chip('💲', 'কারেন্সি', s.currency + ' (৳)') +
+          chip('📅', 'তারিখ ফরম্যাট', s.dateFormat) +
+          chip('⏱️', 'সময় ফরম্যাট', timeFmtLabel) +
+          chip('🎨', 'থিম', themeLabel);
+      }
+
+      function renderFormValues(d) {
+        var s = d.settings;
+        el('stLanguage').value = s.language;
+        el('stTheme').value = s.theme;
+        el('stDateFormat').value = s.dateFormat;
+        el('stTimeFormat').value = s.timeFormat;
+        el('stCurrency').value = s.currency;
+        el('stDecimalPoint').value = s.decimalPoint;
+        el('stNumberFormat').value = s.numberFormat;
+        el('stDefaultAccount').value = s.defaultAccount;
+
+        el('nEmail').checked = s.notifyEmail;
+        el('nApp').checked = s.notifyApp;
+        el('nSalary').checked = s.notifySalary;
+        el('nZakat').checked = s.notifyZakat;
+        el('nIslamic').checked = s.notifyIslamic;
+        el('nInvest').checked = s.notifyInvestment;
+        el('nSystem').checked = s.notifySystem;
+
+        el('stRemSalary').value = s.reminderBudgetTime;
+        el('stRemBudget').value = s.reminderBudgetDay;
+        el('stRemIslamic').value = s.reminderIslamicDate;
+        el('stRemPayment').value = s.reminderPayment;
+        el('stRemInvest').value = s.reminderInvestment;
+      }
+
+      function renderStorage(d) {
+        var s = d.storage;
+        var pct = s.refBytes > 0 ? Math.min(100, (s.usedBytes / s.refBytes) * 100) : 0;
+        el('stStorageFill').style.width = pct + '%';
+        el('stStorageSub').textContent = humanSize(s.usedBytes) + ' ব্যবহৃত (রেফারেন্স ' + humanSize(s.refBytes) + ')';
+      }
+
+      /* ---------- সেভ: ডিসপ্লে/ফিনান্স/রিমাইন্ডার ---------- */
+      function saveGroup(updates, successMsg) {
+        call('saveSettingsValues', [getToken(), updates], function () {
+          showToast(successMsg, 'success');
+          load();
+        });
+      }
+
+      function saveDisplay() {
+        saveGroup([
+          { category: 'Display', key: 'Language', value: el('stLanguage').value },
+          { category: 'Display', key: 'Theme', value: el('stTheme').value },
+          { category: 'Display', key: 'DateFormat', value: el('stDateFormat').value },
+          { category: 'Display', key: 'TimeFormat', value: el('stTimeFormat').value }
+        ], 'ডিসপ্লে সেটিংস সংরক্ষণ হয়েছে।');
+      }
+
+      function saveFinance() {
+        saveGroup([
+          { category: 'Finance', key: 'Currency', value: el('stCurrency').value },
+          { category: 'Finance', key: 'DecimalPoint', value: el('stDecimalPoint').value },
+          { category: 'Finance', key: 'NumberFormat', value: el('stNumberFormat').value },
+          { category: 'Finance', key: 'DefaultAccount', value: el('stDefaultAccount').value.trim() }
+        ], 'ফিনান্স সেটিংস সংরক্ষণ হয়েছে।');
+      }
+
+      function saveReminders() {
+        saveGroup([
+          { category: 'Reminders', key: 'ReminderBudgetTime', value: el('stRemSalary').value },
+          { category: 'Reminders', key: 'ReminderBudgetDay', value: el('stRemBudget').value },
+          { category: 'Reminders', key: 'ReminderIslamicDate', value: el('stRemIslamic').value },
+          { category: 'Reminders', key: 'ReminderPayment', value: el('stRemPayment').value },
+          { category: 'Reminders', key: 'ReminderInvestment', value: el('stRemInvest').value }
+        ], 'রিমাইন্ডার সেটিংস সংরক্ষণ হয়েছে।');
+      }
+
+      /* ---------- নোটিফিকেশন টগল — পরিবর্তন হলেই সরাসরি সেভ ---------- */
+      root().addEventListener('change', function (e) {
+        var t = e.target.closest('#stNotifCard input[type="checkbox"][data-key]');
+        if (!t) return;
+        call('saveSettingsValues', [getToken(), [{ category: 'Notifications', key: t.getAttribute('data-key'), value: t.checked ? 'true' : 'false' }]], function () {
+          showToast('সংরক্ষণ হয়েছে।', 'success');
+        });
+      });
+
+      /* ---------- পাসওয়ার্ড পরিবর্তন (window.doChangePassword পুনরায় ব্যবহার, JS_Auth.html) ---------- */
+      function openChangePasswordModal() {
+        showModal('পাসওয়ার্ড পরিবর্তন', '' +
+          '<label>বর্তমান পাসওয়ার্ড</label>' +
+          '<input type="password" id="stCpOld" class="form-input">' +
+          '<label style="margin-top:12px;display:block;">নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>' +
+          '<input type="password" id="stCpNew" class="form-input">' +
+          '<div class="auth-error" id="stCpError"></div>',
+          [
+            { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+            { label: 'পরিবর্তন করুন', className: 'btn-primary', onClick: function () {
+                var oldP = el('stCpOld').value, newP = el('stCpNew').value;
+                el('stCpError').textContent = '';
+                if (typeof window.doChangePassword !== 'function') { showToast('এই মুহূর্তে পরিবর্তন করা যাচ্ছে না।', 'danger'); return; }
+                window.doChangePassword(oldP, newP, function () {
+                  hideModal();
+                  showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে।', 'success');
+                }, function (msg) { el('stCpError').textContent = msg; });
+            } }
+          ]
+        );
+      }
+
+      /* ---------- অ্যাকাউন্ট ডিঅ্যাক্টিভেট ---------- */
+      function openDeactivateModal() {
+        var body =
+          '<div class="st-danger-box">⚠️ এটি আপনার অ্যাকাউন্ট <b>নিষ্ক্রিয়</b> করে দেবে এবং আপনি সাথে সাথে লগআউট হয়ে যাবেন। ' +
+          'এটি সম্পূর্ণ স্থায়ী মুছে ফেলা নয় — পুনরায় সক্রিয় করতে SYS_Master স্প্রেডশিটের Users শিটে গিয়ে Status কলাম "Active" করে দিতে হবে। ' +
+          'স্থায়ীভাবে পুরোপুরি মুছে ফেলতে চাইলে সেটিও সরাসরি সেই শিট থেকে সারি মুছে করতে হবে — নিরাপত্তার জন্য এই বাটন থেকে স্থায়ী ডিলিট করা যায় না।</div>' +
+          '<label>নিশ্চিত করতে নিচে <b>DEACTIVATE</b> লিখুন</label>' +
+          '<input type="text" id="stDeactConfirm" class="form-input" placeholder="DEACTIVATE">';
+        showModal('অ্যাকাউন্ট ডিঅ্যাক্টিভেট করুন', body, [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'ডিঅ্যাক্টিভেট করুন', className: 'btn-danger', onClick: function () {
+              if (el('stDeactConfirm').value.trim().toUpperCase() !== 'DEACTIVATE') {
+                showToast('নিশ্চিত করতে ঠিক "DEACTIVATE" লিখুন।', 'warning');
+                return;
+              }
+              call('deactivateAccountSoft', [getToken()], function () {
+                hideModal();
+                showToast('অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে — লগআউট হচ্ছে...', 'default');
+                setTimeout(function () { if (typeof window.doLogout === 'function') window.doLogout(); }, 1200);
+              });
+          } }
+        ]);
+      }
+
+      /* ---------- অ্যাক্টিভিটি লগ ---------- */
+      function openActivityLogModal() {
+        call('getLoginActivityList', [getToken()], function (rows) {
+          var body = rows.length ? rows.map(function (r) {
+            var dt = r.timestamp ? new Date(r.timestamp) : null;
+            var when = dt && !isNaN(dt.getTime())
+              ? new Intl.DateTimeFormat('bn-BD', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(dt)
+              : '—';
+            var resultLabel = r.result === 'Success' ? '✅ সফল' : '❌ ব্যর্থ';
+            return '<div class="st-m-list-row"><span class="st-m-grow">' + esc(when) + '</span><span>' + esc(resultLabel) + '</span></div>';
+          }).join('') : '<div class="st-m-note" style="margin:0;">কোনো লগইন কার্যকলাপ পাওয়া যায়নি।</div>';
+          showModal('অ্যাক্টিভিটি লগ (সাম্প্রতিক ১৫টি)', body, [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+        });
+      }
+
+      /* ---------- স্ট্যাটিক তথ্য মোডাল ---------- */
+      function infoModal(title, html) {
+        showModal(title, '<div class="st-m-note" style="margin:0;">' + html + '</div>', [{ label: 'বন্ধ করুন', className: 'btn-outline', onClick: hideModal }]);
+      }
+
+      /* ---------- ফিডব্যাক ---------- */
+      function openFeedbackModal() {
+        showModal('ফিডব্যাক দিন', '<label>আপনার মতামত লিখুন</label><textarea class="form-input" id="stFeedbackMsg" rows="4" placeholder="আপনার মতামত বা সমস্যা লিখুন..."></textarea>', [
+          { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+          { label: 'পাঠান', className: 'btn-primary', onClick: function () {
+              var msg = el('stFeedbackMsg').value.trim();
+              if (!msg) { showToast('মেসেজ লিখুন।', 'warning'); return; }
+              call('submitFeedback', [getToken(), msg], function () {
+                hideModal();
+                showToast('ধন্যবাদ! আপনার ফিডব্যাক সংরক্ষিত হয়েছে।', 'success');
+              });
+          } }
+        ]);
+      }
+
+      /* ---------- ড্যাশবোর্ড কাস্টমাইজ করুন (Home পেজের কার্ড দেখান/লুকান ও ক্রম) ---------- */
+      var DASHBOARD_CARD_LABEL = { date: '📅 তারিখ ও সময়', prayer: '🕌 নামাজের সময়সূচী', weather: '🌤️ আবহাওয়া' };
+      var dashboardDraft = null; // { order: [...], visible: {date,prayer,weather,hero} } — মোডাল খোলা থাকা অবস্থায় লোকাল খসড়া
+
+      function dashboardRowsHtml_() {
+        return dashboardDraft.order.map(function (key, i) {
+          var checked = dashboardDraft.visible[key] ? ' checked' : '';
+          return '<div class="st-m-list-row" data-dash-key="' + key + '">' +
+            '<span class="st-m-order">' +
+              '<button type="button" class="st-m-arrow" data-dash-up="' + key + '"' + (i === 0 ? ' disabled' : '') + ' title="ওপরে সরান">▲</button>' +
+              '<button type="button" class="st-m-arrow" data-dash-down="' + key + '"' + (i === dashboardDraft.order.length - 1 ? ' disabled' : '') + ' title="নিচে সরান">▼</button>' +
+            '</span>' +
+            '<span class="st-m-grow">' + DASHBOARD_CARD_LABEL[key] + '</span>' +
+            '<label class="st-toggle"><input type="checkbox" data-dash-toggle="' + key + '"' + checked + '><span class="st-toggle-slider"></span></label>' +
+            '</div>';
+        }).join('');
+      }
+
+      function dashboardModalBody_() {
+        var heroChecked = dashboardDraft.visible.hero ? ' checked' : '';
+        return '<div class="st-m-note" style="margin-top:0;">▲ ▼ দিয়ে ক্রম বদলান, টগল দিয়ে দেখান/লুকান। হোমপেজে গিয়ে সাথে সাথে পরিবর্তন দেখা যাবে।</div>' +
+          '<div class="st-m-list-row"><span class="st-m-grow">🖼️ হিরো স্লাইডশো (ওপরের ছবি)</span>' +
+          '<label class="st-toggle"><input type="checkbox" id="dashHeroToggle"' + heroChecked + '><span class="st-toggle-slider"></span></label></div>' +
+          '<div id="dashRows">' + dashboardRowsHtml_() + '</div>' +
+          '<div class="st-m-note" id="dashErr" style="color:var(--danger);display:none;"></div>';
+      }
+
+      function rerenderDashboardModal_() {
+        el('dashRows').innerHTML = dashboardRowsHtml_();
+        var heroBox = el('dashHeroToggle');
+        if (heroBox) heroBox.checked = dashboardDraft.visible.hero;
+      }
+
+      function openDashboardCustomizeModal() {
+        setBusy(true);
+        call('getDashboardPrefs', [], function (prefs) {
+          setBusy(false);
+          dashboardDraft = prefs || { order: ['date', 'prayer', 'weather'], visible: { date: true, prayer: true, weather: true, hero: true } };
+
+          showModal('ড্যাশবোর্ড কাস্টমাইজ করুন', dashboardModalBody_(), [
+            { label: 'বাতিল', className: 'btn-outline', onClick: hideModal },
+            { label: 'সংরক্ষণ করুন', className: 'btn-primary', onClick: submitDashboardPrefs }
+          ]);
+
+          document.getElementById('dashHeroToggle').addEventListener('change', function () {
+            dashboardDraft.visible.hero = this.checked;
+          });
+
+          el('modalBody').onclick = function (e) {
+            var up = e.target.closest('[data-dash-up]');
+            if (up) { moveDashboardCard_(up.getAttribute('data-dash-up'), -1); return; }
+            var down = e.target.closest('[data-dash-down]');
+            if (down) { moveDashboardCard_(down.getAttribute('data-dash-down'), 1); return; }
+          };
+          el('modalBody').addEventListener('change', function (e) {
+            var t = e.target.closest('[data-dash-toggle]');
+            if (!t) return;
+            dashboardDraft.visible[t.getAttribute('data-dash-toggle')] = t.checked;
+          });
+        }, function () { setBusy(false); });
+      }
+
+      function moveDashboardCard_(key, delta) {
+        var ord = dashboardDraft.order;
+        var idx = ord.indexOf(key);
+        var newIdx = idx + delta;
+        if (idx < 0 || newIdx < 0 || newIdx >= ord.length) return;
+        var tmp = ord[idx]; ord[idx] = ord[newIdx]; ord[newIdx] = tmp;
+        rerenderDashboardModal_();
+      }
+
+      function submitDashboardPrefs() {
+        var errEl = el('dashErr');
+        errEl.style.display = 'none';
+        call('saveDashboardPrefs', [getToken(), dashboardDraft], function () {
+          hideModal();
+          showToast('ড্যাশবোর্ড সেটিংস সংরক্ষণ হয়েছে — হোম পেজে গিয়ে দেখুন।', 'success');
+        }, function (err) {
+          errEl.textContent = (err && err.message) || 'সংরক্ষণ ব্যর্থ হয়েছে।';
+          errEl.style.display = 'block';
+        });
+      }
+
+      /* ---------- ব্যাকআপ ম্যানিফেস্ট (CSV) ---------- */
+      function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
+      function downloadCsv(fileName, lines) {
+        var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+      }
+
+      function exportBackupManifest() {
+        call('getBackupManifest', [getToken()], function (rows) {
+          var lines = [['Spreadsheet', 'ID', 'Link'].map(csvCell).join(',')];
+          rows.forEach(function (r) { lines.push([csvCell(r.name), csvCell(r.id), csvCell(r.url)].join(',')); });
+          downloadCsv('app-spreadsheets-manifest.csv', lines);
+          showToast('সব স্প্রেডশিটের তালিকা (লিংকসহ) ডাউনলোড হচ্ছে।', 'success');
+        });
+      }
+
+      function exportSettingsCsv() {
+        var s = state.data && state.data.settings;
+        if (!s) { showToast('তথ্য লোড হয়নি।', 'warning'); return; }
+        var lines = [['Key', 'Value'].map(csvCell).join(',')];
+        Object.keys(s).forEach(function (k) { lines.push([csvCell(k), csvCell(s[k])].join(',')); });
+        downloadCsv('settings-export.csv', lines);
+        showToast('সেটিংস এক্সপোর্ট হচ্ছে।', 'success');
+      }
+
+      function exportSettingsPdf() {
+        var s = state.data && state.data.settings;
+        var u = state.data && state.data.user;
+        if (!s || !u) { showToast('তথ্য লোড হয়নি।', 'warning'); return; }
+        var w = window.open('', '_blank');
+        if (!w) { showToast('পপআপ আটকে গেছে — ব্রাউজারে পপআপ অনুমতি দিন।', 'warning'); return; }
+        var rows = Object.keys(s).map(function (k) { return '<tr><td>' + esc(k) + '</td><td>' + esc(s[k]) + '</td></tr>'; }).join('');
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>সেটিংস</title>' +
+          '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">' +
+          '<style>body{font-family:"Noto Sans Bengali",Arial,sans-serif;color:#10233F;padding:28px;font-size:13px}h1{font-size:20px}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #d7dde8;padding:7px 9px;text-align:left}th{background:#f1f5fb}</style></head><body>' +
+          '<h1>সেটিংস সারাংশ — ' + esc(u.name || '') + '</h1><table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>' + rows + '</tbody></table></body></html>');
+        w.document.close(); w.focus();
+        setTimeout(function () { w.print(); }, 900);
+        showToast('প্রিন্ট উইন্ডোতে "Save as PDF" নির্বাচন করুন।', 'default');
+      }
+
+      /* ---------- ইভেন্ট বাইন্ডিং ---------- */
+      root().addEventListener('click', function (e) {
+        var b = e.target.closest('[data-act]');
+        if (!b) return;
+        var act = b.getAttribute('data-act');
+
+        if (act === 'retry') load();
+        else if (act === 'go-profile') { var navBtn = document.querySelector('.nav-item[data-page="personal-info"]'); if (navBtn) navBtn.click(); }
+        else if (act === 'change-password') openChangePasswordModal();
+        else if (act === 'scroll-notif') el('stNotifCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        else if (act === 'deactivate') openDeactivateModal();
+        else if (act === 'save-display') saveDisplay();
+        else if (act === 'save-finance') saveFinance();
+        else if (act === 'save-reminders') saveReminders();
+        else if (act === 'info-schedule') infoModal('ব্যাকআপ শিডিউল', 'এই মুহূর্তে কোনো স্বয়ংক্রিয় ব্যাকআপ সিস্টেম নেই — আপনার প্রতিটি ডেটা সরাসরি Google Sheets-এ সংরক্ষিত হয়, এবং Google নিজেই প্রতিটি স্প্রেডশিটের সংস্করণ (version history) রাখে, যা File মেনু থেকে দেখা যায়। নিচের "ম্যানুয়াল ব্যাকআপ নিন" বাটন দিয়ে সব স্প্রেডশিটের একটি লিংক-তালিকা ডাউনলোড করতে পারেন।');
+        else if (act === 'manual-backup') exportBackupManifest();
+        else if (act === 'restore-info') infoModal('ব্যাকআপ হিস্ট্রি ও রিস্টোর', 'প্রতিটি Google Sheet-এর নিজস্ব সংস্করণ ইতিহাস আছে — সংশ্লিষ্ট স্প্রেডশিট খুলে <b>File → Version history → See version history</b>-তে গেলে যেকোনো আগের অবস্থায় ফিরে যাওয়া যায়। এটিই এই অ্যাপের প্রকৃত ও নির্ভরযোগ্য রিস্টোর ব্যবস্থা।');
+        else if (act === 'privacy-info') infoModal('প্রাইভেসি সেটিংস', 'এই অ্যাপটি একক-ব্যবহারকারীর (single-owner) জন্য তৈরি — আপনার সব তথ্য শুধুমাত্র আপনার নিজের Google অ্যাকাউন্টের Drive/Sheets-এ সংরক্ষিত থাকে এবং অন্য কেউ এতে প্রবেশ করতে পারে না, যদি না আপনি স্প্রেডশিট/ফোল্ডার নিজে শেয়ার করেন।');
+        else if (act === 'policy-info') infoModal('ডাটা প্রসেসিং নীতি', 'আপনার লেখা সব তথ্য সরাসরি আপনার Google Sheets/Drive-এ যায় — কোনো তৃতীয় পক্ষের সার্ভারে পাঠানো হয় না। শুধুমাত্র নামাজের সময়, হিজরি তারিখ ও আবহাওয়ার মতো পাবলিক তথ্যের জন্য Aladhan/Open-Meteo API-তে লোকেশন (জেলার নাম/স্থানাঙ্ক) পাঠানো হয়।');
+        else if (act === 'activity-log') openActivityLogModal();
+        else if (act === 'security-tips') infoModal('সিকিউরিটি টিপস', '• একটি শক্তিশালী, অনন্য পাসওয়ার্ড ব্যবহার করুন।<br>• পাবলিক/শেয়ার করা কম্পিউটারে লগইন রাখবেন না — কাজ শেষে লগআউট করুন।<br>• আপনার Google অ্যাকাউন্টে নিজেও টু-ফ্যাক্টর ভেরিফিকেশন চালু রাখুন (এটি এই অ্যাপের লগইনের চেয়ে বেশি গুরুত্বপূর্ণ, কারণ Google অ্যাকাউন্ট দিয়েই স্প্রেডশিট/ড্রাইভ সুরক্ষিত থাকে)।<br>• সন্দেহজনক লগইন দেখলে "অ্যাক্টিভিটি লগ" থেকে যাচাই করুন এবং পাসওয়ার্ড পরিবর্তন করুন।');
+        else if (act === 'dashboard-customize') openDashboardCustomizeModal();
+        else if (act === 'soon') showToast('এই ফিচারটি শীঘ্রই আসছে।', 'default');
+        else if (act === 'help-center') infoModal('হেল্প সেন্টার', '<b>লগইন করতে পারছি না?</b> ব্রাউজারের localStorage সাফ করে আবার চেষ্টা করুন।<br><br><b>কোনো ছবি/ফাইল দেখা যাচ্ছে না?</b> Google Drive-এর ফাইল শেয়ারিং সেটিংস ঠিক আছে কিনা Utils_FixDriveSharing.gs চালিয়ে যাচাই করুন।<br><br><b>তথ্য সংরক্ষণ হচ্ছে না?</b> ইন্টারনেট সংযোগ পরীক্ষা করুন এবং পেজ রিফ্রেশ করে আবার চেষ্টা করুন।');
+        else if (act === 'contact-support') infoModal('সাপোর্টে যোগাযোগ করুন', 'এই অ্যাপটি সম্পূর্ণ ব্যক্তিগত ব্যবহারের জন্য তৈরি এবং এর কোনো আলাদা সাপোর্ট টিম নেই — যেকোনো সমস্যা বা পরিবর্তনের জন্য প্রজেক্টের GitHub রিপোজিটরিতে নোট রাখুন বা পরবর্তী ডেভেলপমেন্ট সেশনে উল্লেখ করুন।');
+        else if (act === 'feedback') openFeedbackModal();
+        else if (act === 'check-update') showToast('আপনি বর্তমান সর্বশেষ ভার্সনেই আছেন।', 'success');
+        else if (act === 'export-excel') exportSettingsCsv();
+        else if (act === 'export-pdf') exportSettingsPdf();
+        else if (act === 'clear-cache') {
+          confirmDialog('ক্যাশ/সেশন ক্লিয়ার করলে আপনি লগআউট হয়ে যাবেন। চালিয়ে যাবেন?', function () {
+            try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ }
+            showToast('ক্যাশ ক্লিয়ার হয়েছে — লগআউট হচ্ছে...', 'default');
+            setTimeout(function () { window.location.reload(); }, 900);
+          });
+        }
+        else if (act === 'refresh-security') {
+          var token = getToken();
+          if (!token) { showToast('সেশন পাওয়া যায়নি।', 'danger'); return; }
+          google.script.run
+            .withSuccessHandler(function (user) {
+              showToast(user ? 'সিকিউরিটি সেশন বৈধ ও স্বাভাবিক আছে।' : 'সেশন বৈধ নয় — আবার লগইন করুন।', user ? 'success' : 'warning');
+            })
+            .withFailureHandler(function () { showToast('যাচাই করা যায়নি।', 'danger'); })
+            .validateSession(token);
+        }
+      });
+
+      /* ---------- পেজ খোলা হলে (এবং লগইনের পরে) লোড ---------- */
+      function isActive() { return root().classList.contains('active'); }
+      function isAuthed() { return document.body.classList.contains('authenticated'); }
+      function maybeLoad() {
+        if (!isActive() || !isAuthed()) return;
+        if (!state.everLoaded || Date.now() - state.loadedAt > 60000) load();
+      }
+      new MutationObserver(maybeLoad).observe(root(), { attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(maybeLoad).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      maybeLoad();
+    })();
+  </script>
+
 </section>
