@@ -224,6 +224,10 @@
 
     #page-home .prayer-card { display: flex; flex-direction: column; }
 
+    /* নামাজের কার্ড লম্বা হয়, তাই পাশের দুটি কার্ড টেনে না লম্বা করে নিজের উচ্চতায় থাকে */
+    #page-home .date-card,
+    #page-home .weather-card { align-self: start; }
+
     #page-home .prayer-meta {
       display: flex;
       align-items: center;
@@ -238,37 +242,105 @@
     #page-home .prayer-location { color: var(--muted); font-size: 12px; font-weight: 700; }
     #page-home .prayer-next { color: var(--navy); font-size: 12px; font-weight: 800; text-align: right; }
 
-    #page-home .prayer-list {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(65px, 1fr));
-      gap: 8px;
-      width: 100%;
+    /* ---------- চলমান ওয়াক্ত / নিষিদ্ধ সময় (বড় কাউন্টডাউন) ---------- */
+    #page-home .waqt-hero {
+      --hero-a: #071a33;
+      --hero-b: #1769aa;
+      margin-bottom: 4px;
+      padding: 18px 20px 16px;
+      border-radius: 18px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--hero-a), var(--hero-b));
+      box-shadow: 0 14px 30px rgba(7, 26, 51, .18);
     }
+    #page-home .waqt-hero[data-kind="nafl"]      { --hero-a: #0a5b3b; --hero-b: #0f7a4f; }
+    #page-home .waqt-hero[data-kind="forbidden"] { --hero-a: #8f1d14; --hero-b: #c0392b; }
+    #page-home .waqt-hero[data-kind="loading"]   { --hero-a: #33415c; --hero-b: #4b5d7f; }
 
-    #page-home .prayer-item {
-      padding: 12px 6px 10px;
-      text-align: center;
+    #page-home .waqt-hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    #page-home .waqt-badge { padding: 4px 11px; border-radius: 999px; background: rgba(255,255,255,.18); line-height: 1.5; }
+    #page-home .waqt-range { opacity: .92; white-space: nowrap; }
+
+    #page-home .waqt-hero-name { margin-top: 12px; font-size: clamp(18px, 1.9vw, 24px); font-weight: 900; line-height: 1.35; }
+    #page-home .waqt-hero-count {
+      margin: 6px 0 2px;
+      font-size: clamp(36px, 4.4vw, 58px);
+      font-weight: 900;
+      line-height: 1.1;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    #page-home .waqt-hero-caption { font-size: 12px; font-weight: 700; opacity: .92; }
+
+    #page-home .waqt-bar { height: 6px; margin: 12px 0 10px; border-radius: 99px; background: rgba(255,255,255,.22); overflow: hidden; }
+    #page-home .waqt-bar-fill { width: 0; height: 100%; border-radius: 99px; background: #ffffff; transition: width .6s linear; }
+
+    #page-home .waqt-hero-line { font-size: 12px; font-weight: 700; line-height: 1.7; opacity: .96; }
+    #page-home .waqt-hero-line:empty { display: none; }
+
+    /* ---------- সময়ের তালিকা (সেকশন ও কার্ড) ---------- */
+    #page-home .waqt-section { margin-top: 16px; }
+
+    #page-home .waqt-section-title {
+      --k: #1769aa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    #page-home .waqt-section-title.kind-nafl      { --k: #15803d; }
+    #page-home .waqt-section-title.kind-forbidden { --k: #c0392b; }
+    #page-home .waqt-section-title.kind-event     { --k: #b7791f; }
+    #page-home .waqt-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--k); flex-shrink: 0; }
+
+    #page-home .waqt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+
+    #page-home .waqt-item {
+      --k: #1769aa;
+      --kt: #eaf3fb;
+      position: relative;
+      padding: 10px 11px;
       background: #fbfcfe;
       border: 1px solid var(--border);
-      border-radius: 13px;
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      border-left: 4px solid var(--k);
+      border-radius: 12px;
+      transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
     }
+    #page-home .waqt-item.kind-nafl      { --k: #15803d; --kt: #e8f6ee; }
+    #page-home .waqt-item.kind-forbidden { --k: #c0392b; --kt: #fdecea; }
+    #page-home .waqt-item.kind-event     { --k: #b7791f; --kt: #fbf3e2; }
 
-    #page-home .prayer-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(7,26,51,.08);
+    #page-home .waqt-item-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 20px; }
+    #page-home .waqt-item-name { color: var(--text); font-size: 12.5px; font-weight: 800; line-height: 1.35; }
+    #page-home .waqt-flag {
+      display: none;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: var(--k);
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
     }
+    #page-home .waqt-item-time { margin: 5px 0 2px; color: var(--navy); font-size: 15px; font-weight: 900; white-space: nowrap; }
+    #page-home .waqt-item-end { color: #5b6778; font-size: 10.5px; font-weight: 700; line-height: 1.5; }
 
-    #page-home .prayer-item.next {
-      background: linear-gradient(180deg, #eef6ff, #ffffff);
-      border-color: rgba(23,105,170,.45);
-      box-shadow: inset 0 0 0 1px rgba(23,105,170,.06);
-    }
+    #page-home .waqt-item.is-active { background: var(--kt); border-color: var(--k); box-shadow: 0 0 0 1px var(--k); }
+    #page-home .waqt-item.is-active .waqt-flag { display: inline-block; }
+    #page-home .waqt-item.is-primary { box-shadow: 0 0 0 2px var(--k), 0 8px 20px rgba(7, 26, 51, .12); }
 
-    #page-home .prayer-name { min-height: 30px; color: var(--muted); font-size: 11px; font-weight: 800; line-height: 1.35; }
-    #page-home .prayer-item.next .prayer-name { color: var(--blue); }
-    #page-home .prayer-time { margin: 6px 0 7px; color: var(--navy); font-size: 14px; font-weight: 900; white-space: nowrap; }
-    #page-home .prayer-span { min-height: 32px; color: #7b8798; font-size: 9.5px; font-weight: 700; line-height: 1.35; }
+    #page-home .waqt-empty { padding: 14px 4px; color: var(--muted); font-size: 13px; font-weight: 700; }
 
     #page-home .weather-card {
       background:
@@ -308,15 +380,12 @@
     @media (max-width: 1180px) {
       #page-home .home-grid { grid-template-columns: 1fr 1fr; }
       #page-home .weather-card { grid-column: 1 / -1; }
-      #page-home .prayer-list { grid-template-columns: repeat(7, minmax(60px, 1fr)); }
     }
 
     @media (max-width: 780px) {
       #page-home .home-grid { grid-template-columns: 1fr; }
       #page-home .weather-card { grid-column: auto; }
       #page-home .home-card { padding: 18px; border-radius: 17px; }
-      #page-home .prayer-list { grid-template-columns: 1fr 1fr; }
-      #page-home .prayer-item:first-child { grid-column: span 2; }
     }
 
     @media (max-width: 430px) {
@@ -350,7 +419,21 @@
         <div class="prayer-location" id="prayerLocation">লোকেশন লোড হচ্ছে...</div>
         <div class="prayer-next" id="prayerNext">হিসাব হচ্ছে...</div>
       </div>
-      <div class="prayer-list" id="prayerList"><div>নামাজের সময় লোড হচ্ছে...</div></div>
+
+      <div class="waqt-hero" id="waqtHero" data-kind="loading" role="group" aria-label="এখন চলমান ওয়াক্ত">
+        <div class="waqt-hero-top">
+          <span class="waqt-badge" id="waqtBadge">হিসাব হচ্ছে...</span>
+          <span class="waqt-range" id="waqtRange"></span>
+        </div>
+        <div class="waqt-hero-name" id="waqtName">নামাজের সময় লোড হচ্ছে...</div>
+        <div class="waqt-hero-count" id="waqtCount">--:--:--</div>
+        <div class="waqt-hero-caption" id="waqtCaption">শেষ হতে বাকি</div>
+        <div class="waqt-bar"><div class="waqt-bar-fill" id="waqtBarFill"></div></div>
+        <div class="waqt-hero-line" id="waqtAlso"></div>
+        <div class="waqt-hero-line" id="waqtNext"></div>
+      </div>
+
+      <div id="prayerSections"><div class="waqt-empty">নামাজের সময় লোড হচ্ছে...</div></div>
     </div>
 
     <div class="card home-card weather-card">
@@ -444,15 +527,38 @@
       var prayerDateKey = null;
       var lastDateKey = null;
 
-      var PRAYERS = [
-        { key: 'Fajr', label: 'ফজর' },
-        { key: 'Sunrise', label: 'সূর্যদয়' },
-        { key: 'Dhuhr', label: 'যোহর' },
-        { key: 'Asr', label: 'আসর' },
-        { key: 'Sunset', label: 'সূর্যাস্ত' },
-        { key: 'Maghrib', label: 'মাগরিব' },
-        { key: 'Isha', label: 'এশা' }
+      /* =====================================================
+         ওয়াক্ত, নফল সময় ও নিষিদ্ধ সময়
+         API থেকে আসে: ফজর, সূর্যোদয়, যোহর, আসর, সূর্যাস্ত, মাগরিব, এশা।
+         বাকিগুলো নিচের নিয়ম (মিনিটে) দিয়ে হিসাব হয় — মতামত/ফতোয়া অনুযায়ী
+         বদলাতে চাইলে শুধু এই সংখ্যাগুলো বদলান।
+         ===================================================== */
+      var WAQT_RULES = {
+        sunriseForbidden: 15,     // সূর্যোদয়ের পর এত মিনিট নিষিদ্ধ
+        zawalForbidden: 6,        // যোহর শুরুর আগের এত মিনিট (ঠিক দুপুর) নিষিদ্ধ
+        sunsetForbidden: 15,      // সূর্যাস্তের আগের এত মিনিট নিষিদ্ধ
+        ishraqAfterSunrise: 15,   // ইশরাক শুরু: সূর্যোদয়ের এত মিনিট পর
+        chashtAfterSunrise: 60,   // চাশত শুরু: সূর্যোদয়ের এত মিনিট পর (এখানে ইশরাক শেষ)
+        zawalPrayerLength: 20,    // যাওয়ালের নামাজ: যোহর শুরুর পর এত মিনিট
+        awwabinAfterMaghrib: 15,  // আওয়াবীন শুরু: মাগরিবের এত মিনিট পর (এশা পর্যন্ত)
+        sehriBeforeFajr: 0        // সেহরির শেষ সময়: ফজরের এত মিনিট আগে
+      };
+
+      // rank বেশি হলে ওপরে বড় করে দেখানো হয়: নিষিদ্ধ > নফল > ফরজ
+      var WAQT_KINDS = {
+        fard:      { rank: 1, badge: 'ফরজ নামাজের ওয়াক্ত চলছে', caption: 'এই ওয়াক্ত শেষ হতে বাকি' },
+        nafl:      { rank: 2, badge: 'নফল নামাজের সময় চলছে', caption: 'এই সময় শেষ হতে বাকি' },
+        forbidden: { rank: 3, badge: '⛔ নিষিদ্ধ সময় চলছে — নফল নামাজ পড়া যাবে না', caption: 'নিষিদ্ধ সময় শেষ হতে বাকি' }
+      };
+
+      var WAQT_SECTIONS = [
+        { kind: 'fard',      title: 'ফরজ নামাজ',          keys: ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] },
+        { kind: 'nafl',      title: 'নফল ও বিশেষ নামাজ',  keys: ['tahajjud', 'ishraq', 'chasht', 'zawal', 'awwabin'] },
+        { kind: 'forbidden', title: 'নিষিদ্ধ সময়',        keys: ['forbidSunrise', 'forbidNoon', 'forbidSunset'] }
       ];
+
+      var waqtModel = null;                       // বর্তমান দিনের সব সময় (মিনিটে)
+      var waqtNodes = { cards: {}, events: {} };  // রেন্ডার করা কার্ডের DOM রেফারেন্স
 
       var HIJRI_MONTHS = [
         'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জমাদিউল আউয়াল', 'জমাদিউস সানি',
@@ -610,8 +716,10 @@
             updatePrayerStatus();
           })
           .catch(function () {
-            el('prayerList').innerHTML = '<div>নামাজের সময় লোড করা যায়নি।</div>';
+            if (waqtModel) return; // আগের লোড করা সময় দিয়েই চলতে থাকবে
+            el('prayerSections').innerHTML = '<div class="waqt-empty">নামাজের সময় লোড করা যায়নি।</div>';
             el('prayerNext').textContent = 'API সংযোগ পরীক্ষা করুন';
+            el('waqtName').textContent = 'নামাজের সময় লোড করা যায়নি';
           });
       }
 
@@ -642,57 +750,215 @@
         return bnDigits(hours) + ' ঘণ্টা ' + bnDigits(mins) + ' মিনিট';
       }
 
+      /** মিনিট (০–১৪৪০, বা বাইরে হলে ঘুরিয়ে) → "৫:৩০ AM" */
+      function formatMinutes(min) {
+        var m = Math.round(((min % 1440) + 1440) % 1440);
+        if (m === 1440) m = 0;
+        var h = Math.floor(m / 60);
+        return bnDigits(h % 12 || 12) + ':' + bnDigits(pad2(m % 60)) + ' ' + (h >= 12 ? 'PM' : 'AM');
+      }
+
+      /** সেকেন্ড → "০১:২৩:৪৫" */
+      function countdownText(totalSeconds) {
+        var s = Math.max(0, Math.ceil(totalSeconds));
+        return bnDigits(pad2(Math.floor(s / 3600))) + ':' +
+               bnDigits(pad2(Math.floor((s % 3600) / 60))) + ':' +
+               bnDigits(pad2(s % 60));
+      }
+
+      function waqtWindow(key, label, title, kind, start, end) {
+        return { key: key, label: label, title: title, kind: kind, start: start, end: end };
+      }
+
+      /**
+       * দিনের সব ওয়াক্ত/সময় মিনিটে (আজ রাত ১২টা থেকে) বানায়।
+       * তাহাজ্জুদ = আগের রাতের (গতকাল মাগরিব → আজ ফজর) শেষ এক-তৃতীয়াংশ।
+       * এশার ওয়াক্ত পরের দিনের ফজর পর্যন্ত, তাই end ১৪৪০ ছাড়িয়ে যায়।
+       */
+      function buildWaqtModel(t) {
+        var F = timeMinutes(t.Fajr), SR = timeMinutes(t.Sunrise), D = timeMinutes(t.Dhuhr),
+            A = timeMinutes(t.Asr), SS = timeMinutes(t.Sunset), M = timeMinutes(t.Maghrib), I = timeMinutes(t.Isha);
+        var all = [F, SR, D, A, SS, M, I];
+        for (var i = 0; i < all.length; i++) {
+          if (all[i] === null || isNaN(all[i])) return null;
+        }
+        if (I <= M) I += 1440;
+
+        var R = WAQT_RULES;
+        var prevNightStart = M - 1440;
+        var tahajjudStart = prevNightStart + (F - prevNightStart) * 2 / 3;
+
+        return {
+          windows: [
+            waqtWindow('tahajjud',      'তাহাজ্জুদ',            'তাহাজ্জুদের নামাজের সময়',          'nafl',      tahajjudStart, F),
+            waqtWindow('fajr',          'ফজর',                  'ফজরের ওয়াক্ত',                      'fard',      F, SR),
+            waqtWindow('forbidSunrise', 'সূর্যোদয়কালীন',        'সূর্যোদয়কালীন নিষিদ্ধ সময়',          'forbidden', SR, SR + R.sunriseForbidden),
+            waqtWindow('ishraq',        'ইশরাক',                'ইশরাকের নামাজের সময়',              'nafl',      SR + R.ishraqAfterSunrise, SR + R.chashtAfterSunrise),
+            waqtWindow('chasht',        'চাশত',                 'চাশতের নামাজের সময়',               'nafl',      SR + R.chashtAfterSunrise, D - R.zawalForbidden),
+            waqtWindow('forbidNoon',    'মধ্যাহ্ন (ঠিক দুপুর)',  'মধ্যাহ্নের নিষিদ্ধ সময় (ঠিক দুপুর)', 'forbidden', D - R.zawalForbidden, D),
+            waqtWindow('zawal',         'যাওয়াল',              'যাওয়ালের নামাজের সময়',             'nafl',      D, D + R.zawalPrayerLength),
+            waqtWindow('dhuhr',         'যোহর',                 'যোহরের ওয়াক্ত',                     'fard',      D, A),
+            waqtWindow('asr',           'আসর',                  'আসরের ওয়াক্ত',                      'fard',      A, M),
+            waqtWindow('forbidSunset',  'সূর্যাস্তকালীন',        'সূর্যাস্তকালীন নিষিদ্ধ সময়',          'forbidden', SS - R.sunsetForbidden, SS),
+            waqtWindow('maghrib',       'মাগরিব',               'মাগরিবের ওয়াক্ত',                   'fard',      M, I),
+            waqtWindow('awwabin',       'আওয়াবীন',             'আওয়াবীনের নামাজের সময়',            'nafl',      M + R.awwabinAfterMaghrib, I),
+            waqtWindow('isha',          'এশা',                  'এশার ওয়াক্ত',                       'fard',      I, F + 1440)
+          ],
+          events: [
+            { key: 'sunrise', label: 'সূর্যোদয়',          at: SR },
+            { key: 'sunset',  label: 'সূর্যাস্ত',          at: SS },
+            { key: 'sehri',   label: 'সেহরির শেষ সময়',   at: F - R.sehriBeforeFajr },
+            { key: 'iftar',   label: 'ইফতারের সময়',      at: M }
+          ]
+        };
+      }
+
+      /** গতকাল/আজ/আগামীকালের কপি — মধ্যরাত পার হলেও চলমান সময় ঠিক ধরা পড়ে। */
+      function waqtInstances() {
+        var list = [];
+        [-1, 0, 1].forEach(function (offset) {
+          waqtModel.windows.forEach(function (w) {
+            list.push(waqtWindow(w.key, w.label, w.title, w.kind, w.start + offset * 1440, w.end + offset * 1440));
+          });
+        });
+        return list;
+      }
+
+      function nextOccurrence(at, now) {
+        while (at <= now) at += 1440;
+        while (at - 1440 > now) at -= 1440;
+        return at;
+      }
+
+      function waqtCardHtml(w) {
+        return '<div class="waqt-item kind-' + w.kind + '" data-win="' + w.key + '">' +
+          '<div class="waqt-item-head"><span class="waqt-item-name">' + w.label + '</span><span class="waqt-flag">চলছে</span></div>' +
+          '<div class="waqt-item-time">' + formatMinutes(w.start) + '</div>' +
+          '<div class="waqt-item-end">' + formatMinutes(w.end) + ' পর্যন্ত</div></div>';
+      }
+
+      function waqtEventHtml(ev) {
+        return '<div class="waqt-item kind-event" data-event="' + ev.key + '">' +
+          '<div class="waqt-item-head"><span class="waqt-item-name">' + ev.label + '</span></div>' +
+          '<div class="waqt-item-time">' + formatMinutes(ev.at) + '</div>' +
+          '<div class="waqt-item-end">হিসাব হচ্ছে...</div></div>';
+      }
+
       function renderPrayer() {
-        var list = el('prayerList');
-        list.innerHTML = '';
+        var host = el('prayerSections');
+        waqtModel = buildWaqtModel(prayerTimings);
+        if (!waqtModel) {
+          host.innerHTML = '<div class="waqt-empty">নামাজের সময়ের তথ্য অসম্পূর্ণ।</div>';
+          return;
+        }
 
-        PRAYERS.forEach(function (item, index) {
-          var current = prayerTimings[item.key];
-          var next = PRAYERS[index + 1] || PRAYERS[0];
-          var nextTime = prayerTimings[next.key];
-          var currentMin = timeMinutes(current);
-          var nextMin = timeMinutes(nextTime);
-          var span = nextMin - currentMin;
-          if (index === PRAYERS.length - 1) span += 1440;
+        var byKey = {};
+        waqtModel.windows.forEach(function (w) { byKey[w.key] = w; });
 
-          var box = document.createElement('div');
-          box.className = 'prayer-item';
-          box.dataset.key = item.key;
-          box.innerHTML =
-            '<div class="prayer-name">' + item.label + '</div>' +
-            '<div class="prayer-time">' + formatTime(current) + '</div>' +
-            '<div class="prayer-span">পরবর্তী ' + next.label + ' পর্যন্ত<br>' + duration(span) + '</div>';
-          list.appendChild(box);
+        var html = WAQT_SECTIONS.map(function (sec) {
+          return '<div class="waqt-section"><div class="waqt-section-title kind-' + sec.kind + '"><span class="waqt-dot"></span>' + sec.title + '</div>' +
+            '<div class="waqt-grid">' + sec.keys.map(function (k) { return waqtCardHtml(byKey[k]); }).join('') + '</div></div>';
+        }).join('');
+
+        html += '<div class="waqt-section"><div class="waqt-section-title kind-event"><span class="waqt-dot"></span>সূর্য, সেহরি ও ইফতার</div>' +
+          '<div class="waqt-grid">' + waqtModel.events.map(waqtEventHtml).join('') + '</div></div>';
+
+        host.innerHTML = html;
+
+        waqtNodes = { cards: {}, events: {} };
+        Array.prototype.forEach.call(host.querySelectorAll('[data-win]'), function (node) {
+          waqtNodes.cards[node.getAttribute('data-win')] = node;
+        });
+        Array.prototype.forEach.call(host.querySelectorAll('[data-event]'), function (node) {
+          waqtNodes.events[node.getAttribute('data-event')] = node;
+        });
+      }
+
+      /** ওপরের বড় কার্ড: এখন কোন ওয়াক্ত/নিষিদ্ধ সময় চলছে এবং শেষ হতে কত বাকি। */
+      function renderHero(primary, active, list, now) {
+        var hero = el('waqtHero');
+
+        if (!primary) {
+          hero.setAttribute('data-kind', 'loading');
+          el('waqtBadge').textContent = 'সময় নির্ণয় করা যায়নি';
+          el('waqtName').textContent = '—';
+          el('waqtRange').textContent = '';
+          el('waqtCount').textContent = '--:--:--';
+          el('waqtCaption').textContent = '';
+          el('waqtBarFill').style.width = '0%';
+          el('waqtAlso').textContent = '';
+          el('waqtNext').textContent = '';
+          return;
+        }
+
+        var kind = WAQT_KINDS[primary.kind];
+        var total = primary.end - primary.start;
+        var percent = total > 0 ? Math.min(100, Math.max(0, (now - primary.start) / total * 100)) : 0;
+
+        hero.setAttribute('data-kind', primary.kind);
+        el('waqtBadge').textContent = kind.badge;
+        el('waqtName').textContent = primary.title;
+        el('waqtRange').textContent = formatMinutes(primary.start) + ' – ' + formatMinutes(primary.end);
+        el('waqtCount').textContent = countdownText((primary.end - now) * 60);
+        el('waqtCaption').textContent = kind.caption;
+        el('waqtBarFill').style.width = percent.toFixed(1) + '%';
+
+        var others = active.filter(function (w) { return w.key !== primary.key; });
+        el('waqtAlso').textContent = others.length
+          ? 'এছাড়াও চলছে: ' + others.map(function (w) { return w.title; }).join(', ')
+          : '';
+
+        var upcoming = list.filter(function (w) { return w.start > now && w.key !== primary.key; })
+          .sort(function (a, b) { return a.start - b.start; })[0];
+        el('waqtNext').textContent = upcoming
+          ? 'এরপর: ' + upcoming.title + ' — ' + formatMinutes(upcoming.start) + ' (আর ' + duration(Math.ceil(upcoming.start - now)) + ' পরে)'
+          : '';
+      }
+
+      function markActiveCards(active, primary) {
+        var activeKeys = {};
+        active.forEach(function (w) { activeKeys[w.key] = true; });
+
+        Object.keys(waqtNodes.cards).forEach(function (key) {
+          var node = waqtNodes.cards[key];
+          node.classList.toggle('is-active', !!activeKeys[key]);
+          node.classList.toggle('is-primary', !!primary && primary.key === key);
+        });
+      }
+
+      /** সূর্যোদয়/সূর্যাস্ত/সেহরি/ইফতারের কার্ডে পরবর্তী সময় পর্যন্ত কত বাকি। */
+      function updateEventCountdowns(now) {
+        waqtModel.events.forEach(function (ev) {
+          var node = waqtNodes.events[ev.key];
+          if (!node) return;
+          var at = nextOccurrence(ev.at, now);
+          node.querySelector('.waqt-item-end').textContent = 'আর ' + duration(Math.ceil(at - now)) + ' বাকি';
         });
       }
 
       function updatePrayerStatus() {
-        if (!prayerTimings) return;
+        if (!waqtModel) return;
 
-        var now = dhakaParts();
-        var nowMinutes = now.hour * 60 + now.minute + now.second / 60;
+        var p = dhakaParts();
+        var now = p.hour * 60 + p.minute + p.second / 60;
+        var list = waqtInstances();
 
-        var nextIndex = -1;
-        var nextTime = null;
+        var active = list.filter(function (w) { return w.start <= now && now < w.end; });
+        active.sort(function (a, b) {
+          return (WAQT_KINDS[b.kind].rank - WAQT_KINDS[a.kind].rank) || (a.end - b.end);
+        });
+        var primary = active[0] || null;
 
-        for (var i = 0; i < PRAYERS.length; i++) {
-          var mins = timeMinutes(prayerTimings[PRAYERS[i].key]);
-          if (mins !== null && mins > nowMinutes) { nextIndex = i; nextTime = mins; break; }
-        }
+        renderHero(primary, active, list, now);
+        markActiveCards(active, primary);
+        updateEventCountdowns(now);
 
-        if (nextIndex === -1) {
-          nextIndex = 0;
-          nextTime = timeMinutes(prayerTimings.Fajr) + 1440;
-        }
-
-        var remaining = nextTime - nowMinutes;
-
-        el('prayerNext').textContent =
-          'পরবর্তী: ' + PRAYERS[nextIndex].label + ' — আর ' + duration(Math.ceil(remaining)) + ' বাকি';
-
-        var boxes = document.querySelectorAll('#page-home .prayer-item');
-        boxes.forEach(function (box) { box.classList.remove('next'); });
-        if (boxes[nextIndex]) boxes[nextIndex].classList.add('next');
+        // হেডারে: পরবর্তী ফরজ নামাজ
+        var nextFard = list.filter(function (w) { return w.kind === 'fard' && w.start > now; })
+          .sort(function (a, b) { return a.start - b.start; })[0];
+        el('prayerNext').textContent = nextFard
+          ? 'পরবর্তী নামাজ: ' + nextFard.label + ' — আর ' + duration(Math.ceil(nextFard.start - now)) + ' বাকি'
+          : '';
       }
 
       setInterval(updatePrayerStatus, 1000);

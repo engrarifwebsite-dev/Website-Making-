@@ -164,3 +164,7 @@ tested live is marked `[?]` until the project owner confirms it — see
 - [ ] Suspicious-login detection
 - [ ] Budget ↔ Power Grid salary sync (GlobalSyncID)
 - [ ] Any other cross-module data sync identified while building later phases
+
+
+- [x] হোম নামাজের সময়সূচী: ইশরাক/চাশত/যাওয়াল/আওয়াবীন/তাহাজ্জুদ/সূর্যোদয়/সূর্যাস্ত/নিষিদ্ধ/সেহরি/ইফতার + হাইলাইট + কাউন্টডাউন (2026-10-04)
+- [ ] ছুটির হিসাব: ১৮০-ক্যাপ সূত্র, স্থিতি কলাম বাদ, প্রতি রো ফাইল আপলোড/ডাউনলোড (স্থগিত)

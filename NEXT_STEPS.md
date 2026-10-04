@@ -118,3 +118,7 @@ error" for the exact first-run checklist to run through for Zakat & Fitra.
 - Per `CLAUDE.md`: always read `SESSION_STATE.md` + `TASK_PROGRESS.md` +
   `CHANGELOG.md` before writing any code, and update all three (plus this
   file) again before ending a substantial session.
+
+
+- নামাজ কার্ডের WAQT_RULES মান নিজের ফতোয়া/ইসলামিক ফাউন্ডেশন সময়সূচীর সাথে মিলিয়ে নিন।
+- ছুটির হিসাব ট্যাব চাইলে আসল repo-র Server_Leave.gs ও Page_PowerGrid.html ভিত্তি করে শেষ করা হবে।
